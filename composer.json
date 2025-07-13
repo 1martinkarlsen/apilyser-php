@@ -22,11 +22,14 @@
         "symfony/yaml": "^7.2",
         "symfony/config": "^7.3"
     },
-    "bin": [
-        "bin/apilyser"
-    ],
     "require-dev": {
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^11.5"
+    },
+    "bin": [
+        "bin/apilyser"
+    ],
+    "scripts": {
+        "test": "phpunit tests"
     }
 }
