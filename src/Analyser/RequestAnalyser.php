@@ -5,7 +5,7 @@ namespace Apilyser\Analyser;
 use Apilyser\Definition\ParameterDefinition;
 use Apilyser\Extractor\MethodParameterExtractor;
 use Apilyser\Extractor\RequestUsageExtractor;
-use Apilyser\ParameterDefinitionFactory;
+use Apilyser\Definition\ParameterDefinitionFactory;
 use Apilyser\Parser\Api\HttpDelegate;
 use Exception;
 use PhpParser\Node\Param;
