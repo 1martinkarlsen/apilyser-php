@@ -1,11 +1,11 @@
 <?php
 
-use ApiValidator\Comparison\ValidationError;
-use ApiValidator\Comparison\ValidationSuccess;
-use ApiValidator\Definition\EndpointDefinition;
-use ApiValidator\Definition\ParameterDefinition;
-use ApiValidator\Definition\RequestType;
-use ApiValidator\Rule\ParameterExistenceRule;
+use Apilyser\Comparison\ValidationError;
+use Apilyser\Comparison\ValidationSuccess;
+use Apilyser\Definition\EndpointDefinition;
+use Apilyser\Definition\ParameterDefinition;
+use Apilyser\Definition\RequestType;
+use Apilyser\Rule\ParameterExistenceRule;
 use PHPUnit\Framework\TestCase;
 
 class ParameterExistenceRuleTest extends TestCase

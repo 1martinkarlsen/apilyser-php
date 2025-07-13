@@ -1,10 +1,9 @@
 <?php
 
-use ApiValidator\Comparison\ValidationError;
-use ApiValidator\Definition\EndpointDefinition;
-use ApiValidator\Definition\ResponseBodyDefinition;
-use ApiValidator\Definition\ResponseDefinition;
-use ApiValidator\Rule\ResponseExistenceRule;
+use Apilyser\Comparison\ValidationError;
+use Apilyser\Definition\EndpointDefinition;
+use Apilyser\Definition\ResponseDefinition;
+use Apilyser\Rule\ResponseExistenceRule;
 use PHPUnit\Framework\TestCase;
 
 class ResponseExistenceRuleTest extends TestCase
