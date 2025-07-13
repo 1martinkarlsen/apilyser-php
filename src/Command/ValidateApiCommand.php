@@ -1,6 +1,6 @@
 <?php
 
-namespace Apilyser;
+namespace Apilyser\Command;
 
 use Apilyser\ApiValidator;
 use Apilyser\Configuration\Configuration;

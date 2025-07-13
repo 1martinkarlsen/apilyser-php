@@ -1,6 +1,6 @@
 <?php
 
-namespace Apilyser;
+namespace Apilyser\Definition;
 
 use Apilyser\Definition\ParameterDefinition;
 use Apilyser\Definition\RequestType;
