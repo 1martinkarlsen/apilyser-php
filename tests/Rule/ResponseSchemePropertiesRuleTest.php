@@ -1,11 +1,11 @@
 <?php
 
-use ApiValidator\Comparison\ValidationError;
-use ApiValidator\Comparison\ValidationSuccess;
-use ApiValidator\Definition\EndpointDefinition;
-use ApiValidator\Definition\ResponseBodyDefinition;
-use ApiValidator\Definition\ResponseDefinition;
-use ApiValidator\Rule\ResponseSchemePropertiesRule;
+use Apilyser\Comparison\ValidationError;
+use Apilyser\Comparison\ValidationSuccess;
+use Apilyser\Definition\EndpointDefinition;
+use Apilyser\Definition\ResponseBodyDefinition;
+use Apilyser\Definition\ResponseDefinition;
+use Apilyser\Rule\ResponseSchemePropertiesRule;
 use PHPUnit\Framework\TestCase;
 
 class ResponseSchemePropertiesRuleTest extends TestCase

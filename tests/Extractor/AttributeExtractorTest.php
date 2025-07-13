@@ -1,7 +1,7 @@
 <?php
 
-use ApiValidator\Extractor\AttributeExtractor;
-use ApiValidator\Parser\NodeParser;
+use Apilyser\Extractor\AttributeExtractor;
+use Apilyser\Parser\NodeParser;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\NodeFinder;
 use PHPUnit\Framework\TestCase;
