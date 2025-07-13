@@ -4,6 +4,7 @@ A PHP static analysis tool to discover misalignment between the code and the Ope
 ## Getting started
 
 ### Installation
+Install using composer<br />
 The library is still under development
 
 ### Configuration
