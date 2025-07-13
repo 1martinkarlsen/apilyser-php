@@ -10,13 +10,11 @@ use Apilyser\Parser\Api\HttpDelegate;
 use Exception;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassMethod;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class RequestAnalyser
 {
 
     public function __construct(
-        private OutputInterface $output,
         private HttpDelegate $httpDelegate,
         private MethodParameterExtractor $methodParameterExtractor,
         private ParameterDefinitionFactory $parameterDefinitionFactory

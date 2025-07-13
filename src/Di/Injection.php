@@ -166,17 +166,14 @@ class Injection
 
         // Analyzer
         $this->services[OpenApiAnalyser::class] = fn() => new OpenApiAnalyser(
-            output: $this->get(OutputInterface::class),
             openApiDocPath: $this->rootPath . $this->configuration[Configuration::CFG_OPEN_API_PATH]
         );
         $this->services[RequestAnalyser::class] = fn() => new RequestAnalyser(
-            output: $this->get(OutputInterface::class),
             httpDelegate: $this->get(HttpDelegate::class),
             methodParameterExtractor: $this->get(MethodParameterExtractor::class),
             parameterDefinitionFactory: $this->get(ParameterDefinitionFactory::class)
         );
         $this->services[ResponseAnalyser::class] = fn() => new ResponseAnalyser(
-            output: $this->get(OutputInterface::class),
             classExtractor: $this->get(ClassExtractor::class),
             methodStructureExtractor: $this->get(MethodStructureExtractor::class),
             variableUsageExtractor: $this->get(VariableUsageExtractor::class),
@@ -184,7 +181,6 @@ class Injection
             dumper: $this->get(NodeDumper::class)
         );
         $this->services[EndpointAnalyser::class] = fn() => new EndpointAnalyser(
-            output: $this->get(OutputInterface::class),
             routeParser: $this->get(RouteParser::class),
             nodeParser: $this->get(NodeParser::class),
             namespaceResolver: $this->get(NamespaceResolver::class),

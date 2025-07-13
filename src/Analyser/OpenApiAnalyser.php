@@ -9,7 +9,6 @@ use Apilyser\Definition\RequestType;
 use Apilyser\Definition\ResponseBodyDefinition;
 use Apilyser\Definition\ResponseDefinition;
 use Apilyser\Parser\YamlParser;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class OpenApiAnalyser
 {
@@ -19,7 +18,6 @@ class OpenApiAnalyser
     private $components;
 
     public function __construct(
-        public OutputInterface $output,
         private string $openApiDocPath
     ) {
         $this->yamlParser = new YamlParser();

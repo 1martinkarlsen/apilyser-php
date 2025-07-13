@@ -16,7 +16,6 @@ class EndpointAnalyser
 {
 
     public function __construct(
-        private OutputInterface $output,
         private RouteParser $routeParser,
         private NodeParser $nodeParser,
         private NamespaceResolver $namespaceResolver,
@@ -49,8 +48,6 @@ class EndpointAnalyser
         $route = $this->routeParser->parseFullRoute($context->class, $context->method);
 
         if ($route != null) {
-            $this->output->writeln("<info>" . $route->method . " " . $route->path . "</info>");
-
             $requests = $this->requestAnalyzer->analyse($context);
             $responses = $this->responseAnalyzer->analyse($context);
 

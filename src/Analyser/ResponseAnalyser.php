@@ -8,15 +8,12 @@ use Apilyser\Extractor\MethodStructureExtractor;
 use Apilyser\Extractor\VariableUsageExtractor;
 use Apilyser\Resolver\ResponseCall;
 use Apilyser\Resolver\ResponseResolver;
-use Exception;
 use PhpParser\NodeDumper;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class ResponseAnalyser
 {
 
     public function __construct(
-        private OutputInterface $output,
         private ClassExtractor $classExtractor,
         private MethodStructureExtractor $methodStructureExtractor,
 
