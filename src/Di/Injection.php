@@ -17,7 +17,7 @@ use Apilyser\Extractor\FileClassesExtractor;
 use Apilyser\Extractor\MethodParameterExtractor;
 use Apilyser\Extractor\MethodStructureExtractor;
 use Apilyser\Extractor\VariableUsageExtractor;
-use Apilyser\ParameterDefinitionFactory;
+use Apilyser\Definition\ParameterDefinitionFactory;
 use Apilyser\Parser\Api\HttpDelegate;
 use Apilyser\Parser\Api\SymfonyApiParser;
 use Apilyser\Parser\FileParser;
