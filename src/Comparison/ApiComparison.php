@@ -9,7 +9,6 @@ use Apilyser\Rule\ParameterTypeRule;
 use Apilyser\Rule\ResponseExistenceRule;
 use Apilyser\Rule\ResponsePropertyTypeRule;
 use Apilyser\Rule\ResponseSchemePropertiesRule;
-use Exception;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -36,9 +35,12 @@ class ApiComparison {
     /**
      * @param EndpointDefinition[] $definitions
      * @param ApiSpecDefinition $apiSpec
+     * 
+     * @return EndpointResult[]
      */
-    public function compare(array $code, ApiSpecDefinition $spec)
+    public function compare(array $code, ApiSpecDefinition $spec): array
     {
+        $results = [];
         $specEndpoints = $spec->endpoints;
 
         // Loop through docs to find routes
@@ -59,9 +61,31 @@ class ApiComparison {
             if (!empty($endpoint)) {
                 reset($endpoint);
                 $first = current($endpoint);
-                $this->compareEndpoint(spec: $endpointSpec, endpoint: $first);
+                $errors = $this->compareEndpoint(spec: $endpointSpec, endpoint: $first);
+
+                array_push(
+                    $results,
+                    new EndpointResult(
+                        endpoint: $endpointSpec,
+                        success: empty($errors),
+                        errors: $errors
+                    )
+                );
             } else {
-                $this->output->writeln("-- Could not find any routes for this endpoint documentation: " . $endpointSpec->path);
+                array_push(
+                    $results,
+                    new EndpointResult(
+                        endpoint: $endpointSpec,
+                        success: false,
+                        errors: [
+                            new ValidationError(
+                                errorType: "MissingEndpoint",
+                                message: "Documentation for endpoint " . $endpointSpec->method . " " . $endpointSpec->path . " doesn't have any implementation in code.",
+                                errors: []
+                            )
+                        ]
+                    )
+                );
             }
 
         }
@@ -79,21 +103,46 @@ class ApiComparison {
             }
 
             if ($doc == null) {
-                $this->output->writeln("-- Could not find any documentation for this code endpoint: " . $codeEndpoint->path);
+                array_push(
+                    $results,
+                    new EndpointResult(
+                        endpoint: $codeEndpoint,
+                        success: false,
+                        errors: [
+                            new ValidationError(
+                                errorType: "MissingDocumentation",
+                                message: "Endpoint " . $codeEndpoint->method . " " . $codeEndpoint->path . " doesn't have documentation.",
+                                errors: []
+                            )
+                        ]
+                    )
+                );
             }
         }
+
+        return $results;
     }
 
-    private function compareEndpoint(EndpointDefinition $spec, EndpointDefinition $endpoint)
+    /**
+     * @param EndpointDefinition $spec
+     * @param EndpointDefinition $endpoint
+     * 
+     * @return ValidationError[]
+     */
+    private function compareEndpoint(EndpointDefinition $spec, EndpointDefinition $endpoint): array
     {
+        $validationErrors = [];
+
         foreach($this->rules as $rule) {
             $result = $rule->validate($spec, $endpoint);
             if ($result instanceof ValidationError) {
-                $this->output->writeln("--- " . $result->getMessage());
-                foreach ($result->errors as $error) {
-                    $this->output->writeln("---- " . $error);
-                }
+                array_push(
+                    $validationErrors,
+                    $result
+                );
             }
         }
+
+        return $validationErrors;
     }
 }

@@ -5,29 +5,42 @@ namespace Apilyser;
 use Apilyser\Analyser\Analyser;
 use Apilyser\Di\Injection;
 use Apilyser\Parser\FileParser;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class ApiValidator
 {
 
-    private OutputInterface $output;
-    private Analyser $analyser;
-    private FileParser $fileParser;
-
     public function __construct(
-        Injection $injection
-    ) {
-        $this->output = $injection->get(OutputInterface::class);
-        $this->fileParser = $injection->get(FileParser::class);
-        $this->analyser = $injection->get(Analyser::class);
-    }
+        private OutputInterface $output,
+        private FileParser $fileParser,
+        private Analyser $analyser
+    ) {}
 
-    function run(): void
+    function run(): int
     {
         $this->output->writeln("<info>Starting validation</info>");
         $files = $this->fileParser->getFiles();
 
-        $this->analyser->analyse($files);
+        $errors = [];
+        $validationResults = $this->analyser->analyse($files);
+        foreach ($validationResults as $result) {
+            if (!$result->success) {
+                array_push($errors, $result);
+
+                $this->output->writeln("" . $result->endpoint->method . " " . $result->endpoint->path . "");
+                foreach ($result->errors as $error) {
+                    $this->output->writeln("[" . $error->errorType . "] " . $error->getMessage());
+                }
+            }
+        }
+
+        if (!empty($errors)) {
+            $this->output->writeln("<error>Apilyser validate failed</error>");
+            return Command::FAILURE;
+        }
+
+        return Command::SUCCESS;
     }
 
 }

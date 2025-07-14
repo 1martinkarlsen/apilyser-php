@@ -35,7 +35,11 @@ class ParameterTypeRule implements ValidationRule
         }
 
         if (!empty($errors)) {
-            return new ValidationError("ParameterTypeRule failed at " . $openApiSpec->path, $errors);
+            return new ValidationError(
+                errorType: "ParameterTypeRule",
+                message: "ParameterTypeRule failed at " . $openApiSpec->path, 
+                errors: $errors
+            );
         }
 
         return new ValidationSuccess("");

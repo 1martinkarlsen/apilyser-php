@@ -71,6 +71,7 @@ class ParameterExistenceRuleTest extends TestCase
 
         $this->assertInstanceOf(expected: ValidationError::class, actual: $result);
         if ($result instanceof ValidationError) {
+            $this->assertEquals(expected: "ParameterExistenceRule", actual: $result->errorType);
             $this->assertCount(expectedCount: 1, haystack: $result->errors);
         }
     }
@@ -108,6 +109,7 @@ class ParameterExistenceRuleTest extends TestCase
 
         $this->assertInstanceOf(expected: ValidationError::class, actual: $result);
         if ($result instanceof ValidationError) {
+            $this->assertEquals(expected: "ParameterExistenceRule", actual: $result->errorType);
             $this->assertCount(expectedCount: 1, haystack: $result->errors);
         }
     }
@@ -153,6 +155,7 @@ class ParameterExistenceRuleTest extends TestCase
 
         $this->assertInstanceOf(expected: ValidationError::class, actual: $result);
         if ($result instanceof ValidationError) {
+            $this->assertEquals(expected: "ParameterExistenceRule", actual: $result->errorType);
             $this->assertCount(expectedCount: 2, haystack: $result->errors);
         }
     }

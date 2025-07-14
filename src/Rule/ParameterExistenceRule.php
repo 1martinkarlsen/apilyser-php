@@ -64,6 +64,7 @@ class ParameterExistenceRule implements ValidationRule {
 
         if (!empty($errors)) {
             return new ValidationError(
+                errorType: "ParameterExistenceRule",
                 message: "ParameterExistenceRule failed at " . $openApiSpec->path, 
                 errors: $errors
             );

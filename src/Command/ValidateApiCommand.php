@@ -6,6 +6,7 @@ use Apilyser\ApiValidator;
 use Apilyser\Configuration\Configuration;
 use Apilyser\Configuration\ConfigurationLoader;
 use Apilyser\Di\Injection;
+use Exception;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -31,15 +32,20 @@ class ValidateApiCommand extends Command
         $configLoader = new ConfigurationLoader();
         $cfg = $configLoader->loadFromFile(getcwd() . "/" . Configuration::CONFIG_PATH);
 
-        $validator = new ApiValidator(
-            injection: new Injection(
-                output: $output, 
-                rootPath: getcwd(),
-                configuration: $cfg
-            )
+        $injection = new Injection(
+            output: $output, 
+            rootPath: getcwd(),
+            configuration: $cfg
         );
+
+        $validator = $injection->get(ApiValidator::class);
         
-        $validator->run();
+        try {
+            return $validator->run();
+        } catch (Exception $e) {
+            $output->writeln("<error>" . $e->getMessage() . "</error>");
+            return Command::FAILURE;
+        }
 
         return Command::SUCCESS;
     }
