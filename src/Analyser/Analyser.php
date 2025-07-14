@@ -6,7 +6,7 @@ use Apilyser\Comparison\ApiComparison;
 use Exception;
 use Symfony\Component\Console\Output\OutputInterface;
 
-final class Analyser
+class Analyser
 {
 
     public function __construct(

@@ -11,17 +11,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ApiValidator
 {
 
-    private OutputInterface $output;
-    private Analyser $analyser;
-    private FileParser $fileParser;
-
     public function __construct(
-        Injection $injection
-    ) {
-        $this->output = $injection->get(OutputInterface::class);
-        $this->fileParser = $injection->get(FileParser::class);
-        $this->analyser = $injection->get(Analyser::class);
-    }
+        public OutputInterface $output,
+        public FileParser $fileParser,
+        public Analyser $analyser
+    ) {}
 
     function run(): int
     {

@@ -8,6 +8,7 @@ use Apilyser\Analyser\FileAnalyser;
 use Apilyser\Analyser\OpenApiAnalyser;
 use Apilyser\Analyser\RequestAnalyser;
 use Apilyser\Analyser\ResponseAnalyser;
+use Apilyser\ApiValidator;
 use Apilyser\Comparison\ApiComparison;
 use Apilyser\Configuration\Configuration;
 use Apilyser\Extractor\AttributeExtractor;
@@ -201,7 +202,13 @@ class Injection
             fileAnalyser: $this->get(FileAnalyser::class),
             endpointAnalyser: $this->get(EndpointAnalyser::class),
             comparison: $this->get(ApiComparison::class)
-        );  
+        );
+
+        $this->services[ApiValidator::class] = fn() => new ApiValidator(
+            output: $this->get(OutputInterface::class),
+            fileParser: $this->get(FileParser::class),
+            analyser: $this->get(Analyser::class)
+        );
     }
 
 }

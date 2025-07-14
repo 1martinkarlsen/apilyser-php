@@ -94,6 +94,7 @@ class ParameterTypeRuleTest extends TestCase
 
         $this->assertInstanceOf(expected: ValidationError::class, actual: $result);
         if ($result instanceof ValidationError) {
+            $this->assertEquals(expected: "ParameterTypeRule", actual: $result->errorType);
             $this->assertCount(expectedCount: 1, haystack: $result->errors);
         }
     }
