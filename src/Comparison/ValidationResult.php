@@ -10,11 +10,13 @@ abstract class ValidationResult
     /** @var string $message */
     protected string $message;
 
-    public function isSuccess(): bool {
+    public function isSuccess(): bool 
+    {
         return $this->success;
     }
 
-    public function getMessage(): string {
+    public function getMessage(): string 
+    {
         return $this->message;
     }
 }

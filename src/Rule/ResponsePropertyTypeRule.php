@@ -42,6 +42,7 @@ class ResponsePropertyTypeRule implements ValidationRule {
 
         if (!empty($errors)) {
             return new ValidationError(
+                errorType: "ResponsePropertyTypeRule",
                 message: "ResponsePropertyTypeRule failed at " . $openApiSpec->path, 
                 errors: $errors
             );

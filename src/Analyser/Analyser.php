@@ -3,6 +3,7 @@
 namespace Apilyser\Analyser;
 
 use Apilyser\Comparison\ApiComparison;
+use Exception;
 use Symfony\Component\Console\Output\OutputInterface;
 
 final class Analyser
@@ -16,12 +17,16 @@ final class Analyser
         private ApiComparison $comparison
     ) {}
 
-    public function analyse(array $files)
+    /**
+     * @param string[] $files
+     *
+     * @return EndpointResult[]
+     */
+    public function analyse(array $files): array
     {
         $spec = $this->openApiAnalyser->analyse();
         if ($spec == null) {
-            $this->output->writeln("<error>Could not find Open API documentation</error>");
-            return;
+            throw new Exception("Could not find Open API documentation");
         }
 
         // Analyse all files
@@ -35,7 +40,7 @@ final class Analyser
             );
         }
 
-        $this->comparison->compare(
+        return $this->comparison->compare(
             code: $endpoints,
             spec: $spec
         );

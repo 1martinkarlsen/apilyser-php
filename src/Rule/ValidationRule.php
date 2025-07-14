@@ -2,7 +2,6 @@
 
 namespace Apilyser\Rule;
 
-use Apilyser\Definition\ApiSpecEndpointDefinition;
 use Apilyser\Definition\EndpointDefinition;
 use Apilyser\Comparison\ValidationResult;
 

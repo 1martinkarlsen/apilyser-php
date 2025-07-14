@@ -88,6 +88,7 @@ class ResponseExistenceRule implements ValidationRule
 
         if (!empty($errors)) {
             return new ValidationError(
+                errorType: "ResponseExistenceRule",
                 message: "ResponseExistenceRule failed at " . $openApiSpec->path,
                 errors: $errors
             );

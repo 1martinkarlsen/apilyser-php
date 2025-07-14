@@ -41,6 +41,7 @@ class ResponseSchemePropertiesRule implements ValidationRule
 
         if (!empty($errors)) {
             return new ValidationError(
+                errorType: "ResponseSchemePropertiesRule",
                 message: "ResponseSchemePropertiesRule failed at " . $openApiSpec->path, 
                 errors: $errors
             );
