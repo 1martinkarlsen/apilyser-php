@@ -9,8 +9,6 @@ use Apilyser\Rule\ParameterTypeRule;
 use Apilyser\Rule\ResponseExistenceRule;
 use Apilyser\Rule\ResponsePropertyTypeRule;
 use Apilyser\Rule\ResponseSchemePropertiesRule;
-use Error;
-use Exception;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
