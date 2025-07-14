@@ -12,9 +12,9 @@ class ApiValidator
 {
 
     public function __construct(
-        public OutputInterface $output,
-        public FileParser $fileParser,
-        public Analyser $analyser
+        private OutputInterface $output,
+        private FileParser $fileParser,
+        private Analyser $analyser
     ) {}
 
     function run(): int
