@@ -25,7 +25,7 @@ class Analyser
      *
      * @return EndpointResult[]
      */
-    public function analyseRoutes(string $folderPath): array
+    public function analyse(string $folderPath): array
     {
         $spec = $this->openApiAnalyser->analyse();
         if ($spec == null) {
@@ -37,39 +37,10 @@ class Analyser
 
         $endpoints = [];
         foreach ($routes as $route) {
-            $endpoint = $this->fileAnalyser->analyseFile(
+            $endpoint = $this->fileAnalyser->analyse(
                 $route->controllerPath,
                 $route->functionName
             );
-
-            array_push(
-                $endpoints,
-                ...$endpoint
-            );
-        }
-
-        return $this->comparison->compare(
-            code: $endpoints,
-            spec: $spec
-        );
-    }
-
-    /**
-     * @param string[] $files
-     *
-     * @return EndpointResult[]
-     */
-    public function analyse(array $files): array
-    {
-        $spec = $this->openApiAnalyser->analyse();
-        if ($spec == null) {
-            throw new Exception("Could not find Open API documentation");
-        }
-
-        // Analyse all files
-        $endpoints = [];
-        foreach($files as $filePath) {
-            $endpoint = $this->fileAnalyser->analyse($filePath);
 
             array_push(
                 $endpoints,

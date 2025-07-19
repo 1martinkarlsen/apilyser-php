@@ -23,7 +23,7 @@ class ApiValidatorTest extends TestCase
         );
 
         $analyserMock
-            ->method("analyseRoutes")
+            ->method("analyse")
             ->willReturn([
                 new EndpointResult(
                     endpoint: new EndpointDefinition(
@@ -38,7 +38,7 @@ class ApiValidatorTest extends TestCase
 
         $analyserMock
             ->expects($this->once())
-            ->method("analyseRoutes");
+            ->method("analyse");
 
         $result = $validator->run();
 
@@ -56,7 +56,7 @@ class ApiValidatorTest extends TestCase
         );
 
         $analyserMock
-            ->method("analyseRoutes")
+            ->method("analyse")
             ->willReturn([
                 new EndpointResult(
                     endpoint: new EndpointDefinition(
@@ -78,7 +78,7 @@ class ApiValidatorTest extends TestCase
 
         $analyserMock
             ->expects($this->once())
-            ->method("analyseRoutes");
+            ->method("analyse");
 
         $result = $validator->run();
 
@@ -96,7 +96,7 @@ class ApiValidatorTest extends TestCase
         );
 
         $analyserMock
-            ->method("analyseRoutes")
+            ->method("analyse")
             ->willReturn([
                 new EndpointResult(
                     endpoint: new EndpointDefinition(
@@ -127,7 +127,7 @@ class ApiValidatorTest extends TestCase
 
         $analyserMock
             ->expects($this->once())
-            ->method("analyseRoutes");
+            ->method("analyse");
 
         $result = $validator->run();
 

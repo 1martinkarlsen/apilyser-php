@@ -22,7 +22,7 @@ class ApiValidator
         $this->output->writeln("<info>Starting validation</info>");
 
         $errors = [];
-        $validationResults = $this->analyser->analyseRoutes($this->folderPath);
+        $validationResults = $this->analyser->analyse($this->folderPath);
         foreach ($validationResults as $result) {
             if (!$result->success) {
                 array_push($errors, $result);
