@@ -14,9 +14,7 @@ class ApiValidator
     public function __construct(
         private string $folderPath,
         private OutputInterface $output,
-        private FileParser $fileParser,
-        private Analyser $analyser,
-        private RouteParser $routeParser
+        private Analyser $analyser
     ) {}
 
     function run(): int
@@ -24,7 +22,7 @@ class ApiValidator
         $this->output->writeln("<info>Starting validation</info>");
 
         $errors = [];
-        $validationResults =$this->analyser->analyseRoutes($this->folderPath);
+        $validationResults = $this->analyser->analyseRoutes($this->folderPath);
         foreach ($validationResults as $result) {
             if (!$result->success) {
                 array_push($errors, $result);
@@ -40,26 +38,6 @@ class ApiValidator
             $this->output->writeln("<error>Apilyser validate failed</error>");
             return Command::FAILURE;
         }
-
-        /*$files = $this->fileParser->getFiles();
-
-        $errors = [];
-        $validationResults = $this->analyser->analyse($files);
-        foreach ($validationResults as $result) {
-            if (!$result->success) {
-                array_push($errors, $result);
-
-                $this->output->writeln("" . $result->endpoint->method . " " . $result->endpoint->path . "");
-                foreach ($result->errors as $error) {
-                    $this->output->writeln("[" . $error->errorType . "] " . $error->getMessage());
-                }
-            }
-        }
-
-        if (!empty($errors)) {
-            $this->output->writeln("<error>Apilyser validate failed</error>");
-            return Command::FAILURE;
-        }*/
 
         return Command::SUCCESS;
     }

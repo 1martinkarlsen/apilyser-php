@@ -225,9 +225,7 @@ class Injection
         $this->services[ApiValidator::class] = fn() => new ApiValidator(
             folderPath: $this->rootPath,
             output: $this->get(OutputInterface::class),
-            fileParser: $this->get(FileParser::class),
-            analyser: $this->get(Analyser::class),
-            routeParser: $this->get(RouteParser::class)
+            analyser: $this->get(Analyser::class)
         );
     }
 
