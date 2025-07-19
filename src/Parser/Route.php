@@ -6,6 +6,7 @@ class Route {
 
     public function __construct(
         public string $method,
-        public string $path
+        public string $path,
+        public ?string $controllerPath = null
     ) {}
 }

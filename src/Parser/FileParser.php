@@ -16,14 +16,16 @@ class FileParser
 
     public function __construct(string $folderPath) {
         $this->folderRoot = $folderPath;
-        $this->recursiveDirectory = new RecursiveDirectoryIterator($this->folderRoot, RecursiveDirectoryIterator::SKIP_DOTS);
-        $this->directoryIterator = new RecursiveIteratorIterator($this->recursiveDirectory);
     }
 
     /**
      * @return string[]
      */
-    public function getFiles(): array {
+    public function getFiles(?string $folderPath = null): array {
+        $fullPath = $folderPath ? $this->folderRoot . "/" . $folderPath : $this->folderRoot;
+        $this->recursiveDirectory = new RecursiveDirectoryIterator($fullPath , RecursiveDirectoryIterator::SKIP_DOTS);
+        $this->directoryIterator = new RecursiveIteratorIterator($this->recursiveDirectory);
+
         // Array of files to return
         $files = [];
 

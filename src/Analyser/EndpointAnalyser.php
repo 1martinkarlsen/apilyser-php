@@ -31,19 +31,6 @@ class EndpointAnalyser
      */
     public function analyse(ClassMethodContext $context): ?EndpointDefinition
     {
-        return $this->analyzeEndpoint($context);
-    }
-
-    /**
-     * Parses a function
-     * 
-     * @param ClassMethodContext $context
-     * 
-     * @return ?EndpointDefinition
-     */
-    private function analyzeEndpoint(
-        ClassMethodContext $context
-    ): ?EndpointDefinition {
         // Find the route for the method.
         $route = $this->routeParser->parseFullRoute($context->class, $context->method);
 

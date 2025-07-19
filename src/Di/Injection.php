@@ -24,6 +24,8 @@ use Apilyser\Parser\Api\SymfonyApiParser;
 use Apilyser\Parser\FileParser;
 use Apilyser\Parser\NodeParser;
 use Apilyser\Parser\Route\SymfonyAttributeParser;
+use Apilyser\Parser\Route\SymfonyAttributeStrategy;
+use Apilyser\Parser\Route\SymfonyYamlRouteStrategy;
 use Apilyser\Parser\RouteParser;
 use Apilyser\Resolver\ClassAstResolver;
 use Apilyser\Resolver\NamespaceResolver;
@@ -78,13 +80,28 @@ class Injection
 
         // Route parser
         $this->services[AttributeExtractor::class] = fn() => new AttributeExtractor();
-        $this->services[RouteResolver::class] = fn() => new RouteResolver([
-            new SymfonyAttributeParser(
-                output: $this->get(OutputInterface::class),
-                extractor: $this->get(AttributeExtractor::class)
-            )
-        ]);
+        $this->services[SymfonyAttributeParser::class] = fn() => new SymfonyAttributeParser(
+            output: $this->get(OutputInterface::class),
+            extractor: $this->get(AttributeExtractor::class)
+        );
+        $this->services[RouteResolver::class] = fn() => new RouteResolver(
+            routeParsers: [
+                $this->get(SymfonyAttributeParser::class)
+            ],
+            strategies: [
+                new SymfonyYamlRouteStrategy(),
+                new SymfonyAttributeStrategy(
+                    output: $this->get(OutputInterface::class),
+                    nodeFinder: $this->get(NodeFinder::class),
+                    nodeParser: $this->get(NodeParser::class),
+                    fileParser: $this->get(FileParser::class),
+                    attributeParser: $this->get(SymfonyAttributeParser::class),
+                    fileClassesExtractor: $this->get(FileClassesExtractor::class)
+                )
+            ]
+        );
         $this->services[RouteParser::class] = fn() => new RouteParser(
+            projectPath: $this->rootPath,
             routeResolver: $this->get(RouteResolver::class)
         );
 
@@ -207,7 +224,8 @@ class Injection
         $this->services[ApiValidator::class] = fn() => new ApiValidator(
             output: $this->get(OutputInterface::class),
             fileParser: $this->get(FileParser::class),
-            analyser: $this->get(Analyser::class)
+            analyser: $this->get(Analyser::class),
+            routeParser: $this->get(RouteParser::class)
         );
     }
 
