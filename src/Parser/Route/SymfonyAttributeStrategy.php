@@ -5,6 +5,7 @@ namespace Apilyser\Parser\Route;
 use Apilyser\Extractor\FileClassesExtractor;
 use Apilyser\Parser\FileParser;
 use Apilyser\Parser\NodeParser;
+use Apilyser\Parser\Route;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\NodeFinder;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -113,9 +114,15 @@ class SymfonyAttributeStrategy implements RouteStrategy
                     if ($method->attrGroups != null) {
                         $route = $this->attributeParser->parse(class: $class, method: $method);
                         if ($route) {
+                            $newRoute = new Route(
+                                path: $route->path,
+                                method: $route->method,
+                                controllerPath: $file,
+                                functionName: $method->name->name
+                            );
                             array_push(
                                 $routes,
-                                $route
+                                $newRoute
                             );
                         }
                     }

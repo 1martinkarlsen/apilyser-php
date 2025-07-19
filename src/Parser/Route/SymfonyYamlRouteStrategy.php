@@ -3,12 +3,15 @@
 namespace Apilyser\Parser\Route;
 
 use Apilyser\Parser\Route;
+use Apilyser\Resolver\NamespaceResolver;
 use Symfony\Component\Yaml\Yaml;
 
 class SymfonyYamlRouteStrategy implements RouteStrategy
 {
 
-    public function __construct() {}
+    public function __construct(
+        private NamespaceResolver $namespaceResolver
+    ) {}
 
     public function canHandle(string $rootPath): bool
     {
@@ -71,9 +74,12 @@ class SymfonyYamlRouteStrategy implements RouteStrategy
         }
         
         $path = $config['path'];
-        $controller = $config['controller'];
+        $controllerCfg = explode("::", $config['controller']);
         $methods = $config['methods'] ?? ['GET'];
         $methods = is_array($methods) ? $methods : [$methods];
+
+        $controllerPath = $this->namespaceResolver->resolveNamespace($controllerCfg[0]);
+        $functionName = $controllerCfg[1];
 
         foreach ($methods as $method) {
             $method = strtoupper($method);
@@ -82,7 +88,8 @@ class SymfonyYamlRouteStrategy implements RouteStrategy
                 new Route(
                     path: $path,
                     method: $method,
-                    controllerPath: $controller
+                    controllerPath: $controllerPath,
+                    functionName: $functionName
                 )
             );
         }

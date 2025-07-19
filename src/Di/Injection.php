@@ -89,7 +89,7 @@ class Injection
                 $this->get(SymfonyAttributeParser::class)
             ],
             strategies: [
-                new SymfonyYamlRouteStrategy(),
+                new SymfonyYamlRouteStrategy(namespaceResolver: $this->get(NamespaceResolver::class)),
                 new SymfonyAttributeStrategy(
                     output: $this->get(OutputInterface::class),
                     nodeFinder: $this->get(NodeFinder::class),
@@ -216,12 +216,14 @@ class Injection
         $this->services[Analyser::class] = fn() => new Analyser(
             output: $this->get(OutputInterface::class),
             openApiAnalyser: $this->get(OpenApiAnalyser::class),
+            routeResolver: $this->get(RouteResolver::class),
             fileAnalyser: $this->get(FileAnalyser::class),
             endpointAnalyser: $this->get(EndpointAnalyser::class),
             comparison: $this->get(ApiComparison::class)
         );
 
         $this->services[ApiValidator::class] = fn() => new ApiValidator(
+            folderPath: $this->rootPath,
             output: $this->get(OutputInterface::class),
             fileParser: $this->get(FileParser::class),
             analyser: $this->get(Analyser::class),

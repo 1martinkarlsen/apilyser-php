@@ -4,7 +4,6 @@ namespace Apilyser\Resolver;
 
 use Apilyser\Parser\Route\RouteFunctionParser;
 use PhpParser\Node\Stmt\Class_;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class RouteResolver
 {
@@ -32,15 +31,15 @@ class RouteResolver
     /**
      * @return Route[]
      */
-    public function resolveStrategy(string $rootPath): array
+    public function resolveStrategy(string $path): array
     {
         $routes = [];
 
         foreach ($this->strategies as $strategy) {
-            if ($strategy->canHandle($rootPath)) {
+            if ($strategy->canHandle($path)) {
                 array_push(
                     $routes, 
-                    ...$strategy->parseRoutes($rootPath)
+                    ...$strategy->parseRoutes($path)
                 );
             }
         }

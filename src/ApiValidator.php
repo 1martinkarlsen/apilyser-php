@@ -12,6 +12,7 @@ class ApiValidator
 {
 
     public function __construct(
+        private string $folderPath,
         private OutputInterface $output,
         private FileParser $fileParser,
         private Analyser $analyser,
@@ -22,10 +23,22 @@ class ApiValidator
     {
         $this->output->writeln("<info>Starting validation</info>");
 
-        $routes = $this->routeParser->parse();
-        foreach ($routes as $route) {
-            $this->output->writeln("" . $route->method . " " . $route->path);
-            $this->output->writeln("Controller: " . $route->controllerPath);
+        $errors = [];
+        $validationResults =$this->analyser->analyseRoutes($this->folderPath);
+        foreach ($validationResults as $result) {
+            if (!$result->success) {
+                array_push($errors, $result);
+
+                $this->output->writeln("" . $result->endpoint->method . " " . $result->endpoint->path . "");
+                foreach ($result->errors as $error) {
+                    $this->output->writeln("[" . $error->errorType . "] " . $error->getMessage());
+                }
+            }
+        }
+
+        if (!empty($errors)) {
+            $this->output->writeln("<error>Apilyser validate failed</error>");
+            return Command::FAILURE;
         }
 
         /*$files = $this->fileParser->getFiles();

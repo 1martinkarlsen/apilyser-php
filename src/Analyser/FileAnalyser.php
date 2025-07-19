@@ -19,6 +19,40 @@ final class FileAnalyser
         private ClassImportsExtractor $classImportsExtractor
     ) {}
 
+    public function analyseFile(string $filePath, string $functionName)
+    {
+        $endpoints = [];
+
+        $fileContent = file_get_contents($filePath);
+        $fileStmts = $this->nodeParser->parse($fileContent);
+
+        $imports = $this->classImportsExtractor->extract($fileStmts);
+        $classes = $this->fileClassesExtractor->extract($fileStmts);
+
+        foreach ($classes as $class) {
+            $function = $this->nodeFinder->findFirst($class, function ($node) use ($functionName) {
+                return $node instanceof ClassMethod && $node->name->name == $functionName;
+            });
+
+            if ($function != null) {
+                $endpoint = $this->endpointAnalyser->analyse(
+                    context: new ClassMethodContext(
+                        imports: $imports,
+                        class: $class,
+                        method: $function
+                    )
+                );
+
+                array_push(
+                    $endpoints,
+                    $endpoint
+                );
+            }
+        }
+
+        return $endpoints;
+    }
+
     /**
      * @return EndpointDefinition[]
      */
