@@ -211,7 +211,6 @@ class Injection
             openApiAnalyser: $this->get(OpenApiAnalyser::class),
             routeResolver: $this->get(RouteResolver::class),
             fileAnalyser: $this->get(FileAnalyser::class),
-            endpointAnalyser: $this->get(EndpointAnalyser::class),
             comparison: $this->get(ApiComparison::class)
         );
 

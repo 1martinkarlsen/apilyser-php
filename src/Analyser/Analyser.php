@@ -15,7 +15,6 @@ class Analyser
         private OpenApiAnalyser $openApiAnalyser,
         private RouteResolver $routeResolver,
         private FileAnalyser $fileAnalyser,
-        private EndpointAnalyser $endpointAnalyser,
         private ApiComparison $comparison
     ) {}
 
