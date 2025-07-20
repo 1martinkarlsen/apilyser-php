@@ -16,7 +16,6 @@ class ResponseAnalyser
     public function __construct(
         private ClassExtractor $classExtractor,
         private MethodStructureExtractor $methodStructureExtractor,
-
         private VariableUsageExtractor $variableUsageExtractor,
         private ResponseResolver $responseResolver,
         private NodeDumper $dumper

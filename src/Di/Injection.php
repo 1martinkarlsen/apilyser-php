@@ -85,9 +85,6 @@ class Injection
             extractor: $this->get(AttributeExtractor::class)
         );
         $this->services[RouteResolver::class] = fn() => new RouteResolver(
-            routeParsers: [
-                $this->get(SymfonyAttributeParser::class)
-            ],
             strategies: [
                 new SymfonyYamlRouteStrategy(namespaceResolver: $this->get(NamespaceResolver::class)),
                 new SymfonyAttributeStrategy(

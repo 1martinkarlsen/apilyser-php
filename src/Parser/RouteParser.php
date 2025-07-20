@@ -22,15 +22,4 @@ class RouteParser
     {
         return $this->routeResolver->resolveStrategy($this->projectPath);
     }
-
-    public function parseFullRoute(Class_ $class, ClassMethod $method): ?Route
-    {
-        $routeParser = $this->routeResolver->resolve($class);
-
-        if ($routeParser == null) {
-            return null;
-        }
-
-        return $routeParser->parse($class, $method);
-    }
 }

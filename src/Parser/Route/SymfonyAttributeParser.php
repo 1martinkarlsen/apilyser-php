@@ -11,7 +11,7 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class SymfonyAttributeParser implements RouteFunctionParser
+class SymfonyAttributeParser
 {
 
     private const ATTR_ROUTE_NAME = "Route";

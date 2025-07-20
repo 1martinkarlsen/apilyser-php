@@ -3,12 +3,7 @@
 namespace Apilyser\Analyser;
 
 use Apilyser\Definition\EndpointDefinition;
-use Apilyser\Parser\NodeParser;
 use Apilyser\Parser\Route;
-use Apilyser\Parser\RouteParser;
-use Apilyser\Resolver\NamespaceResolver;
-use PhpParser\NodeFinder;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Responsible for parsing endpoints from code.
