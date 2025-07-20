@@ -24,6 +24,8 @@ use Apilyser\Parser\Api\SymfonyApiParser;
 use Apilyser\Parser\FileParser;
 use Apilyser\Parser\NodeParser;
 use Apilyser\Parser\Route\SymfonyAttributeParser;
+use Apilyser\Parser\Route\SymfonyAttributeStrategy;
+use Apilyser\Parser\Route\SymfonyYamlRouteStrategy;
 use Apilyser\Parser\RouteParser;
 use Apilyser\Resolver\ClassAstResolver;
 use Apilyser\Resolver\NamespaceResolver;
@@ -78,13 +80,25 @@ class Injection
 
         // Route parser
         $this->services[AttributeExtractor::class] = fn() => new AttributeExtractor();
-        $this->services[RouteResolver::class] = fn() => new RouteResolver([
-            new SymfonyAttributeParser(
-                output: $this->get(OutputInterface::class),
-                extractor: $this->get(AttributeExtractor::class)
-            )
-        ]);
+        $this->services[SymfonyAttributeParser::class] = fn() => new SymfonyAttributeParser(
+            output: $this->get(OutputInterface::class),
+            extractor: $this->get(AttributeExtractor::class)
+        );
+        $this->services[RouteResolver::class] = fn() => new RouteResolver(
+            strategies: [
+                new SymfonyYamlRouteStrategy(namespaceResolver: $this->get(NamespaceResolver::class)),
+                new SymfonyAttributeStrategy(
+                    output: $this->get(OutputInterface::class),
+                    nodeFinder: $this->get(NodeFinder::class),
+                    nodeParser: $this->get(NodeParser::class),
+                    fileParser: $this->get(FileParser::class),
+                    attributeParser: $this->get(SymfonyAttributeParser::class),
+                    fileClassesExtractor: $this->get(FileClassesExtractor::class)
+                )
+            ]
+        );
         $this->services[RouteParser::class] = fn() => new RouteParser(
+            projectPath: $this->rootPath,
             routeResolver: $this->get(RouteResolver::class)
         );
 
@@ -182,10 +196,6 @@ class Injection
             dumper: $this->get(NodeDumper::class)
         );
         $this->services[EndpointAnalyser::class] = fn() => new EndpointAnalyser(
-            routeParser: $this->get(RouteParser::class),
-            nodeParser: $this->get(NodeParser::class),
-            namespaceResolver: $this->get(NamespaceResolver::class),
-            nodeFinder: $this->get(NodeFinder::class),
             requestAnalyzer: $this->get(RequestAnalyser::class),
             responseAnalyzer: $this->get(ResponseAnalyser::class)
         );
@@ -199,14 +209,14 @@ class Injection
         $this->services[Analyser::class] = fn() => new Analyser(
             output: $this->get(OutputInterface::class),
             openApiAnalyser: $this->get(OpenApiAnalyser::class),
+            routeResolver: $this->get(RouteResolver::class),
             fileAnalyser: $this->get(FileAnalyser::class),
-            endpointAnalyser: $this->get(EndpointAnalyser::class),
             comparison: $this->get(ApiComparison::class)
         );
 
         $this->services[ApiValidator::class] = fn() => new ApiValidator(
+            folderPath: $this->rootPath,
             output: $this->get(OutputInterface::class),
-            fileParser: $this->get(FileParser::class),
             analyser: $this->get(Analyser::class)
         );
     }

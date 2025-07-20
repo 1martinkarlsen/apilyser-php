@@ -11,17 +11,15 @@ class RouteParser
 {
 
     public function __construct(
+        private string $projectPath,
         private RouteResolver $routeResolver
     ) {}
 
-    public function parseFullRoute(Class_ $class, ClassMethod $method): ?Route
+    /**
+     * @return Route[]
+     */
+    public function parse(): array
     {
-        $routeParser = $this->routeResolver->resolve($class);
-
-        if ($routeParser == null) {
-            return null;
-        }
-
-        return $routeParser->parse($class, $method);
+        return $this->routeResolver->resolveStrategy($this->projectPath);
     }
 }

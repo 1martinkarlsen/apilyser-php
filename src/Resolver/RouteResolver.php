@@ -2,24 +2,34 @@
 
 namespace Apilyser\Resolver;
 
-use PhpParser\Node\Stmt\Class_;
+use Apilyser\Parser\Route;
 
 class RouteResolver
 {
 
     /**
-     * @param RouteFunctionParser[] $routeParsers
+     * @param RouteStrategy[] $strategies
      */
     public function __construct(
-        private array $routeParsers
+        private array $strategies
     ) {}
 
-    public function resolve(Class_ $class)
+    /**
+     * @return Route[]
+     */
+    public function resolveStrategy(string $path): array
     {
-        foreach ($this->routeParsers as $routeParser) {
-            if ($routeParser->hasRoute($class->attrGroups)) {
-                return $routeParser;
+        $routes = [];
+
+        foreach ($this->strategies as $strategy) {
+            if ($strategy->canHandle($path)) {
+                array_push(
+                    $routes, 
+                    ...$strategy->parseRoutes($path)
+                );
             }
         }
+
+        return $routes;
     }
 }

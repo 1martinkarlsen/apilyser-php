@@ -5,50 +5,22 @@ use Apilyser\ApiValidator;
 use Apilyser\Comparison\EndpointResult;
 use Apilyser\Comparison\ValidationError;
 use Apilyser\Definition\EndpointDefinition;
-use Apilyser\Parser\FileParser;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use function PHPSTORM_META\map;
-
 class ApiValidatorTest extends TestCase
 {
 
-    function testNoFiles()
-    {
-        $fileParserMock = $this->createMock(FileParser::class);
-        $analyserMock = $this->createMock(Analyser::class);
-
-        $validator = new ApiValidator(
-            output: $this->createMock(OutputInterface::class),
-            fileParser: $fileParserMock,
-            analyser: $analyserMock
-        );
-
-        $fileParserMock
-            ->method("getFiles")
-            ->willReturn([]);
-
-        $result = $validator->run();
-
-        $this->assertEquals(expected: Command::SUCCESS, actual: $result);
-    }
-
     function testNoErrors()
     {
-        $fileParserMock = $this->createMock(FileParser::class);
         $analyserMock = $this->createMock(Analyser::class);
 
         $validator = new ApiValidator(
+            folderPath: "/test",
             output: $this->createMock(OutputInterface::class),
-            fileParser: $fileParserMock,
             analyser: $analyserMock
         );
-
-        $fileParserMock
-            ->method("getFiles")
-            ->willReturn(["filePath.php"]);
 
         $analyserMock
             ->method("analyse")
@@ -64,6 +36,10 @@ class ApiValidatorTest extends TestCase
                 )
             ]);
 
+        $analyserMock
+            ->expects($this->once())
+            ->method("analyse");
+
         $result = $validator->run();
 
         $this->assertEquals(expected: Command::SUCCESS, actual: $result);
@@ -71,18 +47,13 @@ class ApiValidatorTest extends TestCase
 
     function testOnlyErrors()
     {
-        $fileParserMock = $this->createMock(FileParser::class);
         $analyserMock = $this->createMock(Analyser::class);
 
         $validator = new ApiValidator(
+            folderPath: "/test",
             output: $this->createMock(OutputInterface::class),
-            fileParser: $fileParserMock,
             analyser: $analyserMock
         );
-
-        $fileParserMock
-            ->method("getFiles")
-            ->willReturn(["filePath.php"]);
 
         $analyserMock
             ->method("analyse")
@@ -105,6 +76,10 @@ class ApiValidatorTest extends TestCase
                 )
             ]);
 
+        $analyserMock
+            ->expects($this->once())
+            ->method("analyse");
+
         $result = $validator->run();
 
         $this->assertEquals(expected: Command::FAILURE, actual: $result);
@@ -112,18 +87,13 @@ class ApiValidatorTest extends TestCase
 
     function testErrorsAndSuccess()
     {
-        $fileParserMock = $this->createMock(FileParser::class);
         $analyserMock = $this->createMock(Analyser::class);
 
         $validator = new ApiValidator(
+            folderPath: "/test",
             output: $this->createMock(OutputInterface::class),
-            fileParser: $fileParserMock,
             analyser: $analyserMock
         );
-
-        $fileParserMock
-            ->method("getFiles")
-            ->willReturn(["filePath.php"]);
 
         $analyserMock
             ->method("analyse")
@@ -154,6 +124,10 @@ class ApiValidatorTest extends TestCase
                     success: true,
                 )
             ]);
+
+        $analyserMock
+            ->expects($this->once())
+            ->method("analyse");
 
         $result = $validator->run();
 

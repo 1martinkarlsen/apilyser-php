@@ -3,8 +3,8 @@
 namespace Apilyser;
 
 use Apilyser\Analyser\Analyser;
-use Apilyser\Di\Injection;
 use Apilyser\Parser\FileParser;
+use Apilyser\Parser\RouteParser;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -12,18 +12,17 @@ class ApiValidator
 {
 
     public function __construct(
+        private string $folderPath,
         private OutputInterface $output,
-        private FileParser $fileParser,
         private Analyser $analyser
     ) {}
 
     function run(): int
     {
         $this->output->writeln("<info>Starting validation</info>");
-        $files = $this->fileParser->getFiles();
 
         $errors = [];
-        $validationResults = $this->analyser->analyse($files);
+        $validationResults = $this->analyser->analyse($this->folderPath);
         foreach ($validationResults as $result) {
             if (!$result->success) {
                 array_push($errors, $result);
