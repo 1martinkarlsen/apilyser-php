@@ -22,10 +22,6 @@ class RequestAnalyser
 
     public function analyse(ClassMethodContext $context): array
     {
-        if (!$context instanceof ClassMethodContext) {
-            throw new Exception("Wrong context type");
-        }
-
         return $this->analyzeMethod($context->method, $context->imports) ?: [];
     }
 

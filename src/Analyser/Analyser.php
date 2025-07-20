@@ -3,7 +3,6 @@
 namespace Apilyser\Analyser;
 
 use Apilyser\Comparison\ApiComparison;
-use Apilyser\Parser\RouteParser;
 use Apilyser\Resolver\RouteResolver;
 use Exception;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -37,10 +36,7 @@ class Analyser
 
         $endpoints = [];
         foreach ($routes as $route) {
-            $endpoint = $this->fileAnalyser->analyse(
-                $route->controllerPath,
-                $route->functionName
-            );
+            $endpoint = $this->fileAnalyser->analyse($route);
 
             array_push(
                 $endpoints,

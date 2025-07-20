@@ -5,6 +5,7 @@ namespace Apilyser\Analyser;
 use Apilyser\Extractor\ClassImportsExtractor;
 use Apilyser\Extractor\FileClassesExtractor;
 use Apilyser\Parser\NodeParser;
+use Apilyser\Parser\Route;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\NodeFinder;
 
@@ -22,23 +23,22 @@ final class FileAnalyser
     /**
      * @return EndpointDefinition[]
      */
-    public function analyse(string $filePath, string $functionName)
+    public function analyse(Route $route)
     {
-        $endpoints = [];
-
-        $fileContent = file_get_contents($filePath);
+        $fileContent = file_get_contents($route->controllerPath);
         $fileStmts = $this->nodeParser->parse($fileContent);
 
         $imports = $this->classImportsExtractor->extract($fileStmts);
         $classes = $this->fileClassesExtractor->extract($fileStmts);
 
-        return $this->analyseClasses($classes, $imports, $functionName);
+        return $this->analyseClasses($route, $classes, $imports);
     }
 
-    private function analyseClasses(array $classes, array $imports, string $functionName): array
+    private function analyseClasses(Route $route, array $classes, array $imports): array
     {
         $endpoints = [];
 
+        $functionName = $route->functionName;
         foreach ($classes as $class) {
             $function = $this->nodeFinder->findFirst($class, function ($node) use ($functionName) {
                 return $node instanceof ClassMethod && $node->name->name == $functionName;
@@ -46,6 +46,7 @@ final class FileAnalyser
 
             if ($function != null) {
                 $endpoint = $this->endpointAnalyser->analyse(
+                    route: $route,
                     context: new ClassMethodContext(
                         imports: $imports,
                         class: $class,

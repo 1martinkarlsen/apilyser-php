@@ -4,6 +4,7 @@ namespace Apilyser\Analyser;
 
 use Apilyser\Definition\EndpointDefinition;
 use Apilyser\Parser\NodeParser;
+use Apilyser\Parser\Route;
 use Apilyser\Parser\RouteParser;
 use Apilyser\Resolver\NamespaceResolver;
 use PhpParser\NodeFinder;
@@ -16,10 +17,6 @@ class EndpointAnalyser
 {
 
     public function __construct(
-        private RouteParser $routeParser,
-        private NodeParser $nodeParser,
-        private NamespaceResolver $namespaceResolver,
-        private NodeFinder $nodeFinder,
         private RequestAnalyser $requestAnalyzer,
         private ResponseAnalyser $responseAnalyzer
     ) {}
@@ -29,23 +26,16 @@ class EndpointAnalyser
      * 
      * @return ?EndpointDefinition
      */
-    public function analyse(ClassMethodContext $context): ?EndpointDefinition
+    public function analyse(Route $route, ClassMethodContext $context): ?EndpointDefinition
     {
-        // Find the route for the method.
-        $route = $this->routeParser->parseFullRoute($context->class, $context->method);
+        $requests = $this->requestAnalyzer->analyse($context);
+        $responses = $this->responseAnalyzer->analyse($context);
 
-        if ($route != null) {
-            $requests = $this->requestAnalyzer->analyse($context);
-            $responses = $this->responseAnalyzer->analyse($context);
-
-            return new EndpointDefinition(
-                $route->path,
-                $route->method,
-                $requests,
-                $responses
-            );
-        } else {
-            return null;
-        }
+        return new EndpointDefinition(
+            $route->path,
+            $route->method,
+            $requests,
+            $responses
+        );
     }
 }

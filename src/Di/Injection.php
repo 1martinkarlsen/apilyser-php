@@ -199,10 +199,6 @@ class Injection
             dumper: $this->get(NodeDumper::class)
         );
         $this->services[EndpointAnalyser::class] = fn() => new EndpointAnalyser(
-            routeParser: $this->get(RouteParser::class),
-            nodeParser: $this->get(NodeParser::class),
-            namespaceResolver: $this->get(NamespaceResolver::class),
-            nodeFinder: $this->get(NodeFinder::class),
             requestAnalyzer: $this->get(RequestAnalyser::class),
             responseAnalyzer: $this->get(ResponseAnalyser::class)
         );

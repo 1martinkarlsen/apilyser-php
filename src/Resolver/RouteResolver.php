@@ -2,6 +2,7 @@
 
 namespace Apilyser\Resolver;
 
+use Apilyser\Parser\Route;
 use Apilyser\Parser\Route\RouteFunctionParser;
 use PhpParser\Node\Stmt\Class_;
 
