@@ -3,8 +3,6 @@
 namespace Apilyser;
 
 use Apilyser\Analyser\Analyser;
-use Apilyser\Parser\FileParser;
-use Apilyser\Parser\RouteParser;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Output\OutputInterface;
 
