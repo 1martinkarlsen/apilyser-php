@@ -11,6 +11,7 @@ use Apilyser\Analyser\ResponseAnalyser;
 use Apilyser\ApiValidator;
 use Apilyser\Comparison\ApiComparison;
 use Apilyser\Configuration\Configuration;
+use Apilyser\Configuration\ConfigurationLoader;
 use Apilyser\Extractor\AttributeExtractor;
 use Apilyser\Extractor\ClassExtractor;
 use Apilyser\Extractor\ClassImportsExtractor;
@@ -44,14 +45,15 @@ use Symfony\Component\Console\Output\OutputInterface;
 class Injection
 {
 
+    private array $configuration = [];
     private array $services = [];
 
     public function __construct(
         public OutputInterface $output,
-        public string $rootPath,
-        public array $configuration
+        public string $rootPath
     )
     {
+        $this->configure();
         $this->setup();
     }
 
@@ -61,7 +63,14 @@ class Injection
             return $this->services[$serviceId]();
         }
 
-        throw new Exception("Service " . $serviceId . " was not found");
+        throw new Exception("Class " . $serviceId . " was not found");
+    }
+
+    private function configure(): void
+    {
+        $configLoader = new ConfigurationLoader();
+        $cfg = $configLoader->loadFromFile($this->rootPath . "/" . Configuration::CONFIG_PATH);
+        $this->configuration = $cfg;
     }
 
     private function setup()
@@ -88,7 +97,6 @@ class Injection
             strategies: [
                 new SymfonyYamlRouteStrategy(namespaceResolver: $this->get(NamespaceResolver::class)),
                 new SymfonyAttributeStrategy(
-                    output: $this->get(OutputInterface::class),
                     nodeFinder: $this->get(NodeFinder::class),
                     nodeParser: $this->get(NodeParser::class),
                     fileParser: $this->get(FileParser::class),

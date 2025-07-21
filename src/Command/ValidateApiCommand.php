@@ -3,8 +3,6 @@
 namespace Apilyser\Command;
 
 use Apilyser\ApiValidator;
-use Apilyser\Configuration\Configuration;
-use Apilyser\Configuration\ConfigurationLoader;
 use Apilyser\Di\Injection;
 use Exception;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -29,19 +27,17 @@ class ValidateApiCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $configLoader = new ConfigurationLoader();
-        $cfg = $configLoader->loadFromFile(getcwd() . "/" . Configuration::CONFIG_PATH);
+        $rootPath = getcwd();
 
-        $injection = new Injection(
-            output: $output, 
-            rootPath: getcwd(),
-            configuration: $cfg
-        );
-
-        $validator = $injection->get(ApiValidator::class);
-        
         try {
+            $injection = new Injection(
+                output: $output, 
+                rootPath: $rootPath
+            );
+
+            $validator = $injection->get(ApiValidator::class);
             return $validator->run();
+            
         } catch (Exception $e) {
             $output->writeln("<error>" . $e->getMessage() . "</error>");
             return Command::FAILURE;

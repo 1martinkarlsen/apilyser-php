@@ -8,14 +8,12 @@ use Apilyser\Parser\NodeParser;
 use Apilyser\Parser\Route;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\NodeFinder;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Yaml\Yaml;
 
 class SymfonyAttributeStrategy implements RouteStrategy
 {
 
     public function __construct(
-        private OutputInterface $output,
         private NodeFinder $nodeFinder,
         private NodeParser $nodeParser,
         private FileParser $fileParser,
