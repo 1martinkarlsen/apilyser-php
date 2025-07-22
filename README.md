@@ -12,8 +12,8 @@ After installation, a `apilyzer.yaml` file is required for the library to work.<
 
 | Configuration | description      |
 | ------------- | ---------------- |
-| path          | path to the code |
-| openApiPath  | path to the open api documentation yaml file
+| codePat       | path to the code |
+| openApiPath   | path to the open api documentation yaml file |
 
 ## Usage
 You can run the simple validation command by typing<br />

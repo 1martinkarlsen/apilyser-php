@@ -2,7 +2,6 @@
 
 namespace Apilyser\Command;
 
-use Apilyser\ApiValidator;
 use Apilyser\Di\Injection;
 use Exception;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -34,8 +33,8 @@ class ValidateApiCommand extends Command
                 output: $output, 
                 rootPath: $rootPath
             );
-
-            $validator = $injection->get(ApiValidator::class);
+            
+            $validator = $injection->createApiValidator();
             return $validator->run();
             
         } catch (Exception $e) {
