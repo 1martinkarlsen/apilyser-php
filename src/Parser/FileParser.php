@@ -14,8 +14,8 @@ class FileParser
 
     public string $folderRoot;
 
-    public function __construct(string $folderPath) {
-        $this->folderRoot = $folderPath;
+    public function __construct(string $folderRoot) {
+        $this->folderRoot = $folderRoot;
     }
 
     /**

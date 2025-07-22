@@ -55,8 +55,31 @@ class Injection
     {
         $this->configure();
         $this->setup();
+        $this->setupRouting();
     }
 
+    /**
+     * Creates the ApiValidator
+     * 
+     * @return ApiValidator
+     */
+    public function createApiValidator(): ApiValidator
+    {
+        return new ApiValidator(
+            folderPath: $this->rootPath,
+            output: $this->get(OutputInterface::class),
+            analyser: $this->get(Analyser::class)
+        );
+    }
+
+    /**
+     * Get a service from service container.
+     * 
+     * @param string $serviceId
+     * @return object
+     * 
+     * @throws Exception
+     */
     public function get(string $serviceId): object
     {
         if (isset($this->services[$serviceId])) {
@@ -66,6 +89,10 @@ class Injection
         throw new Exception("Class " . $serviceId . " was not found");
     }
 
+    /**
+     * Responsible for loading and setting up configuration.
+     * 
+     */
     private function configure(): void
     {
         $configLoader = new ConfigurationLoader();
@@ -73,6 +100,9 @@ class Injection
         $this->configuration = $cfg;
     }
 
+    /**
+     * Responsible for setting up basic classes.
+     */
     private function setup()
     {
         $this->services[OutputInterface::class] = fn() => $this->output;
@@ -84,31 +114,11 @@ class Injection
 
         // Parser
         $this->services[NodeParser::class] = fn() => new NodeParser();
-        $this->services[FileParser::class] = fn() => new FileParser($this->rootPath . $this->configuration[Configuration::CFG_PATH]);
+        $this->services[FileParser::class] = fn() => new FileParser($this->rootPath . $this->configuration[Configuration::CFG_CODE_PATH]);
         
 
         // Route parser
         $this->services[AttributeExtractor::class] = fn() => new AttributeExtractor();
-        $this->services[SymfonyAttributeParser::class] = fn() => new SymfonyAttributeParser(
-            output: $this->get(OutputInterface::class),
-            extractor: $this->get(AttributeExtractor::class)
-        );
-        $this->services[RouteResolver::class] = fn() => new RouteResolver(
-            strategies: [
-                new SymfonyYamlRouteStrategy(namespaceResolver: $this->get(NamespaceResolver::class)),
-                new SymfonyAttributeStrategy(
-                    nodeFinder: $this->get(NodeFinder::class),
-                    nodeParser: $this->get(NodeParser::class),
-                    fileParser: $this->get(FileParser::class),
-                    attributeParser: $this->get(SymfonyAttributeParser::class),
-                    fileClassesExtractor: $this->get(FileClassesExtractor::class)
-                )
-            ]
-        );
-        $this->services[RouteParser::class] = fn() => new RouteParser(
-            projectPath: $this->rootPath,
-            routeResolver: $this->get(RouteResolver::class)
-        );
 
         // Resolver
         $this->services[NamespaceResolver::class] = fn() => new NamespaceResolver(
@@ -221,11 +231,37 @@ class Injection
             fileAnalyser: $this->get(FileAnalyser::class),
             comparison: $this->get(ApiComparison::class)
         );
+    }
 
-        $this->services[ApiValidator::class] = fn() => new ApiValidator(
-            folderPath: $this->rootPath,
-            output: $this->get(OutputInterface::class),
-            analyser: $this->get(Analyser::class)
+    /**
+     * Responsible for setting up routing.
+     * This setup is seperated from the basic setup as the routing comes from different frameworks.
+     * 
+     * It's important to setup basic classes before setting up routing, as the basic classes might be used
+     * by the routing.
+     */
+    private function setupRouting(): void
+    {
+        $this->services[SymfonyAttributeParser::class] = fn() => new SymfonyAttributeParser(
+            extractor: $this->get(AttributeExtractor::class)
+        );
+
+        $this->services[RouteResolver::class] = fn() => new RouteResolver(
+            strategies: [
+                new SymfonyYamlRouteStrategy(namespaceResolver: $this->get(NamespaceResolver::class)),
+                new SymfonyAttributeStrategy(
+                    nodeFinder: $this->get(NodeFinder::class),
+                    nodeParser: $this->get(NodeParser::class),
+                    fileParser: $this->get(FileParser::class),
+                    attributeParser: $this->get(SymfonyAttributeParser::class),
+                    fileClassesExtractor: $this->get(FileClassesExtractor::class)
+                )
+            ]
+        );
+
+        $this->services[RouteParser::class] = fn() => new RouteParser(
+            projectPath: $this->rootPath,
+            routeResolver: $this->get(RouteResolver::class)
         );
     }
 

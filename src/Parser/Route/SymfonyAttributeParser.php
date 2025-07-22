@@ -9,7 +9,6 @@ use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class SymfonyAttributeParser
 {
@@ -19,7 +18,6 @@ class SymfonyAttributeParser
     private const ATTR_METHOD_NAME = "methods";
 
     public function __construct(
-        private OutputInterface $output,
         private AttributeExtractor $extractor
     ) {}
 

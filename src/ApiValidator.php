@@ -15,7 +15,7 @@ class ApiValidator
         private Analyser $analyser
     ) {}
 
-    function run(): int
+    public function run(): int
     {
         $this->output->writeln("<info>Starting validation</info>");
 

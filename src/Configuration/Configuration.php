@@ -9,7 +9,7 @@ class Configuration implements ConfigurationInterface
 {
 
     public const CONFIG_PATH = "apilyser.yaml";
-    public const CFG_PATH = "path";
+    public const CFG_CODE_PATH = "codePath";
     public const CFG_OPEN_API_PATH = "openApiPath";
 
     function getConfigTreeBuilder(): TreeBuilder
@@ -18,7 +18,7 @@ class Configuration implements ConfigurationInterface
 
         $builder->getRootNode()
             ->children()
-                ->scalarNode(self::CFG_PATH)
+                ->scalarNode(self::CFG_CODE_PATH)
                     ->isRequired()
                     ->cannotBeEmpty()
                 ->end()
