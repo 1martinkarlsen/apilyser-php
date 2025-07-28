@@ -8,8 +8,8 @@ class MethodStructure
 {
 
     /**
-     * @var ClassMethod $method
-     * @var MethodScope[] $scopes
+     * @param ClassMethod $method
+     * @param MethodScope[] $scopes
      */
     public function __construct(
         public ClassMethod $method,

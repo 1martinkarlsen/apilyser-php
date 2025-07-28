@@ -24,8 +24,6 @@ class OpenApiAnalyser
     }
 
     /**
-     * @param string $filePath
-     * 
      * @return ?ApiSpecDefinition
      */
     function analyse(): ?ApiSpecDefinition

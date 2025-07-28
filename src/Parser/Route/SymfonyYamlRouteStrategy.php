@@ -63,7 +63,7 @@ class SymfonyYamlRouteStrategy implements RouteStrategy
 
 
     /**
-     * @return Route[]|null
+     * @return Route[]
      */
     private function createRouteFromConfig(array $config): array
     {

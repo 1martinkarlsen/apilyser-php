@@ -50,7 +50,7 @@ class ClassExtractor
      * @param Node[] $stmts
      * @param string[] $imports
      * 
-     * @return Node[]
+     * @return ClassUsage[]
      */
     private function traverseResponse(ApiParser $apiParser, array $stmts, array $imports)
     {

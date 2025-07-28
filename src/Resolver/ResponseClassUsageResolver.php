@@ -3,6 +3,7 @@
 namespace Apilyser\Resolver;
 
 use Apilyser\Analyser\ClassMethodContext;
+use Apilyser\Resolver\Node\ResponseNodeResolver;
 use PhpParser\Node;
 
 class ResponseClassUsageResolver

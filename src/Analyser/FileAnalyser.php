@@ -2,6 +2,7 @@
 
 namespace Apilyser\Analyser;
 
+use Apilyser\Definition\EndpointDefinition;
 use Apilyser\Extractor\ClassImportsExtractor;
 use Apilyser\Extractor\FileClassesExtractor;
 use Apilyser\Parser\NodeParser;
@@ -23,7 +24,7 @@ final class FileAnalyser
     /**
      * @return EndpointDefinition[]
      */
-    public function analyse(Route $route)
+    public function analyse(Route $route): array
     {
         $fileContent = file_get_contents($route->controllerPath);
         $fileStmts = $this->nodeParser->parse($fileContent);

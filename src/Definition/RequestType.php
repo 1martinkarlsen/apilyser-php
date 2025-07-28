@@ -2,7 +2,8 @@
 
 namespace Apilyser\Definition;
 
-enum RequestType {
+enum RequestType 
+{
     case Path;
     case Query;
     case Body;

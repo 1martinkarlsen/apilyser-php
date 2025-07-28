@@ -27,6 +27,8 @@ class VariableUsageTraverser extends NodeVisitorAbstract
 
             $this->usages[] = $this->lookForParent($node);
         }
+
+        return null;
     }
 
     /**

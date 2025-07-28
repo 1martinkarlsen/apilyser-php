@@ -4,6 +4,7 @@ namespace Apilyser\Comparison;
 
 use Apilyser\Definition\ApiSpecDefinition;
 use Apilyser\Definition\EndpointDefinition;
+use Apilyser\Rule\ValidationRule;
 use Apilyser\Rule\ParameterExistenceRule;
 use Apilyser\Rule\ParameterTypeRule;
 use Apilyser\Rule\ResponseExistenceRule;
@@ -33,8 +34,8 @@ class ApiComparison {
     }
 
     /**
-     * @param EndpointDefinition[] $definitions
-     * @param ApiSpecDefinition $apiSpec
+     * @param EndpointDefinition[] $code
+     * @param ApiSpecDefinition $spec
      * 
      * @return EndpointResult[]
      */

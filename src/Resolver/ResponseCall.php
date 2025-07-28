@@ -2,6 +2,8 @@
 
 namespace Apilyser\Resolver;
 
+use Apilyser\Definition\ResponseBodyDefinition;
+
 class ResponseCall
 {
 

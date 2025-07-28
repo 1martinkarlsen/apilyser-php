@@ -19,6 +19,12 @@ use Apilyser\Definition\ResponseDefinition;
  */
 class ResponsePropertyTypeRule implements ValidationRule {
 
+    /**
+     * @param EndpointDefinition $openApiSpec
+     * @param EndpointDefinition $endpoint
+     * 
+     * @return ValidationResult
+     */
     function validate(EndpointDefinition $openApiSpec, EndpointDefinition $endpoint): ValidationResult 
     {
         $errors = [];
@@ -51,6 +57,12 @@ class ResponsePropertyTypeRule implements ValidationRule {
         return new ValidationSuccess("");
     }
 
+    /**
+     * @param ResponseDefinition $spec
+     * @param ResponseDefinition $code
+     * 
+     * @return ?string
+     */
     private function validateResponse(ResponseDefinition $spec, ResponseDefinition $code): ?string
     {
         $errors = [];
@@ -76,6 +88,12 @@ class ResponsePropertyTypeRule implements ValidationRule {
         return null;
     }
 
+    /**
+     * @param string $name
+     * @param ResponseBodyDefinition[] $properties
+     * 
+     * @return ?ResponseBodyDefinition
+     */
     private function findResponsePropertyByName(string $name, array $properties): ?ResponseBodyDefinition
     {
         $result = array_filter(

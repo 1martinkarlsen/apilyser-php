@@ -2,11 +2,13 @@
 
 namespace Apilyser\Definition;
 
+use Apilyser\Definition\ResponseBodyDefinition;
+
 class ResponseDefinition
 {
     /**
      * @param string $type content type, e.g. 'application/json'
-     * @param \ApiValidator\ResponseBodyDefinition[]|null $structure list of body response, e.g. ['id' => 'number']
+     * @param ResponseBodyDefinition[]|null $structure list of body response, e.g. ['id' => 'number']
      * @param int $statusCode
      */
     public function __construct(

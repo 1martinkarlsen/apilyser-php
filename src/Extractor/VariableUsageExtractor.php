@@ -17,7 +17,7 @@ class VariableUsageExtractor {
     public function __construct() {}
 
     /**
-     * @param Variable $var
+     * @param Variable $node
      * @param ClassMethod $method
      * 
      * @return Node[]

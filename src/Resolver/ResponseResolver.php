@@ -13,8 +13,9 @@ class ResponseResolver
 {
 
     /**
+     * @param OutputInterface $output
      * @param VariableUsageExtractor $variableUsageExtractor
-     * @param NodeResolver[] $nodeResolvers
+     * @param ResponseClassUsageResolver $classUsageResolver
      */
     public function __construct(
         private OutputInterface $output,

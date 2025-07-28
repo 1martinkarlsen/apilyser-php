@@ -20,7 +20,6 @@ use PhpParser\Node\PropertyItem;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
-use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\NodeDumper;
@@ -42,9 +41,8 @@ class TypeStructureResolver
     }
 
     /**
+     * @param ClassMethodContext $context
      * @param Expr $expr
-     * @param ClassMethod $method
-     * @param string[] $imports
      * 
      * @return ResponseBodyDefinition[]
      */
@@ -65,10 +63,8 @@ class TypeStructureResolver
     }
 
     /**
-     * @param Class_ $currentClass
+     * @param ClassMethodContext $context
      * @param string $variableName
-     * @param ClassMethod $method
-     * @param string[] $imports
      * 
      * @return ResponseBodyDefinition[]
      */
@@ -83,10 +79,8 @@ class TypeStructureResolver
     }
 
     /**
-     * @param Class_ $currentClass
+     * @param ClassMethodContext $context
      * @param MethodCall $node
-     * @param ClassMethod $method
-     * @param string[] $imports
      * 
      * @return ?ResponseBodyDefinition[]
      */
@@ -174,10 +168,8 @@ class TypeStructureResolver
     }
 
     /**
-     * @param Class_ $currentClass
+     * @param ClassMethodContext $context
      * @param Array_ $node
-     * @param ClassMethod $method
-     * @param string[] $imports
      * 
      * @return ResponseBodyDefinition[]
      */
@@ -196,6 +188,10 @@ class TypeStructureResolver
     }
 
     /**
+     * @param ClassMethodContext $context
+     * @param Property $property
+     * @param string $name
+     * 
      * @return ResponseBodyDefinition|null
      */
     private function getBodyFromProperty(ClassMethodContext $context, Property $property, string $name): ?ResponseBodyDefinition
@@ -311,6 +307,9 @@ class TypeStructureResolver
     }
 
     /**
+     * @param ClassMethodContext $context
+     * @param PropertyItem $prop
+     * 
      * @return ResponseBodyDefinition[]
      */
     private function getBodyFromPropertyItem(ClassMethodContext $context, PropertyItem $prop): array
@@ -326,6 +325,12 @@ class TypeStructureResolver
         return [];
     }
 
+    /**
+     * @param ClassMethodContext $context
+     * @param ArrayItem $item
+     * 
+     * @return ResponseBodyDefinition|null
+     */
     private function resolveArrayItemStructure(ClassMethodContext $context, ArrayItem $item): ?ResponseBodyDefinition
     {
         $itemKey = null;
@@ -363,12 +368,10 @@ class TypeStructureResolver
     }
 
     /**
-     * @param Class_ $class
-     * @param ClassMethod $method
+     * @param ClassMethodContext $context
      * @param string $calledMethodName
-     * @param string[] $imports
      * 
-     * @return RespondeBodyDefinition[]
+     * @return ResponseBodyDefinition[]
      */
     private function extractArray(ClassMethodContext $context, string $calledMethodName): array
     {
@@ -390,6 +393,9 @@ class TypeStructureResolver
     }
 
     /**
+     * @param ClassMethodContext $context
+     * @param Expr $value
+     * 
      * @return ResponseBodyDefinition|null
      */
     private function findValueType(ClassMethodContext $context, Expr $value): ?ResponseBodyDefinition

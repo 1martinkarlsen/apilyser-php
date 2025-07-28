@@ -65,6 +65,8 @@ class ClassUsageTraverser extends NodeVisitorAbstract
                 );
             }
         }
+
+        return null;
     }
 
     /**

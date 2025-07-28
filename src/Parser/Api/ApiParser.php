@@ -39,9 +39,8 @@ interface ApiParser {
     function getNewClassParameters(): NewClassResponseParameter;
 
     /**
+     * @param ClassMethodContext $context
      * @param Node $node
-     * @param ClassMethod $method
-     * @param string[] $imports
      * @param ?ResponseCall $modifierResponseCall
      * 
      * @return ?ResponseCall
