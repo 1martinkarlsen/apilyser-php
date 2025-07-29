@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Resolver;
 
@@ -80,9 +80,12 @@ class ClassAstResolver
      */
     public function findMethodInClass(Class_ $class, string $methodName): ?ClassMethod 
     {
-        return $this->nodeFinder->findFirst($class->stmts, function (Node $nodeItem) use ($methodName) {
+        /** @var ClassMethod|null */
+        $method = $this->nodeFinder->findFirst($class->stmts, function (Node $nodeItem) use ($methodName) {
             return $nodeItem instanceof ClassMethod && $nodeItem->name->name === $methodName;
         });
+
+        return $method;
     }
 
     /**
@@ -95,10 +98,14 @@ class ClassAstResolver
     public function findPropertyInClass(Class_ $class, PropertyFetch $propertyFetch): ?Property
     {
         $propertyName = $propertyFetch->name->name;
-        return $this->nodeFinder->findFirst($class->stmts, function (Node $node) use ($propertyName) {
+
+        /** @var Property|null */
+        $property = $this->nodeFinder->findFirst($class->stmts, function (Node $node) use ($propertyName) {
             return $node instanceof Property && 
                 isset($node->props[0]) && 
                 $node->props[0]->name->name == $propertyName;
         });
+
+        return $property;
     }
 }

@@ -1,9 +1,10 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Traverser;
 
 use Apilyser\Extractor\MethodScope;
 use PhpParser\Node;
+use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\ElseIf_;
 use PhpParser\Node\Stmt\If_;
@@ -20,7 +21,7 @@ class MethodScopesTraverser extends NodeVisitorAbstract
     public array $scopes = [];
 
     /**
-     * @var Node[]
+     * @var string[]
      */
     private $scopeExpressions = [
         If_::class,
@@ -39,7 +40,7 @@ class MethodScopesTraverser extends NodeVisitorAbstract
 
             $parent = $this->lookForParentScope($node);
             if ($parent != null) {
-                if (in_array(get_class($parent), $this->scopeExpressions)) {
+                if ($parent instanceof Stmt && in_array(get_class($parent), $this->scopeExpressions)) {
                     $scope->scope = $parent;
                 }
             }

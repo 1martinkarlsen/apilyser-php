@@ -1,9 +1,11 @@
 parameters:
     phpVersion: 80100 # PHP 8.1
-    level: 2
+    level: 3
     paths:
         - src
         - tests
         - bin
+    symfony:
+        constantHassers: false
 includes:
-    - ./vendor/phpstan/phpstan-symfony/extension.neon
+    - vendor/phpstan/phpstan-symfony/extension.neon
