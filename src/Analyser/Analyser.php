@@ -6,13 +6,11 @@ use Apilyser\Comparison\ApiComparison;
 use Apilyser\Comparison\EndpointResult;
 use Apilyser\Resolver\RouteResolver;
 use Exception;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class Analyser
 {
 
     public function __construct(
-        private OutputInterface $output,
         private OpenApiAnalyser $openApiAnalyser,
         private RouteResolver $routeResolver,
         private FileAnalyser $fileAnalyser,

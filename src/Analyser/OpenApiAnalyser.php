@@ -244,8 +244,6 @@ class OpenApiAnalyser
             default:
                 return [];
         }
-
-        return [];
     }
 
     private function handleSchemaProperties(array $properties): array

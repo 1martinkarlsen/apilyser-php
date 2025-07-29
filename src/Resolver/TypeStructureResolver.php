@@ -4,7 +4,6 @@ namespace Apilyser\Resolver;
 
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Definition\ResponseBodyDefinition;
-use Apilyser\Parser\NodeParser;
 use Apilyser\Traverser\ArrayKeyTraverser;
 use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr;
@@ -22,19 +21,13 @@ use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\NodeDumper;
 use PhpParser\NodeTraverser;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class TypeStructureResolver
 {
     private VariableAssignmentFinder $variableAssignmentFinder;
 
     public function __construct(
-        private OutputInterface $output,
-        private NodeDumper $nodeDumper,
-        private NamespaceResolver $namespaceResolver,
-        private NodeParser $nodeParser,
         private ClassAstResolver $classAstResolver
     ) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
@@ -99,7 +92,7 @@ class TypeStructureResolver
                         if ($classStructure != null) {
 
                             $calledMethod = $this->classAstResolver->findMethodInClass($classStructure->class, $node->name->name);
-                            if ($calledMethod != null && $calledMethod instanceof ClassMethod) {
+                            if ($calledMethod != null) {
                                 $returnType = null;
                                 if ($calledMethod->returnType instanceof NullableType) {
                                     $returnType = $calledMethod->returnType->type->name;
@@ -147,7 +140,7 @@ class TypeStructureResolver
                     if ($classStructure != null) {
                         $calledMethod = $this->classAstResolver->findMethodInClass($classStructure->class, $node->name->name);
 
-                        if ($calledMethod != null && $calledMethod instanceof ClassMethod) {
+                        if ($calledMethod != null) {
                             $newContext = new ClassMethodContext(
                                 class: $classStructure->class,
                                 method: $calledMethod,
@@ -179,9 +172,7 @@ class TypeStructureResolver
 
         foreach ($node->items as $item) {
             $itemDef = $this->resolveArrayItemStructure($context, $item);
-            if ($itemDef) {
-                $resolvedItems[] = $itemDef;
-            }
+            $resolvedItems[] = $itemDef;
         }
 
         return $resolvedItems;
@@ -329,9 +320,9 @@ class TypeStructureResolver
      * @param ClassMethodContext $context
      * @param ArrayItem $item
      * 
-     * @return ResponseBodyDefinition|null
+     * @return ResponseBodyDefinition
      */
-    private function resolveArrayItemStructure(ClassMethodContext $context, ArrayItem $item): ?ResponseBodyDefinition
+    private function resolveArrayItemStructure(ClassMethodContext $context, ArrayItem $item): ResponseBodyDefinition
     {
         $itemKey = null;
         switch (true) {
@@ -363,8 +354,6 @@ class TypeStructureResolver
                 nullable: false
             );
         }
-
-        return null;
     }
 
     /**

@@ -7,18 +7,15 @@ use Apilyser\Extractor\ClassUsage;
 use Apilyser\Extractor\VariableUsageExtractor;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\Variable;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class ResponseResolver
 {
 
     /**
-     * @param OutputInterface $output
      * @param VariableUsageExtractor $variableUsageExtractor
      * @param ResponseClassUsageResolver $classUsageResolver
      */
     public function __construct(
-        private OutputInterface $output,
         private VariableUsageExtractor $variableUsageExtractor,
         private ResponseClassUsageResolver $classUsageResolver
     ) {}

@@ -66,7 +66,7 @@ class SymfonyAttributeStrategy implements RouteStrategy
     /**
      * @return Route[]
      */
-    private function createRouteFromConfig(array $config): ?array
+    private function createRouteFromConfig(array $config): array
     {
         $routes = [];
 

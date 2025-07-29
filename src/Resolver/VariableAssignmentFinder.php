@@ -42,7 +42,7 @@ class VariableAssignmentFinder
     private function isVariableAssignment(Node $node, string $variableName)
     {
         if ($node instanceof Assign) {
-            if ($node->var instanceof Variable || $node->var instanceof VarLikeIdentifier) {
+            if ($node->var instanceof Variable) {
                 if ($node->var->name == $variableName) {
                     return true;
                 }
