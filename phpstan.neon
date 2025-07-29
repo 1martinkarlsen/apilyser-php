@@ -5,7 +5,5 @@ parameters:
         - src
         - tests
         - bin
-    symfony:
-        constantHassers: false
 includes:
     - vendor/phpstan/phpstan-symfony/extension.neon

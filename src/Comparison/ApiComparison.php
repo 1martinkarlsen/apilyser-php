@@ -54,8 +54,8 @@ class ApiComparison {
             $endpoint = array_filter(
                 $code,
                 function ($definition) use ($path, $method) {
-                    return ($definition->path == $path) && 
-                        ($definition->method == $method) ?? $definition;
+                    return $definition->path == $path && 
+                        $definition->method == $method;
                 }
             );
 

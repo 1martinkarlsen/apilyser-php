@@ -51,8 +51,8 @@ class ResponseExistenceRule implements ValidationRule
             $matching = array_filter(
                 $codeResponses,
                 function ($response) use ($spec) {
-                    return $spec->statusCode == $response->statusCode
-                        && $spec->type == $response->type ?? $response;
+                    return ($spec->statusCode == $response->statusCode
+                        && $spec->type == $response->type);
                 }
             );
 
@@ -73,7 +73,7 @@ class ResponseExistenceRule implements ValidationRule
                 array: $specResponses,
                 callback: function ($response) use ($code) {
                     return $response->statusCode == $code->statusCode
-                        && $response->type == $code->type ?? $response;
+                        && $response->type == $code->type;
                 }
             );
 

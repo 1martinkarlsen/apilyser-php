@@ -6,9 +6,24 @@ use Attribute;
 class Route
 {
 
+    private ?string $path;
+    private ?string $name;
+
     public function __construct(
         string|array|null $path = null,
-        private ?string $name = null,
-    ) {}
-    
+        ?string $name = null,
+    ) {
+        $this->path = $path;
+        $this->name = $name;
+    }
+
+    public function getPath(): ?string
+    {
+        return $this->path;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
 }
