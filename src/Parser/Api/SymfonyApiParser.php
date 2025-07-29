@@ -30,10 +30,16 @@ class SymfonyApiParser implements ApiParser {
     private const RESPONSE_FUNCTION_SET_DATA = "setData";
     private const RESPONSE_FUNCTION_SEND = "send";
 
+    /**
+     * @var string[]
+     */
     private array $requestClasses = [
         Request::class
     ];
 
+    /**
+     * @var string[]
+     */
     private array $responseClasses = [
         JsonResponse::class,
         Response::class
