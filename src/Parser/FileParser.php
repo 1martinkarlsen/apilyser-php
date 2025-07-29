@@ -29,7 +29,8 @@ class FileParser
         // Array of files to return
         $files = [];
 
-        foreach ($this->directoryIterator as $path) {
+        foreach ($this->directoryIterator as $pathInfo) {
+            $path = $pathInfo->getPathname();
             $pathDirs = explode("/", $path);
             $lastPath = end($pathDirs);
             if (preg_match($this->regex, $lastPath)) {
