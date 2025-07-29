@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Parser\Route;
 
@@ -66,7 +66,7 @@ class SymfonyAttributeStrategy implements RouteStrategy
     /**
      * @return Route[]
      */
-    private function createRouteFromConfig(array $config): ?array
+    private function createRouteFromConfig(array $config): array
     {
         $routes = [];
 

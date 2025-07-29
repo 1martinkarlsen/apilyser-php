@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Traverser;
 
@@ -27,6 +27,8 @@ class VariableUsageTraverser extends NodeVisitorAbstract
 
             $this->usages[] = $this->lookForParent($node);
         }
+
+        return null;
     }
 
     /**

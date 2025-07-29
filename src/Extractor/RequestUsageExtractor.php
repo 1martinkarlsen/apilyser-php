@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Extractor;
 
@@ -61,7 +61,7 @@ class RequestUsageExtractor
         return null;
     }
 
-    private function handleMethodCall(MethodCall $method): ?RequestCall
+    private function handleMethodCall(MethodCall $method): RequestCall
     {
         $expr = $method->var;
         $location = RequestType::Unknown;

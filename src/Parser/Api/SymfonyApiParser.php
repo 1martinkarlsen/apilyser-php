@@ -1,10 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Parser\Api;
 
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Definition\NewClassResponseParameter;
-use Apilyser\Resolver\NamespaceResolver;
 use Apilyser\Resolver\ResponseCall;
 use PhpParser\Node;
 use Apilyser\Resolver\TypeStructureResolver;
@@ -12,7 +11,6 @@ use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\Int_;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,18 +28,22 @@ class SymfonyApiParser implements ApiParser {
     private const RESPONSE_FUNCTION_SET_DATA = "setData";
     private const RESPONSE_FUNCTION_SEND = "send";
 
+    /**
+     * @var string[]
+     */
     private array $requestClasses = [
         Request::class
     ];
 
+    /**
+     * @var string[]
+     */
     private array $responseClasses = [
         JsonResponse::class,
         Response::class
     ];
 
     public function __construct(
-        private OutputInterface $output,
-        private NamespaceResolver $namespaceResolver,
         private TypeStructureResolver $typeStructureResolver
     ) {}
 

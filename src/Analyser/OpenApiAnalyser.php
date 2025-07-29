@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Analyser;
 
@@ -24,8 +24,6 @@ class OpenApiAnalyser
     }
 
     /**
-     * @param string $filePath
-     * 
      * @return ?ApiSpecDefinition
      */
     function analyse(): ?ApiSpecDefinition
@@ -246,8 +244,6 @@ class OpenApiAnalyser
             default:
                 return [];
         }
-
-        return [];
     }
 
     private function handleSchemaProperties(array $properties): array

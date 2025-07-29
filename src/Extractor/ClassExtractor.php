@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Extractor;
 
@@ -50,7 +50,7 @@ class ClassExtractor
      * @param Node[] $stmts
      * @param string[] $imports
      * 
-     * @return Node[]
+     * @return ClassUsage[]
      */
     private function traverseResponse(ApiParser $apiParser, array $stmts, array $imports)
     {

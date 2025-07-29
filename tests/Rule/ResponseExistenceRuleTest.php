@@ -33,10 +33,10 @@ class ResponseExistenceRuleTest extends TestCase
         );
 
         $this->assertInstanceOf(expected: ValidationError::class, actual: $result);
-        if ($result instanceof ValidationError) {
-            $this->assertEquals(expected: "ResponseExistenceRule", actual: $result->errorType);
-            $this->assertCount(expectedCount: 2, haystack: $result->errors);
-        }
+        
+        /** @var ValidationError $result */
+        $this->assertEquals(expected: "ResponseExistenceRule", actual: $result->errorType);
+        $this->assertCount(expectedCount: 2, haystack: $result->errors);
     }
 
     function testResponseExistenceRuleWithMissingDocResponse()
@@ -69,10 +69,10 @@ class ResponseExistenceRuleTest extends TestCase
         );
 
         $this->assertInstanceOf(expected: ValidationError::class, actual: $result);
-        if ($result instanceof ValidationError) {
-            $this->assertEquals(expected: "ResponseExistenceRule", actual: $result->errorType);
-            $this->assertCount(expectedCount: 2, haystack: $result->errors);
-        }
+    
+        /** @var ValidationError $result */
+        $this->assertEquals(expected: "ResponseExistenceRule", actual: $result->errorType);
+        $this->assertCount(expectedCount: 2, haystack: $result->errors);
     }
 
     function testResponseExistenceRuleWithMissingCodeResponse()
@@ -105,10 +105,10 @@ class ResponseExistenceRuleTest extends TestCase
         );
 
         $this->assertInstanceOf(expected: ValidationError::class, actual: $result);
-        if ($result instanceof ValidationError) {
-            $this->assertEquals(expected: "ResponseExistenceRule", actual: $result->errorType);
-            $this->assertCount(expectedCount: 2, haystack: $result->errors);
-        }
+    
+        /** @var ValidationError $result */
+        $this->assertEquals(expected: "ResponseExistenceRule", actual: $result->errorType);
+        $this->assertCount(expectedCount: 2, haystack: $result->errors);
     }
 
     function testResponseExistenceRuleWithDifferentStatusCodeResponse()
@@ -147,10 +147,10 @@ class ResponseExistenceRuleTest extends TestCase
         );
 
         $this->assertInstanceOf(expected: ValidationError::class, actual: $result);
-        if ($result instanceof ValidationError) {
-            $this->assertEquals(expected: "ResponseExistenceRule", actual: $result->errorType);
-            $this->assertCount(expectedCount: 2, haystack: $result->errors);
-        }
+        
+        /** @var ValidationError $result */
+        $this->assertEquals(expected: "ResponseExistenceRule", actual: $result->errorType);
+        $this->assertCount(expectedCount: 2, haystack: $result->errors);
     }
     
 }

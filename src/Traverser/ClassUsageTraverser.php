@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Traverser;
 
@@ -65,6 +65,8 @@ class ClassUsageTraverser extends NodeVisitorAbstract
                 );
             }
         }
+
+        return null;
     }
 
     /**

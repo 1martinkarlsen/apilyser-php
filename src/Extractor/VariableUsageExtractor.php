@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Extractor;
 
@@ -17,7 +17,7 @@ class VariableUsageExtractor {
     public function __construct() {}
 
     /**
-     * @param Variable $var
+     * @param Variable $node
      * @param ClassMethod $method
      * 
      * @return Node[]

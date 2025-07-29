@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Di;
 
@@ -130,10 +130,6 @@ class Injection
             nodeParser: $this->get(NodeParser::class)
         );
         $this->services[TypeStructureResolver::class] = fn() => new TypeStructureResolver(
-            output: $this->get(OutputInterface::class),
-            nodeDumper: $this->get(NodeDumper::class),
-            namespaceResolver: $this->get(NamespaceResolver::class),
-            nodeParser: $this->get(NodeParser::class),
             classAstResolver: $this->get(ClassAstResolver::class)
         );
 
@@ -144,8 +140,6 @@ class Injection
 
         // Http parsers
         $this->services[SymfonyApiParser::class] = fn() => new SymfonyApiParser(
-            output: $this->get(OutputInterface::class),
-            namespaceResolver: $this->get(NamespaceResolver::class),
             typeStructureResolver: $this->get(TypeStructureResolver::class)
         );
         $httpDelegate = new HttpDelegate();
@@ -170,14 +164,11 @@ class Injection
         $this->services[MethodStructureExtractor::class] = fn() => new MethodStructureExtractor();
 
         $this->services[NewClassResponseResolver::class] = fn() => new NewClassResponseResolver(
-            output: $this->get(OutputInterface::class),
-            nodeParser: $this->get(NodeParser::class),
             namespaceResolver: $this->get(NamespaceResolver::class),
             typeStructureResolver: $this->get(TypeStructureResolver::class),
             httpDelegate: $this->get(HttpDelegate::class)
         );
         $this->services[MethodCallResponseResolver::class] = fn() => new MethodCallResponseResolver(
-            output: $this->get(OutputInterface::class),
             httpDelegate: $this->get(HttpDelegate::class)
         );
         $this->services[ResponseClassUsageResolver::class] = fn() => new ResponseClassUsageResolver(
@@ -187,7 +178,6 @@ class Injection
             ]
         );
         $this->services[ResponseResolver::class] = fn() => new ResponseResolver(
-            output: $this->get(OutputInterface::class),
             variableUsageExtractor: $this->get(VariableUsageExtractor::class),
             classUsageResolver: $this->get(ResponseClassUsageResolver::class)
         );
@@ -209,9 +199,7 @@ class Injection
         $this->services[ResponseAnalyser::class] = fn() => new ResponseAnalyser(
             classExtractor: $this->get(ClassExtractor::class),
             methodStructureExtractor: $this->get(MethodStructureExtractor::class),
-            variableUsageExtractor: $this->get(VariableUsageExtractor::class),
-            responseResolver: $this->get(ResponseResolver::class),
-            dumper: $this->get(NodeDumper::class)
+            responseResolver: $this->get(ResponseResolver::class)
         );
         $this->services[EndpointAnalyser::class] = fn() => new EndpointAnalyser(
             requestAnalyzer: $this->get(RequestAnalyser::class),
@@ -225,7 +213,6 @@ class Injection
             classImportsExtractor: $this->get(ClassImportsExtractor::class)
         );
         $this->services[Analyser::class] = fn() => new Analyser(
-            output: $this->get(OutputInterface::class),
             openApiAnalyser: $this->get(OpenApiAnalyser::class),
             routeResolver: $this->get(RouteResolver::class),
             fileAnalyser: $this->get(FileAnalyser::class),

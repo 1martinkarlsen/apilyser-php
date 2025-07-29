@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Command;
 
@@ -41,7 +41,5 @@ class ValidateApiCommand extends Command
             $output->writeln("<error>" . $e->getMessage() . "</error>");
             return Command::FAILURE;
         }
-
-        return Command::SUCCESS;
     }
 }

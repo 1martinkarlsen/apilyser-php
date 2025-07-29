@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Resolver\Node;
 
@@ -7,13 +7,11 @@ use Apilyser\Parser\Api\HttpDelegate;
 use Apilyser\Resolver\ResponseCall;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class MethodCallResponseResolver implements ResponseNodeResolver
 {
 
     public function __construct(
-        private OutputInterface $output,
         private HttpDelegate $httpDelegate
     ) {}
 

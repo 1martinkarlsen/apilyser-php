@@ -1,6 +1,8 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Resolver;
+
+use Apilyser\Definition\ResponseBodyDefinition;
 
 class ResponseCall
 {

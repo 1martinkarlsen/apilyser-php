@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "db0ba86e826c143b68d7b2785c13a9ec",
+    "content-hash": "b6adf1e1361cfb81fd4189827cb04347",
     "packages": [
         {
             "name": "nikic/php-parser",
-            "version": "v5.5.0",
+            "version": "v5.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "ae59794362fe85e051a58ad36b289443f57be7a9"
+                "reference": "221b0d0fdf1369c71047ad1d18bb5880017bbc56"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/ae59794362fe85e051a58ad36b289443f57be7a9",
-                "reference": "ae59794362fe85e051a58ad36b289443f57be7a9",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/221b0d0fdf1369c71047ad1d18bb5880017bbc56",
+                "reference": "221b0d0fdf1369c71047ad1d18bb5880017bbc56",
                 "shasum": ""
             },
             "require": {
@@ -60,9 +60,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.5.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.6.0"
             },
-            "time": "2025-05-31T08:24:38+00:00"
+            "time": "2025-07-27T20:03:57+00:00"
         },
         {
             "name": "psr/container",
@@ -420,6 +420,85 @@
             "time": "2024-10-25T15:15:23+00:00"
         },
         {
+            "name": "symfony/http-foundation",
+            "version": "v7.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/http-foundation.git",
+                "reference": "23dd60256610c86a3414575b70c596e5deff6ed9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/http-foundation/zipball/23dd60256610c86a3414575b70c596e5deff6ed9",
+                "reference": "23dd60256610c86a3414575b70c596e5deff6ed9",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2",
+                "symfony/deprecation-contracts": "^2.5|^3.0",
+                "symfony/polyfill-mbstring": "~1.1",
+                "symfony/polyfill-php83": "^1.27"
+            },
+            "conflict": {
+                "doctrine/dbal": "<3.6",
+                "symfony/cache": "<6.4.12|>=7.0,<7.1.5"
+            },
+            "require-dev": {
+                "doctrine/dbal": "^3.6|^4",
+                "predis/predis": "^1.1|^2.0",
+                "symfony/cache": "^6.4.12|^7.1.5",
+                "symfony/clock": "^6.4|^7.0",
+                "symfony/dependency-injection": "^6.4|^7.0",
+                "symfony/expression-language": "^6.4|^7.0",
+                "symfony/http-kernel": "^6.4|^7.0",
+                "symfony/mime": "^6.4|^7.0",
+                "symfony/rate-limiter": "^6.4|^7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\HttpFoundation\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Defines an object-oriented layer for the HTTP specification",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/http-foundation/tree/v7.3.1"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2025-06-23T15:07:14+00:00"
+        },
+        {
             "name": "symfony/polyfill-ctype",
             "version": "v1.32.0",
             "source": {
@@ -737,6 +816,82 @@
                 }
             ],
             "time": "2024-12-23T08:48:59+00:00"
+        },
+        {
+            "name": "symfony/polyfill-php83",
+            "version": "v1.32.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-php83.git",
+                "reference": "2fb86d65e2d424369ad2905e83b236a8805ba491"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-php83/zipball/2fb86d65e2d424369ad2905e83b236a8805ba491",
+                "reference": "2fb86d65e2d424369ad2905e83b236a8805ba491",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2"
+            },
+            "type": "library",
+            "extra": {
+                "thanks": {
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ],
+                "psr-4": {
+                    "Symfony\\Polyfill\\Php83\\": ""
+                },
+                "classmap": [
+                    "Resources/stubs"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nicolas Grekas",
+                    "email": "p@tchwork.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony polyfill backporting some PHP 8.3+ features to lower PHP versions",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "compatibility",
+                "polyfill",
+                "portable",
+                "shim"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/polyfill-php83/tree/v1.32.0"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2024-09-09T11:45:10+00:00"
         },
         {
             "name": "symfony/service-contracts",
@@ -1162,16 +1317,16 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.17",
+            "version": "2.1.21",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "89b5ef665716fa2a52ecd2633f21007a6a349053"
+                "reference": "1ccf445757458c06a04eb3f803603cb118fe5fa6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/89b5ef665716fa2a52ecd2633f21007a6a349053",
-                "reference": "89b5ef665716fa2a52ecd2633f21007a6a349053",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/1ccf445757458c06a04eb3f803603cb118fe5fa6",
+                "reference": "1ccf445757458c06a04eb3f803603cb118fe5fa6",
                 "shasum": ""
             },
             "require": {
@@ -1216,7 +1371,78 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-05-21T20:55:28+00:00"
+            "time": "2025-07-28T19:35:08+00:00"
+        },
+        {
+            "name": "phpstan/phpstan-symfony",
+            "version": "2.0.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpstan/phpstan-symfony.git",
+                "reference": "392f7ab8f52a0a776977be4e62535358c28e1b15"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpstan/phpstan-symfony/zipball/392f7ab8f52a0a776977be4e62535358c28e1b15",
+                "reference": "392f7ab8f52a0a776977be4e62535358c28e1b15",
+                "shasum": ""
+            },
+            "require": {
+                "ext-simplexml": "*",
+                "php": "^7.4 || ^8.0",
+                "phpstan/phpstan": "^2.1.13"
+            },
+            "conflict": {
+                "symfony/framework-bundle": "<3.0"
+            },
+            "require-dev": {
+                "php-parallel-lint/php-parallel-lint": "^1.2",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpstan/phpstan-strict-rules": "^2.0",
+                "phpunit/phpunit": "^9.6",
+                "psr/container": "1.1.2",
+                "symfony/config": "^5.4 || ^6.1",
+                "symfony/console": "^5.4 || ^6.1",
+                "symfony/dependency-injection": "^5.4 || ^6.1",
+                "symfony/form": "^5.4 || ^6.1",
+                "symfony/framework-bundle": "^5.4 || ^6.1",
+                "symfony/http-foundation": "^5.4 || ^6.1",
+                "symfony/messenger": "^5.4",
+                "symfony/polyfill-php80": "^1.24",
+                "symfony/serializer": "^5.4",
+                "symfony/service-contracts": "^2.2.0"
+            },
+            "type": "phpstan-extension",
+            "extra": {
+                "phpstan": {
+                    "includes": [
+                        "extension.neon",
+                        "rules.neon"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PHPStan\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Lukáš Unger",
+                    "email": "looky.msc@gmail.com",
+                    "homepage": "https://lookyman.net"
+                }
+            ],
+            "description": "Symfony Framework extensions and rules for PHPStan",
+            "support": {
+                "issues": "https://github.com/phpstan/phpstan-symfony/issues",
+                "source": "https://github.com/phpstan/phpstan-symfony/tree/2.0.7"
+            },
+            "time": "2025-07-22T09:40:57+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -2709,7 +2935,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.0"
+        "php": "^8.1"
     },
     "platform-dev": [],
     "plugin-api-version": "2.3.0"

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Parser\Api;
 
@@ -39,9 +39,8 @@ interface ApiParser {
     function getNewClassParameters(): NewClassResponseParameter;
 
     /**
+     * @param ClassMethodContext $context
      * @param Node $node
-     * @param ClassMethod $method
-     * @param string[] $imports
      * @param ?ResponseCall $modifierResponseCall
      * 
      * @return ?ResponseCall

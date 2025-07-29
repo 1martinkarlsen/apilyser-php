@@ -1,8 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Resolver;
 
 use Apilyser\Analyser\ClassMethodContext;
+use Apilyser\Resolver\Node\ResponseNodeResolver;
 use PhpParser\Node;
 
 class ResponseClassUsageResolver

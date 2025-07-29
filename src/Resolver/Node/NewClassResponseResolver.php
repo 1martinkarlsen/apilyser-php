@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Resolver\Node;
 
@@ -6,7 +6,6 @@ use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Definition\NewClassResponseParameter;
 use Apilyser\Parser\Api\ApiParser;
 use Apilyser\Parser\Api\HttpDelegate;
-use Apilyser\Parser\NodeParser;
 use Apilyser\Resolver\NamespaceResolver;
 use Apilyser\Resolver\ResponseCall;
 use Apilyser\Resolver\TypeStructureResolver;
@@ -15,14 +14,11 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\Int_;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class NewClassResponseResolver implements ResponseNodeResolver
 {
 
     public function __construct(
-        private OutputInterface $output,
-        private NodeParser $nodeParser,
         private NamespaceResolver $namespaceResolver,
         private TypeStructureResolver $typeStructureResolver,
         private HttpDelegate $httpDelegate

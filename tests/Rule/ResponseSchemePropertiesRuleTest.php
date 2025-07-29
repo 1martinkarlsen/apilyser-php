@@ -103,9 +103,9 @@ class ResponseSchemePropertiesRuleTest extends TestCase
         );
 
         $this->assertInstanceOf(expected: ValidationError::class, actual: $result);
-        if ($result instanceof ValidationError) {
-            $this->assertEquals(expected: "ResponseSchemePropertiesRule", actual: $result->errorType);
-            $this->assertCount(expectedCount: 1, haystack: $result->errors);
-        }
+        
+        /** @var ValidationError $result */
+        $this->assertEquals(expected: "ResponseSchemePropertiesRule", actual: $result->errorType);
+        $this->assertCount(expectedCount: 1, haystack: $result->errors);
     }
 }

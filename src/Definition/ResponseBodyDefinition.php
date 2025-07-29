@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Definition;
 
@@ -52,9 +52,7 @@ class ResponseBodyDefinition {
 
         if ($this->children != null) {
             foreach ($this->children as $child) {
-                if (!is_array($child)) {
-                    $childArr[] = $child->asArray();
-                }
+                $childArr[] = $child->asArray();
             }
         }
 
@@ -72,9 +70,7 @@ class ResponseBodyDefinition {
 
         if ($this->children != null) {
             foreach ($this->children as $child) {
-                if (!is_array($child)) {
-                    $childArr[] = $child->toString();
-                }
+                $childArr[] = $child->toString();
             }
         }
 

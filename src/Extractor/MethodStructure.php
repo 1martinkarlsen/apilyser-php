@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Apilyser\Extractor;
 
@@ -8,8 +8,8 @@ class MethodStructure
 {
 
     /**
-     * @var ClassMethod $method
-     * @var MethodScope[] $scopes
+     * @param ClassMethod $method
+     * @param MethodScope[] $scopes
      */
     public function __construct(
         public ClassMethod $method,

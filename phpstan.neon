@@ -1,0 +1,9 @@
+parameters:
+    phpVersion: 80100 # PHP 8.1
+    level: 4
+    paths:
+        - src
+        - tests
+        - bin
+includes:
+    - vendor/phpstan/phpstan-symfony/extension.neon
