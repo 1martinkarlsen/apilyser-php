@@ -17,7 +17,6 @@ use Apilyser\Extractor\ClassExtractor;
 use Apilyser\Extractor\ClassImportsExtractor;
 use Apilyser\Extractor\FileClassesExtractor;
 use Apilyser\Extractor\MethodParameterExtractor;
-use Apilyser\Extractor\MethodStructureExtractor;
 use Apilyser\Extractor\VariableUsageExtractor;
 use Apilyser\Definition\ParameterDefinitionFactory;
 use Apilyser\Parser\Api\HttpDelegate;
@@ -161,7 +160,6 @@ class Injection
         $this->services[MethodParameterExtractor::class] = fn() => new MethodParameterExtractor(
             namespaceResolver: $this->get(NamespaceResolver::class)
         );
-        $this->services[MethodStructureExtractor::class] = fn() => new MethodStructureExtractor();
 
         $this->services[NewClassResponseResolver::class] = fn() => new NewClassResponseResolver(
             namespaceResolver: $this->get(NamespaceResolver::class),
@@ -198,7 +196,6 @@ class Injection
         );
         $this->services[ResponseAnalyser::class] = fn() => new ResponseAnalyser(
             classExtractor: $this->get(ClassExtractor::class),
-            methodStructureExtractor: $this->get(MethodStructureExtractor::class),
             responseResolver: $this->get(ResponseResolver::class)
         );
         $this->services[EndpointAnalyser::class] = fn() => new EndpointAnalyser(

@@ -12,7 +12,7 @@ After installation, a `apilyzer.yaml` file is required for the library to work.<
 
 | Configuration | description      |
 | ------------- | ---------------- |
-| codePat       | path to the code |
+| codePath      | path to the code |
 | openApiPath   | path to the open api documentation yaml file |
 
 ## Usage
