@@ -4,7 +4,6 @@ namespace Apilyser\Analyser;
 
 use Apilyser\Definition\ResponseDefinition;
 use Apilyser\Extractor\ClassExtractor;
-use Apilyser\Extractor\MethodStructureExtractor;
 use Apilyser\Resolver\ResponseCall;
 use Apilyser\Resolver\ResponseResolver;
 
@@ -13,7 +12,6 @@ class ResponseAnalyser
 
     public function __construct(
         private ClassExtractor $classExtractor,
-        private MethodStructureExtractor $methodStructureExtractor,
         private ResponseResolver $responseResolver
     ) {}
 
