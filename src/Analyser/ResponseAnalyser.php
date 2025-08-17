@@ -25,9 +25,7 @@ class ResponseAnalyser
     public function analyse(ClassMethodContext $context): array
     {
         // Find used classes in method that exist in api parser
-        $scopedMethod = $this->methodStructureExtractor->extract($context->method);
-        $usedResponseClasses = $this->classExtractor->extract($scopedMethod->method, $context->imports);
-
+        $usedResponseClasses = $this->classExtractor->extract($context->method, $context->imports);
         $results = $this->responseResolver->resolve($context, $usedResponseClasses);
 
         return array_map(

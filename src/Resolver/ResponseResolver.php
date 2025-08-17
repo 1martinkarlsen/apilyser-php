@@ -5,8 +5,6 @@ namespace Apilyser\Resolver;
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Extractor\ClassUsage;
 use Apilyser\Extractor\VariableUsageExtractor;
-use PhpParser\Node\Expr\Assign;
-use PhpParser\Node\Expr\Variable;
 
 class ResponseResolver
 {
@@ -37,11 +35,7 @@ class ResponseResolver
             $result = null;
 
             // Class assigned (ex: $var = new Class())
-            if ($usedClass->parent instanceof Assign) {
-                $result = $this->collectFromAssignedResponseCall($usedClass->parent, $context);
-            } else {
-                $result = $this->classUsageResolver->resolve($context, $usedClass->node);
-            }
+            $result = $this->classUsageResolver->resolve($context, $usedClass->node);
             
             if ($result != null) {
                 $results[] = $result;
@@ -49,27 +43,5 @@ class ResponseResolver
         }
 
         return $results;
-    }
-
-    private function collectFromAssignedResponseCall(Assign $assignedNode, ClassMethodContext $context): ?ResponseCall
-    {
-        $result = null;
-        $calls = [];
-        if ($assignedNode->var instanceof Variable) {
-            $calls = $this->variableUsageExtractor->extractVariableUsage(
-                node: $assignedNode->var,
-                method: $context->method
-            );
-        }
-
-        foreach ($calls as $call) {
-            // NodeHandler
-            $responseCall = $this->classUsageResolver->resolve($context, $call, $result);
-            if ($responseCall != null && $responseCall !== $result) {
-                $result = $responseCall;
-            }
-        }
-
-        return $result;
     }
 }

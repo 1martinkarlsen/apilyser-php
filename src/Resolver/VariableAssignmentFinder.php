@@ -7,7 +7,6 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\Node\VarLikeIdentifier;
 use PhpParser\NodeFinder;
 
 class VariableAssignmentFinder
