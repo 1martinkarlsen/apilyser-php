@@ -15,6 +15,9 @@ class ApiFrameworkResolver
         private HttpDelegate $httpDelegate
     ) {}
 
+    /**
+     * @return ClassUsage[]
+     */
     public function resolve(ClassMethod $method, array $imports): array
     {
         $result = [];
@@ -37,6 +40,7 @@ class ApiFrameworkResolver
 
     private function extractUsedClasses(ClassMethod $method, array $imports, ApiParser $apiParser): array
     {
+        /** @var ClassUsage[] */
         $result = [];
         $responseClasses = $apiParser->getSupportedResponseClasses();
 

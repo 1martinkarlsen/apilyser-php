@@ -6,11 +6,13 @@ use Apilyser\Definition\ResponseDefinition;
 use Apilyser\Resolver\ApiFrameworkResolver;
 use Apilyser\Resolver\ResponseCall;
 use Apilyser\Resolver\ResponseResolver;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class ResponseAnalyser
 {
 
     public function __construct(
+        private OutputInterface $output,
         private ApiFrameworkResolver $apiFrameworkResolver,
         private ResponseResolver $responseResolver
     ) {}
@@ -28,7 +30,9 @@ class ResponseAnalyser
 
         return array_map(
             function(ResponseCall $responseCall) {
-                return $this->mapResponseCallToResponseDefinition($responseCall);
+                $res = $this->mapResponseCallToResponseDefinition($responseCall);
+                $this->output->writeln("Response: " . $res->toString());
+                return $res;
             },
             $results
         );

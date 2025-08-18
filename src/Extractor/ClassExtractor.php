@@ -13,7 +13,7 @@ use PhpParser\NodeVisitor\ParentConnectingVisitor;
  */
 class ClassExtractor
 {
-    public function __construct(private ClassUsageTraverserFactory $classUsageTraverserFactory) 
+    public function __construct(private ClassUsageTraverserFactory $classUsageTraverserFactory)
     {
     }
 
@@ -33,9 +33,10 @@ class ClassExtractor
             imports: $imports
         );
 
-        foreach ($usages as $usage) {
-            $result[] = $usage;
-        }
+        array_push(
+            $result,
+            ...$usages
+        );
 
         return $result;
     }

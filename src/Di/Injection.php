@@ -199,6 +199,7 @@ class Injection
             parameterDefinitionFactory: $this->get(ParameterDefinitionFactory::class)
         );
         $this->services[ResponseAnalyser::class] = fn() => new ResponseAnalyser(
+            output: $this->get(OutputInterface::class),
             apiFrameworkResolver: $this->get(ApiFrameworkResolver::class),
             responseResolver: $this->get(ResponseResolver::class)
         );

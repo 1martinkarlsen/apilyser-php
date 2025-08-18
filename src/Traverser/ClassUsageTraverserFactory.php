@@ -3,20 +3,21 @@
 namespace Apilyser\Traverser;
 
 use Apilyser\Resolver\NamespaceResolver;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class ClassUsageTraverserFactory
 {
 
-    public function __construct(
-        private NamespaceResolver $namespaceResolver
-    ) {}
+    public function __construct(private NamespaceResolver $namespaceResolver) 
+    {
+    }
 
     public function create(string $className, array $imports)
     {
-        $fullClassName = $this->namespaceResolver->findFullNamespaceForClass($className, $imports);
-
         return new ClassUsageTraverser(
-            className: $fullClassName
+            namespaceResolver: $this->namespaceResolver,
+            className: $className,
+            imports: $imports
         );
     }
 }

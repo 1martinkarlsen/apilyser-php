@@ -3,6 +3,7 @@
 namespace Apilyser\Traverser;
 
 use Apilyser\Extractor\ClassUsage;
+use Apilyser\Resolver\NamespaceResolver;
 use PhpParser\Node;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\New_;
@@ -18,7 +19,9 @@ class ClassUsageTraverser extends NodeVisitorAbstract
     public $usages = [];
 
     public function __construct(
-        private string $className
+        private NamespaceResolver $namespaceResolver,
+        private string $className,
+        private array $imports
     ) {}
 
     function enterNode(Node $node)
@@ -78,7 +81,8 @@ class ClassUsageTraverser extends NodeVisitorAbstract
      */
     private function getTargetClassName(Name $name): ?string
     {
-        if ($this->className == $name->name) {
+        $fullClassName = $this->namespaceResolver->findFullNamespaceForClass($name->name, $this->imports);
+        if ($this->className === $fullClassName) {
             return $this->className;
         }
 
