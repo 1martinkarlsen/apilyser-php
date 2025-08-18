@@ -27,6 +27,7 @@ use Apilyser\Parser\Route\SymfonyAttributeParser;
 use Apilyser\Parser\Route\SymfonyAttributeStrategy;
 use Apilyser\Parser\Route\SymfonyYamlRouteStrategy;
 use Apilyser\Parser\RouteParser;
+use Apilyser\Resolver\ApiFrameworkResolver;
 use Apilyser\Resolver\ClassAstResolver;
 use Apilyser\Resolver\NamespaceResolver;
 use Apilyser\Resolver\Node\MethodCallResponseResolver;
@@ -131,6 +132,10 @@ class Injection
         $this->services[TypeStructureResolver::class] = fn() => new TypeStructureResolver(
             classAstResolver: $this->get(ClassAstResolver::class)
         );
+        $this->services[ApiFrameworkResolver::class] = fn() => new ApiFrameworkResolver(
+            classExtractor: $this->get(ClassExtractor::class),
+            httpDelegate: $this->get(HttpDelegate::class)
+        );
 
         // Traverser
         $this->services[ClassUsageTraverserFactory::class] = fn() => new ClassUsageTraverserFactory(
@@ -150,8 +155,7 @@ class Injection
             nodeFinder: $this->get(NodeFinder::class)
         );
         $this->services[ClassExtractor::class] = fn() => new ClassExtractor(
-            classUsageTraverserFactory: $this->get(ClassUsageTraverserFactory::class),
-            httpDelegate: $this->get(HttpDelegate::class)
+            classUsageTraverserFactory: $this->get(ClassUsageTraverserFactory::class)
         );
         $this->services[ClassImportsExtractor::class] = fn() => new ClassImportsExtractor(
             nodeFinder: $this->get(NodeFinder::class)
@@ -195,7 +199,7 @@ class Injection
             parameterDefinitionFactory: $this->get(ParameterDefinitionFactory::class)
         );
         $this->services[ResponseAnalyser::class] = fn() => new ResponseAnalyser(
-            classExtractor: $this->get(ClassExtractor::class),
+            apiFrameworkResolver: $this->get(ApiFrameworkResolver::class),
             responseResolver: $this->get(ResponseResolver::class)
         );
         $this->services[EndpointAnalyser::class] = fn() => new EndpointAnalyser(
