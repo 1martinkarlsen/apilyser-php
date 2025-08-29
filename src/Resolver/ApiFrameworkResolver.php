@@ -5,7 +5,7 @@ namespace Apilyser\Resolver;
 use Apilyser\Extractor\ClassExtractor;
 use Apilyser\Parser\Api\ApiParser;
 use Apilyser\Parser\Api\HttpDelegate;
-use PhpParser\Node\Stmt\ClassMethod;
+use Apilyser\Resolver\ClassUsage;
 
 class ApiFrameworkResolver
 {
@@ -18,13 +18,14 @@ class ApiFrameworkResolver
     /**
      * @return ClassUsage[]
      */
-    public function resolve(ClassMethod $method, array $imports): array
+    public function resolve(array $stmts, array $imports): array
     {
+        /** @var ClassUsage[] */
         $result = [];
 
         foreach ($this->httpDelegate->getParsers() as $http) {
             $responseClasses = $this->extractUsedClasses(
-                method: $method,
+                stmts: $stmts,
                 imports: $imports,
                 apiParser: $http
             );
@@ -38,7 +39,10 @@ class ApiFrameworkResolver
         return $result;
     }
 
-    private function extractUsedClasses(ClassMethod $method, array $imports, ApiParser $apiParser): array
+    /**
+     * @return ClassUsage[]
+     */
+    private function extractUsedClasses(array $stmts, array $imports, ApiParser $apiParser): array
     {
         /** @var ClassUsage[] */
         $result = [];
@@ -46,7 +50,7 @@ class ApiFrameworkResolver
 
         foreach ($responseClasses as $responseClass) {
             $usages = $this->classExtractor->extract(
-                method: $method,
+                stmts: $stmts,
                 className: $responseClass,
                 imports: $imports
             );

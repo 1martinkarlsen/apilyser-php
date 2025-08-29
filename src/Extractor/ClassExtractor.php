@@ -18,18 +18,18 @@ class ClassExtractor
     }
 
     /**
-     * @param ClassMethod $method
+     * @param Node[] $stmts
      * @param string[] $imports
      * 
      * @return ClassUsage[]
      */
-    function extract(ClassMethod $method, string $className, array $imports): array
+    function extract(array $stmts, string $className, array $imports): array
     {
         $result = [];
 
         $usages = $this->traverseResponse(
             className: $className,
-            stmts: $method->stmts,
+            stmts: $stmts,
             imports: $imports
         );
 

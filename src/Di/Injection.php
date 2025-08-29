@@ -5,6 +5,7 @@ namespace Apilyser\Di;
 use Apilyser\Analyser\Analyser;
 use Apilyser\Analyser\EndpointAnalyser;
 use Apilyser\Analyser\FileAnalyser;
+use Apilyser\Analyser\MethodPathAnalyser;
 use Apilyser\Analyser\OpenApiAnalyser;
 use Apilyser\Analyser\RequestAnalyser;
 use Apilyser\Analyser\ResponseAnalyser;
@@ -37,6 +38,8 @@ use Apilyser\Resolver\ResponseResolver;
 use Apilyser\Resolver\RouteResolver;
 use Apilyser\Resolver\TypeStructureResolver;
 use Apilyser\Traverser\ClassUsageTraverserFactory;
+use Apilyser\Traverser\MethodPathParser;
+use Apilyser\Traverser\MethodPathTraverser;
 use Exception;
 use PhpParser\NodeDumper;
 use PhpParser\NodeFinder;
@@ -109,6 +112,8 @@ class Injection
         $this->services[NodeDumper::class] = fn() => new NodeDumper();
         $this->services[NodeFinder::class] = fn() => new NodeFinder();
 
+        $this->services[MethodPathAnalyser::class] = fn() => new MethodPathAnalyser();
+
         // Factories
         $this->services[ParameterDefinitionFactory::class] = fn() => new ParameterDefinitionFactory();
 
@@ -116,7 +121,6 @@ class Injection
         $this->services[NodeParser::class] = fn() => new NodeParser();
         $this->services[FileParser::class] = fn() => new FileParser($this->rootPath . $this->configuration[Configuration::CFG_CODE_PATH]);
         
-
         // Route parser
         $this->services[AttributeExtractor::class] = fn() => new AttributeExtractor();
 
@@ -200,8 +204,12 @@ class Injection
         );
         $this->services[ResponseAnalyser::class] = fn() => new ResponseAnalyser(
             output: $this->get(OutputInterface::class),
+            nodeDumper: $this->get(NodeDumper::class),
+            methodPathAnalyser: $this->get(MethodPathAnalyser::class),
             apiFrameworkResolver: $this->get(ApiFrameworkResolver::class),
-            responseResolver: $this->get(ResponseResolver::class)
+            responseResolver: $this->get(ResponseResolver::class),
+            httpDelegate: $this->get(HttpDelegate::class),
+            classUsageTraverserFactory: $this->get(ClassUsageTraverserFactory::class)
         );
         $this->services[EndpointAnalyser::class] = fn() => new EndpointAnalyser(
             requestAnalyzer: $this->get(RequestAnalyser::class),

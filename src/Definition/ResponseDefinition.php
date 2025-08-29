@@ -49,4 +49,9 @@ class ResponseDefinition
         //$struct = implode($dataArr);
         //return "{ 'type': ". $this->type .", 'structure': ". ($this->structure == null ? 'null' : $struct) .", 'statusCode': ". $this->statusCode ." }";
     }
+
+    public function __toString()
+    {
+        return $this->toString();
+    }
 }
