@@ -18,15 +18,16 @@ class ResponseClassUsageResolver
 
     /**
      * @param ClassMethodContext $context
+     * @param Node[] $methodJourney
      * @param Node $node
      * 
      * @return ?ResponseCall
      */
-    public function resolve(ClassMethodContext $context, Node $node, ?ResponseCall $modifierResponseCall = null): ?ResponseCall
+    public function resolve(ClassMethodContext $context, array $methodJourney, Node $node, ?ResponseCall $modifierResponseCall = null): ?ResponseCall
     {
         foreach ($this->classUsageResolvers as $resolver) {
             if ($resolver->canResolve($node)) {
-                return $resolver->resolve($context, $node, $modifierResponseCall);
+                return $resolver->resolve($context, $methodJourney, $node, $modifierResponseCall);
             }
         }
 

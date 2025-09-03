@@ -37,22 +37,14 @@ class ResponseAnalyser
     {
         $paths = $this->methodPathAnalyser->analyse($context->method);
 
-        $usedResponseClasses = [];
+        $results = [];
         foreach ($paths as $path) {
-            foreach ($this->httpDelegate->getParsers() as $httpParser) {
-
-                $usedClass = $this->processPath($path, $httpParser, $context->imports);
-                array_push(
-                    $usedResponseClasses,
-                    ...$usedClass
-                );
-            }
+            $result = $this->analysePath($path, $context);
+            array_push(
+                $results,
+                ...$result
+            );
         }
-
-        //$this->output->writeln("HEJ: " . $this->nodeDumper->dump($context->method->stmts));
-        
-        // Find used classes in method that exist in api parser
-        $results = $this->responseResolver->resolve($context, $usedResponseClasses);
 
         $result = array_map(
             function(ResponseCall $responseCall) {
@@ -61,13 +53,36 @@ class ResponseAnalyser
             $results
         );
 
-        $items = array_unique($result);
+        return array_unique($result);
+    }
 
-        foreach ($items as $item) {
-            $this->output->writeln("Response: " . $item->toString());
+
+    /**
+     * @param MethodPathDefinition $path
+     * @param ClassMethodContext $context
+     * 
+     * @return ResponseCall[]
+     */
+    private function analysePath(MethodPathDefinition $path, ClassMethodContext $context): array
+    {
+        $usedResponseClasses = [];
+
+        foreach ($this->httpDelegate->getParsers() as $httpParser) {
+            $usedClass = $this->processPath($path, $httpParser, $context->imports);
+            array_push(
+                $usedResponseClasses,
+                ...$usedClass
+            );
         }
 
-        return $items;
+        $statementNodes = array_map(
+            function($statement) {
+                return $statement->getNode();
+            },
+            $path->getStatements()
+        );
+
+        return $this->responseResolver->resolve($context, $statementNodes, $usedResponseClasses);
     }
 
     /**

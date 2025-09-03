@@ -29,8 +29,20 @@ class NewClassResponseResolver implements ResponseNodeResolver
         return $node instanceof New_;
     }
 
-    public function resolve(ClassMethodContext $context, Node $node, ?ResponseCall $modifierResponseCall = null): ?ResponseCall
-    {
+    /**
+     * @param ClassMethodContext $context
+     * @param Node[] $methodJourney
+     * @param Node $node
+     * @param ?ResponseCall $modifierResponseCall
+     * 
+     * @return ?ResponseCall
+     */
+    public function resolve(
+        ClassMethodContext $context, 
+        array $methodJourney,
+        Node $node, 
+        ?ResponseCall $modifierResponseCall = null
+    ): ?ResponseCall {
         if (!$node instanceof New_ || !$node->class instanceof Name) {
             throw new Exception("Invalid node type");
         }
@@ -46,6 +58,7 @@ class NewClassResponseResolver implements ResponseNodeResolver
         $parameters = $responseParser->getNewClassParameters();
         return $this->getResponse(
             context: $context,
+            methodJourney: $methodJourney,
             class: $node,
             parameterInfo: $parameters
         );
@@ -66,6 +79,7 @@ class NewClassResponseResolver implements ResponseNodeResolver
 
     function getResponse(
         ClassMethodContext $context,
+        array $methodJourney,
         New_ $class, 
         NewClassResponseParameter $parameterInfo
     ): ?ResponseCall
@@ -80,6 +94,7 @@ class NewClassResponseResolver implements ResponseNodeResolver
                 if ($arg->name->name == $parameterInfo->bodyName) {
                     $body = $this->typeStructureResolver->resolveFromExpression(
                         context: $context,
+                        methodJourney: $methodJourney,
                         expr: $arg->value
                     );
                 } else if ($arg->name->name == $parameterInfo->statusCodeName) {
@@ -93,6 +108,7 @@ class NewClassResponseResolver implements ResponseNodeResolver
                     // Body
                     $body = $this->typeStructureResolver->resolveFromExpression(
                         context: $context,
+                        methodJourney: $methodJourney,
                         expr: $arg->value
                     );
                 } else if ($index == $parameterInfo->statusCodeIndex) {
