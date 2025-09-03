@@ -12,15 +12,11 @@ use Apilyser\Resolver\ResponseResolver;
 use Apilyser\Traverser\ClassUsageTraverser;
 use Apilyser\Traverser\ClassUsageTraverserFactory;
 use PhpParser\Node;
-use PhpParser\NodeDumper;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class ResponseAnalyser
 {
 
     public function __construct(
-        private OutputInterface $output,
-        private NodeDumper $nodeDumper,
         private MethodPathAnalyser $methodPathAnalyser,
         private ApiFrameworkResolver $apiFrameworkResolver,
         private ResponseResolver $responseResolver,
