@@ -29,12 +29,12 @@ class MethodPathAnalyser
     public function analyse(ClassMethod $method): array
     {
         $this->paths = [];
-        $this->walkStatements($method->stmts, new MethodPathDefinition());
+        $this->analyseStatements($method->stmts, new MethodPathDefinition());
 
         return $this->paths;
     }
 
-    private function walkStatements(array $stmts, MethodPathDefinition $currentPath): void
+    private function analyseStatements(array $stmts, MethodPathDefinition $currentPath): void
     {
         for ($i = 0; $i < count($stmts); $i++) {
             $stmt = $stmts[$i];
@@ -84,22 +84,22 @@ class MethodPathAnalyser
         // True branch
         $truePath = clone $basePath;
         $truePath->addCondition("if", $ifStmt->cond, true);
-        $this->walkStatements($ifStmt->stmts, $truePath);
+        $this->analyseStatements($ifStmt->stmts, $truePath);
         
         // Continue with remaining statements after if block (if no return/throw)
         if (!$this->pathEndsWithTermination($ifStmt->stmts)) {
-            $this->walkStatements($remainingStmts, $truePath);
+            $this->analyseStatements($remainingStmts, $truePath);
         }
         
         // Handle elseif chains
         foreach ($ifStmt->elseifs as $elseif) {
             $elseifPath = clone $basePath;
             $elseifPath->addCondition("elseif", $elseif->cond, true);
-            $this->walkStatements($elseif->stmts, $elseifPath);
+            $this->analyseStatements($elseif->stmts, $elseifPath);
             
             // Continue with remaining statements after elseif block
             if (!$this->pathEndsWithTermination($elseif->stmts)) {
-                $this->walkStatements($remainingStmts, $elseifPath);
+                $this->analyseStatements($remainingStmts, $elseifPath);
             }
         }
         
@@ -107,17 +107,17 @@ class MethodPathAnalyser
         if ($ifStmt->else) {
             $elsePath = clone $basePath;
             $elsePath->addCondition("else", $ifStmt->cond, false);
-            $this->walkStatements($ifStmt->else->stmts, $elsePath);
+            $this->analyseStatements($ifStmt->else->stmts, $elsePath);
             
             // Continue with remaining statements after else block
             if (!$this->pathEndsWithTermination($ifStmt->else->stmts)) {
-                $this->walkStatements($remainingStmts, $elsePath);
+                $this->analyseStatements($remainingStmts, $elsePath);
             }
         } else {
             // Implicit else path (condition was false, continue after if)
             $elsePath = clone $basePath;
             $elsePath->addCondition("implicit-else", $ifStmt->cond, false);
-            $this->walkStatements($remainingStmts, $elsePath);
+            $this->analyseStatements($remainingStmts, $elsePath);
         }
     }
 
@@ -128,22 +128,22 @@ class MethodPathAnalyser
         $loopPath->addCondition("loop-enter", $this->getLoopCondition($loopStmt), true);
         
         if ($loopStmt instanceof Node\Stmt\While_) {
-            $this->walkStatements($loopStmt->stmts, $loopPath);
+            $this->analyseStatements($loopStmt->stmts, $loopPath);
         } elseif ($loopStmt instanceof Node\Stmt\For_) {
-            $this->walkStatements($loopStmt->stmts, $loopPath);
+            $this->analyseStatements($loopStmt->stmts, $loopPath);
         } elseif ($loopStmt instanceof Node\Stmt\Foreach_) {
-            $this->walkStatements($loopStmt->stmts, $loopPath);
+            $this->analyseStatements($loopStmt->stmts, $loopPath);
         }
         
         // Continue with remaining statements after loop (if no break/return)
         if (!$this->pathEndsWithTermination($loopStmt->stmts)) {
-            $this->walkStatements($remainingStmts, $loopPath);
+            $this->analyseStatements($remainingStmts, $loopPath);
         }
         
         // Path that skips the loop
         $skipPath = clone $basePath;
         $skipPath->addCondition("loop-skip", $this->getLoopCondition($loopStmt), false);
-        $this->walkStatements($remainingStmts, $skipPath);
+        $this->analyseStatements($remainingStmts, $skipPath);
     }
 
     private function handleSwitch(Node\Stmt\Switch_ $switchStmt, MethodPathDefinition $basePath, array $remainingStmts): void
@@ -159,11 +159,11 @@ class MethodPathAnalyser
                 $hasDefaultCase = true;
             }
             
-            $this->walkStatements($case->stmts, $casePath);
+            $this->analyseStatements($case->stmts, $casePath);
             
             // Continue with remaining statements after switch (if no break/return)
             if (!$this->pathEndsWithTermination($case->stmts)) {
-                $this->walkStatements($remainingStmts, $casePath);
+                $this->analyseStatements($remainingStmts, $casePath);
             }
         }
         
@@ -171,7 +171,7 @@ class MethodPathAnalyser
         if (!$hasDefaultCase) {
             $noMatchPath = clone $basePath;
             $noMatchPath->addCondition("no-case-match", null, false);
-            $this->walkStatements($remainingStmts, $noMatchPath);
+            $this->analyseStatements($remainingStmts, $noMatchPath);
         }
     }
 
