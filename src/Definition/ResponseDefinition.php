@@ -45,9 +45,6 @@ class ResponseDefinition
             ],
             JSON_UNESCAPED_SLASHES
         );
-
-        //$struct = implode($dataArr);
-        //return "{ 'type': ". $this->type .", 'structure': ". ($this->structure == null ? 'null' : $struct) .", 'statusCode': ". $this->statusCode ." }";
     }
 
     public function __toString()
