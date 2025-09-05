@@ -22,11 +22,12 @@ class ResponseResolver
      * Resolving how to handle used classes
      * 
      * @param ClassMethodContext $context
+     * @param Node[] $methodJourney
      * @param ClassUsage[] $usedClasses
      * 
      * @return ResponseCall[]
      */
-    public function resolve(ClassMethodContext $context, array $usedClasses): array
+    public function resolve(ClassMethodContext $context, array $methodJourney, array $usedClasses): array
     {
         $results = []; 
         foreach ($usedClasses as $usedClass) {
@@ -35,7 +36,7 @@ class ResponseResolver
             $result = null;
 
             // Class assigned (ex: $var = new Class())
-            $result = $this->classUsageResolver->resolve($context, $usedClass->node);
+            $result = $this->classUsageResolver->resolve($context, $methodJourney, $usedClass->node);
             
             if ($result != null) {
                 $results[] = $result;

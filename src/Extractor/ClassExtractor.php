@@ -2,8 +2,6 @@
 
 namespace Apilyser\Extractor;
 
-use Apilyser\Parser\Api\ApiParser;
-use Apilyser\Parser\Api\HttpDelegate;
 use Apilyser\Traverser\ClassUsageTraverserFactory;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -15,32 +13,30 @@ use PhpParser\NodeVisitor\ParentConnectingVisitor;
  */
 class ClassExtractor
 {
-    public function __construct(
-        private ClassUsageTraverserFactory $classUsageTraverserFactory,
-        private HttpDelegate $httpDelegate
-    ) {}
+    public function __construct(private ClassUsageTraverserFactory $classUsageTraverserFactory)
+    {
+    }
 
     /**
-     * @param ClassMethod $method
+     * @param Node[] $stmts
      * @param string[] $imports
      * 
      * @return ClassUsage[]
      */
-    function extract(ClassMethod $method, array $imports): array
+    function extract(array $stmts, string $className, array $imports): array
     {
         $result = [];
 
-        foreach ($this->httpDelegate->getParsers() as $http) {
-            $usages = $this->traverseResponse(
-                apiParser: $http,
-                stmts: $method->stmts,
-                imports: $imports
-            );
+        $usages = $this->traverseResponse(
+            className: $className,
+            stmts: $stmts,
+            imports: $imports
+        );
 
-            foreach ($usages as $usage) {
-                $result[] = $usage;
-            }
-        }
+        array_push(
+            $result,
+            ...$usages
+        );
 
         return $result;
     }
@@ -52,7 +48,7 @@ class ClassExtractor
      * 
      * @return ClassUsage[]
      */
-    private function traverseResponse(ApiParser $apiParser, array $stmts, array $imports)
+    private function traverseResponse(string $className, array $stmts, array $imports)
     {
         // Establish parent relationships
         $traverser = new NodeTraverser();
@@ -63,7 +59,7 @@ class ClassExtractor
         // Find class usage
         $tt = new NodeTraverser();
         $finder = $this->classUsageTraverserFactory->create(
-            apiParser: $apiParser,
+            className: $className,
             imports: $imports
         );
         $tt->addVisitor($finder);

@@ -18,7 +18,7 @@ class RouteResolver
     /**
      * @return Route[]
      */
-    public function resolveStrategy(string $path): array
+    public function resolveRoutes(string $path): array
     {
         $routes = [];
 

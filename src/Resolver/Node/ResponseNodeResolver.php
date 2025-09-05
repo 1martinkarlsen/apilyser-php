@@ -9,5 +9,10 @@ use PhpParser\Node;
 interface ResponseNodeResolver
 {
     public function canResolve(Node $node): bool;
-    public function resolve(ClassMethodContext $context, Node $node, ?ResponseCall $modifierResponseCall = null): ?ResponseCall;
+    public function resolve(
+        ClassMethodContext $context,
+        array $methodJourney,
+        Node $node, 
+        ?ResponseCall $modifierResponseCall = null
+    ): ?ResponseCall;
 }

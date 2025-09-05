@@ -26,9 +26,7 @@ class TypeStructureResolver
 {
     private VariableAssignmentFinder $variableAssignmentFinder;
 
-    public function __construct(
-        private ClassAstResolver $classAstResolver
-    ) {
+    public function __construct(private ClassAstResolver $classAstResolver) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
     }
 
@@ -38,17 +36,17 @@ class TypeStructureResolver
      * 
      * @return ResponseBodyDefinition[]
      */
-    public function resolveFromExpression(ClassMethodContext $context, Expr $expr): array
+    public function resolveFromExpression(ClassMethodContext $context, array $methodJourney, Expr $expr): array
     {
         switch (true) {
             case $expr instanceof MethodCall:
-                return $this->handleMethodCall($context, $expr) ?: [];
+                return $this->handleMethodCall($context, $methodJourney, $expr) ?: [];
 
             case $expr instanceof Variable:
-                return $this->handleVariable($context, $expr->name) ?: [];
+                return $this->handleVariable($context, $methodJourney, $expr->name) ?: [];
             
             case $expr instanceof Array_:
-                return $this->handleArray($context, $expr) ?: [];
+                return $this->handleArray($context, $methodJourney, $expr) ?: [];
         }
 
         return [];
@@ -56,15 +54,17 @@ class TypeStructureResolver
 
     /**
      * @param ClassMethodContext $context
+     * @param Node[] $methodJourney
      * @param string $variableName
      * 
      * @return ResponseBodyDefinition[]
      */
-    private function handleVariable(ClassMethodContext $context, string $variableName): array
+    private function handleVariable(ClassMethodContext $context, array $methodJourney, string $variableName): array
     {
-        $assignedExpr = $this->variableAssignmentFinder->findAssignment($variableName, $context->method);
+        $assignedExpr = $this->variableAssignmentFinder->findAssignment($variableName, $methodJourney);
+        
         if ($assignedExpr != null) {
-            return $this->resolveFromExpression($context, $assignedExpr);
+            return $this->resolveFromExpression($context, $methodJourney, $assignedExpr);
         }
 
         return [];
@@ -76,14 +76,14 @@ class TypeStructureResolver
      * 
      * @return ?ResponseBodyDefinition[]
      */
-    private function handleMethodCall(ClassMethodContext $context, MethodCall $node): array|null
+    private function handleMethodCall(ClassMethodContext $context, array $methodJourney, MethodCall $node): array|null
     {
         $nodeVar = $node->var;
         switch (true) {
             case $nodeVar instanceof Variable:
                 $variableName = $nodeVar->name;
 
-                $nodeExpr = $this->variableAssignmentFinder->findAssignment($variableName, $context->method);
+                $nodeExpr = $this->variableAssignmentFinder->findAssignment($variableName, $methodJourney);
                 if ($nodeExpr != null && $nodeExpr instanceof New_) {
                     $className = $nodeExpr->class->name;
                     if (is_string($className)) {
@@ -106,7 +106,7 @@ class TypeStructureResolver
                                         method: $calledMethod,
                                         imports: $context->imports
                                     );
-                                    $results = $this->extractArray($newContext, $node->name->name);
+                                    $results = $this->extractArray($newContext, $methodJourney, $node->name->name);
                                 } else {
                                     $results = [];
                                 }
@@ -145,7 +145,7 @@ class TypeStructureResolver
                                 method: $calledMethod,
                                 imports: $context->imports
                             );
-                            $results = $this->extractArray($newContext, $node->name->name);
+                            $results = $this->extractArray($newContext, $methodJourney, $node->name->name);
                             if ($results != null) {
                                 return $results;
                             }
@@ -165,12 +165,12 @@ class TypeStructureResolver
      * 
      * @return ResponseBodyDefinition[]
      */
-    private function handleArray(ClassMethodContext $context, Array_ $node): array
+    private function handleArray(ClassMethodContext $context, array $methodJourney, Array_ $node): array
     {
         $resolvedItems = [];
 
         foreach ($node->items as $item) {
-            $itemDef = $this->resolveArrayItemStructure($context, $item);
+            $itemDef = $this->resolveArrayItemStructure($context, $methodJourney, $item);
             $resolvedItems[] = $itemDef;
         }
 
@@ -184,7 +184,7 @@ class TypeStructureResolver
      * 
      * @return ResponseBodyDefinition|null
      */
-    private function getBodyFromProperty(ClassMethodContext $context, Property $property, string $name): ?ResponseBodyDefinition
+    private function getBodyFromProperty(ClassMethodContext $context, array $methodJourney, Property $property, string $name): ?ResponseBodyDefinition
     {
         $typeNode = $property->type;
         $isNullable = false;
@@ -203,7 +203,7 @@ class TypeStructureResolver
             if ($typeName === "array") {
                 $children = [];
                 foreach ($property->props as $prop) {
-                    $itemChildren = $this->getBodyFromPropertyItem($context, $prop);
+                    $itemChildren = $this->getBodyFromPropertyItem($context, $methodJourney, $prop);
                     $children = array_merge($children, $itemChildren);
                 }
             }
@@ -302,13 +302,13 @@ class TypeStructureResolver
      * 
      * @return ResponseBodyDefinition[]
      */
-    private function getBodyFromPropertyItem(ClassMethodContext $context, PropertyItem $prop): array
+    private function getBodyFromPropertyItem(ClassMethodContext $context, array $methodJourney, PropertyItem $prop): array
     {
         // TODO: `findVariableAssignmentInMethod` is not working if the property exist on a class level
         // or if it's set in another method (ex constructor).
-        $assignment = $this->variableAssignmentFinder->findAssignment($prop->name->name, $context->method);
+        $assignment = $this->variableAssignmentFinder->findAssignment($prop->name->name, $methodJourney);
         if ($assignment != null) {
-            $res = $this->resolveFromExpression($context, $assignment);
+            $res = $this->resolveFromExpression($context, $methodJourney, $assignment);
             return $res;
         }
 
@@ -321,7 +321,7 @@ class TypeStructureResolver
      * 
      * @return ResponseBodyDefinition
      */
-    private function resolveArrayItemStructure(ClassMethodContext $context, ArrayItem $item): ResponseBodyDefinition
+    private function resolveArrayItemStructure(ClassMethodContext $context, array $methodJourney, ArrayItem $item): ResponseBodyDefinition
     {
         $itemKey = null;
         switch (true) {
@@ -345,7 +345,7 @@ class TypeStructureResolver
                 nullable: false
             );
         } else {
-            $def = $this->resolveFromExpression($context, $itemValue);
+            $def = $this->resolveFromExpression($context, $methodJourney, $itemValue);
             return new ResponseBodyDefinition(
                 name: $itemKey,
                 type: 'array',
@@ -361,7 +361,7 @@ class TypeStructureResolver
      * 
      * @return ResponseBodyDefinition[]
      */
-    private function extractArray(ClassMethodContext $context, string $calledMethodName): array
+    private function extractArray(ClassMethodContext $context, array $methodJourney, string $calledMethodName): array
     {
         $traverser = new NodeTraverser();
         $keyExtractor = new ArrayKeyTraverser($calledMethodName);
@@ -372,7 +372,7 @@ class TypeStructureResolver
 
         $bodyContent = [];
         foreach ($items as $item) {
-            $body = $this->findValueType($context, $item->value);
+            $body = $this->findValueType($context, $methodJourney, $item->value);
             if ($body != null) {
                 array_push($bodyContent, $body);
             }
@@ -386,7 +386,7 @@ class TypeStructureResolver
      * 
      * @return ResponseBodyDefinition|null
      */
-    private function findValueType(ClassMethodContext $context, Expr $value): ?ResponseBodyDefinition
+    private function findValueType(ClassMethodContext $context, array $methodJourney, Expr $value): ?ResponseBodyDefinition
     {
         
         switch (true) {
@@ -394,14 +394,14 @@ class TypeStructureResolver
                 $property = $this->classAstResolver->findPropertyInClass($context->class, $value);
 
                 if ($property != null) {
-                    return $this->getBodyFromProperty($context, $property, $value->name->name);
+                    return $this->getBodyFromProperty($context, $methodJourney, $property, $value->name->name);
                 }
                 
                 break;
             case $value instanceof MethodCall:
-                $children =  $this->handleMethodCall($context, $value);
+                $children =  $this->handleMethodCall($context, $methodJourney, $value);
 
-                $res =  $this->findValueType($context, $value->var);
+                $res =  $this->findValueType($context, $methodJourney, $value->var);
                 if ($res != null && $value->var instanceof PropertyFetch) {
                     $result = new ResponseBodyDefinition(
                         name: $value->var->name->name,
