@@ -2,21 +2,18 @@
 
 namespace Apilyser\Traverser;
 
-use Apilyser\Parser\Api\ApiParser;
 use Apilyser\Resolver\NamespaceResolver;
 
 class ClassUsageTraverserFactory
 {
 
-    public function __construct(
-        private NamespaceResolver $namespaceResolver
-    ) {}
+    public function __construct(private NamespaceResolver $namespaceResolver) {}
 
-    public function create(ApiParser $apiParser, array $imports)
+    public function create(string $className, array $imports)
     {
         return new ClassUsageTraverser(
-            apiParser: $apiParser,
             namespaceResolver: $this->namespaceResolver,
+            className: $className,
             imports: $imports
         );
     }

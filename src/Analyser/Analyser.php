@@ -30,7 +30,7 @@ class Analyser
         }
 
         // Analyse all routes
-        $routes = $this->routeResolver->resolveStrategy($folderPath);
+        $routes = $this->routeResolver->resolveRoutes($folderPath);
 
         $endpoints = [];
         foreach ($routes as $route) {

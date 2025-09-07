@@ -19,15 +19,23 @@ class VariableAssignmentFinder
         $this->nodeFinder = new NodeFinder();
     }
 
-    public function findAssignment(string $variableName, ClassMethod $method): ?Expr
+    /**
+     * @param string $variableName
+     * @param Node[] $nodes
+     * 
+     * @return ?Expr
+     */
+    public function findAssignment(string $variableName, array $nodes): ?Expr
     {
-        if ($method->stmts === null) {
+        if ($nodes === null) {
             return null;
         }
 
-        $node = $this->nodeFinder->findFirst($method->stmts, function(Node $node) use ($variableName) {
+        $variableNodes = $this->nodeFinder->find($nodes, function(Node $node) use ($variableName) {
             return $this->isVariableAssignment($node, $variableName);
         });
+
+        $node = end($variableNodes);
 
         if ($node instanceof Assign) {
             return $node->expr;
