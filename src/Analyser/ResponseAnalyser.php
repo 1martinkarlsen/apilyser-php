@@ -4,6 +4,7 @@ namespace Apilyser\Analyser;
 
 use Apilyser\Definition\MethodPathDefinition;
 use Apilyser\Definition\ResponseDefinition;
+use Apilyser\Extractor\MethodPathExtractor;
 use Apilyser\Parser\Api\ApiParser;
 use Apilyser\Parser\Api\HttpDelegate;
 use Apilyser\Resolver\ApiFrameworkResolver;
@@ -19,7 +20,7 @@ class ResponseAnalyser
 {
     public function __construct(
         private OutputInterface $output,
-        private MethodPathAnalyser $methodPathAnalyser,
+        private MethodPathExtractor $methodPathExtractor,
         private ApiFrameworkResolver $apiFrameworkResolver,
         private ResponseResolver $responseResolver,
         private HttpDelegate $httpDelegate,
@@ -33,7 +34,7 @@ class ResponseAnalyser
      */
     public function analyse(ClassMethodContext $context): array
     {
-        $paths = $this->methodPathAnalyser->analyse($context->method);
+        $paths = $this->methodPathExtractor->analyse($context->method);
 
         $results = [];
         foreach ($paths as $path) {

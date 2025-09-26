@@ -5,6 +5,7 @@ namespace Apilyser\Resolver;
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Analyser\MethodPathAnalyser;
 use Apilyser\Definition\ResponseBodyDefinition;
+use Apilyser\Extractor\MethodPathExtractor;
 use Apilyser\Traverser\ArrayKeyTraverser;
 use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr;
@@ -32,7 +33,7 @@ class TypeStructureResolver
     public function __construct(
         public OutputInterface $output,
         public NodeDumper $dumper,
-        private MethodPathAnalyser $methodPathAnalyser,
+        private MethodPathExtractor $methodPathExtractor,
         private ClassAstResolver $classAstResolver
     ) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
@@ -94,7 +95,7 @@ class TypeStructureResolver
                  */
                 if ($variableName == "this") {
                     $calledMethod = $this->classAstResolver->findMethodInClass($context->class, $node->name->name);
-                    $methodPaths = $this->methodPathAnalyser->analyse($calledMethod);
+                    $methodPaths = $this->methodPathExtractor->analyse($calledMethod);
 
                     foreach ($methodPaths as $path) {
 

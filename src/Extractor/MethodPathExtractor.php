@@ -1,6 +1,6 @@
 <?php
 
-namespace Apilyser\Analyser;
+namespace Apilyser\Extractor;
 
 use Apilyser\Definition\MethodPathDefinition;
 use PhpParser\Node;
@@ -15,7 +15,7 @@ use PhpParser\Node\Stmt\Return_;
 use PhpParser\Node\Stmt\Switch_;
 use PhpParser\Node\Stmt\While_;
 
-class MethodPathAnalyser
+class MethodPathExtractor
 {
 
     /** @var MethodPathDefinition[] */

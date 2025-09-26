@@ -20,6 +20,7 @@ use Apilyser\Extractor\FileClassesExtractor;
 use Apilyser\Extractor\MethodParameterExtractor;
 use Apilyser\Extractor\VariableUsageExtractor;
 use Apilyser\Definition\ParameterDefinitionFactory;
+use Apilyser\Extractor\MethodPathExtractor;
 use Apilyser\Parser\Api\HttpDelegate;
 use Apilyser\Parser\Api\SymfonyApiParser;
 use Apilyser\Parser\FileParser;
@@ -112,7 +113,7 @@ class Injection
         $this->services[NodeDumper::class] = fn() => new NodeDumper();
         $this->services[NodeFinder::class] = fn() => new NodeFinder();
 
-        $this->services[MethodPathAnalyser::class] = fn() => new MethodPathAnalyser();
+        $this->services[MethodPathExtractor::class] = fn() => new MethodPathExtractor();
 
         // Factories
         $this->services[ParameterDefinitionFactory::class] = fn() => new ParameterDefinitionFactory();
@@ -136,7 +137,7 @@ class Injection
         $this->services[TypeStructureResolver::class] = fn() => new TypeStructureResolver(
             output: $this->get(OutputInterface::class),
             dumper: $this->get(NodeDumper::class),
-            methodPathAnalyser: $this->get(MethodPathAnalyser::class),
+            methodPathExtractor: $this->get(MethodPathExtractor::class),
             classAstResolver: $this->get(ClassAstResolver::class)
         );
         $this->services[ApiFrameworkResolver::class] = fn() => new ApiFrameworkResolver(
@@ -207,7 +208,7 @@ class Injection
         );
         $this->services[ResponseAnalyser::class] = fn() => new ResponseAnalyser(
             output: $this->get(OutputInterface::class),
-            methodPathAnalyser: $this->get(MethodPathAnalyser::class),
+            methodPathExtractor: $this->get(MethodPathExtractor::class),
             apiFrameworkResolver: $this->get(ApiFrameworkResolver::class),
             responseResolver: $this->get(ResponseResolver::class),
             httpDelegate: $this->get(HttpDelegate::class),
