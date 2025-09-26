@@ -4,18 +4,13 @@ namespace Apilyser\Resolver;
 
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Extractor\ClassUsage;
-use Apilyser\Extractor\VariableUsageExtractor;
 
 class ResponseResolver
 {
 
-    /**
-     * @param VariableUsageExtractor $variableUsageExtractor
-     * @param ResponseClassUsageResolver $classUsageResolver
-     */
     public function __construct(
-        private VariableUsageExtractor $variableUsageExtractor,
-        private ResponseClassUsageResolver $classUsageResolver
+        private ResponseClassUsageResolver $classUsageResolver,
+        private TypeStructureResolver $typeStructureResolver
     ) {}
 
     /**
@@ -27,7 +22,7 @@ class ResponseResolver
      * 
      * @return ResponseCall[]
      */
-    public function resolve(ClassMethodContext $context, array $methodJourney, array $usedClasses): array
+    public function resolveUsedClasses(ClassMethodContext $context, array $methodJourney, array $usedClasses): array
     {
         $results = []; 
         foreach ($usedClasses as $usedClass) {
@@ -38,6 +33,24 @@ class ResponseResolver
             // Class assigned (ex: $var = new Class())
             $result = $this->classUsageResolver->resolve($context, $methodJourney, $usedClass->node);
             
+            if ($result != null) {
+                $results[] = $result;
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * @return ResponseCall[]
+     */
+    public function resolveReturns(ClassMethodContext $context, array $methodJourney, array $returns): array
+    {
+        $results = [];
+
+        foreach ($returns as $return) {
+            $result = $this->typeStructureResolver->resolveFromExpression($context, $methodJourney, $return->expr);
+
             if ($result != null) {
                 $results[] = $result;
             }

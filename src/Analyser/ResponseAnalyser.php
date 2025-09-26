@@ -12,11 +12,13 @@ use Apilyser\Resolver\ResponseResolver;
 use Apilyser\Traverser\ClassUsageTraverser;
 use Apilyser\Traverser\ClassUsageTraverserFactory;
 use PhpParser\Node;
+use PhpParser\Node\Stmt\Return_;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class ResponseAnalyser
 {
-
     public function __construct(
+        private OutputInterface $output,
         private MethodPathAnalyser $methodPathAnalyser,
         private ApiFrameworkResolver $apiFrameworkResolver,
         private ResponseResolver $responseResolver,
@@ -49,7 +51,13 @@ class ResponseAnalyser
             $results
         );
 
-        return array_unique($result);
+        $res = array_unique($result);
+
+        foreach ($res as $response) {
+            $this->output->writeln("Response: " . $response->toString());
+        }
+
+        return $res;
     }
 
 
@@ -61,15 +69,8 @@ class ResponseAnalyser
      */
     private function analysePath(MethodPathDefinition $path, ClassMethodContext $context): array
     {
-        $usedResponseClasses = [];
-
-        foreach ($this->httpDelegate->getParsers() as $httpParser) {
-            $usedClass = $this->processPath($path, $httpParser, $context->imports);
-            array_push(
-                $usedResponseClasses,
-                ...$usedClass
-            );
-        }
+        $usedResponseClasses = $this->findUsedResponseClassesInPath($path, $context);
+        $returns = $this->findReturnsInPath($path, $context, $usedResponseClasses);
 
         $statementNodes = array_map(
             function($statement) {
@@ -78,13 +79,57 @@ class ResponseAnalyser
             $path->getStatements()
         );
 
-        return $this->responseResolver->resolve($context, $statementNodes, $usedResponseClasses);
+        $results = $this->responseResolver->resolveUsedClasses($context, $statementNodes, $usedResponseClasses);
+        $returnsResult = $this->responseResolver->resolveReturns($context, $statementNodes, $returns);
+
+        array_push(
+            $results,
+            ...$returnsResult
+        );
+
+        return $results;
     }
 
     /**
      * @return ClassUsage[]
      */
-    private function processPath(MethodPathDefinition $path, ApiParser $httpParser, array $imports): array
+    private function findUsedResponseClassesInPath(MethodPathDefinition $path, ClassMethodContext $context): array
+    {
+        $usedResponseClasses = [];
+
+        foreach ($this->httpDelegate->getParsers() as $httpParser) {
+            $usedClass = $this->processClassInPath($path, $httpParser, $context->imports);
+            array_push(
+                $usedResponseClasses,
+                ...$usedClass
+            );
+        }
+
+        return $usedResponseClasses;
+    }
+
+    /**
+     * @return Node[]
+     */
+    private function findReturnsInPath(MethodPathDefinition $path, ClassMethodContext $context): array
+    {
+        $returns = [];
+
+        foreach ($path->getStatements() as $stmts) {
+            $node = $stmts->getNode();
+
+            if ($node instanceof Return_) {
+                $returns[] = $node;
+            }
+        }
+
+        return $returns;
+    }
+
+    /**
+     * @return ClassUsage[]
+     */
+    private function processClassInPath(MethodPathDefinition $path, ApiParser $httpParser, array $imports): array
     {
         $usedClasses = $httpParser->getSupportedResponseClasses();
 

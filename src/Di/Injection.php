@@ -134,6 +134,9 @@ class Injection
             nodeParser: $this->get(NodeParser::class)
         );
         $this->services[TypeStructureResolver::class] = fn() => new TypeStructureResolver(
+            output: $this->get(OutputInterface::class),
+            dumper: $this->get(NodeDumper::class),
+            methodPathAnalyser: $this->get(MethodPathAnalyser::class),
             classAstResolver: $this->get(ClassAstResolver::class)
         );
         $this->services[ApiFrameworkResolver::class] = fn() => new ApiFrameworkResolver(
@@ -184,8 +187,8 @@ class Injection
             ]
         );
         $this->services[ResponseResolver::class] = fn() => new ResponseResolver(
-            variableUsageExtractor: $this->get(VariableUsageExtractor::class),
-            classUsageResolver: $this->get(ResponseClassUsageResolver::class)
+            classUsageResolver: $this->get(ResponseClassUsageResolver::class),
+            typeStructureResolver: $this->get(TypeStructureResolver::class)
         );
 
         // Rules
@@ -203,6 +206,7 @@ class Injection
             parameterDefinitionFactory: $this->get(ParameterDefinitionFactory::class)
         );
         $this->services[ResponseAnalyser::class] = fn() => new ResponseAnalyser(
+            output: $this->get(OutputInterface::class),
             methodPathAnalyser: $this->get(MethodPathAnalyser::class),
             apiFrameworkResolver: $this->get(ApiFrameworkResolver::class),
             responseResolver: $this->get(ResponseResolver::class),

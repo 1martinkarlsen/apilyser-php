@@ -3,6 +3,7 @@
 namespace Apilyser\Resolver;
 
 use Apilyser\Analyser\ClassMethodContext;
+use Apilyser\Analyser\MethodPathAnalyser;
 use Apilyser\Definition\ResponseBodyDefinition;
 use Apilyser\Traverser\ArrayKeyTraverser;
 use PhpParser\Node\ArrayItem;
@@ -20,13 +21,20 @@ use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Property;
+use PhpParser\NodeDumper;
 use PhpParser\NodeTraverser;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class TypeStructureResolver
 {
     private VariableAssignmentFinder $variableAssignmentFinder;
 
-    public function __construct(private ClassAstResolver $classAstResolver) {
+    public function __construct(
+        public OutputInterface $output,
+        public NodeDumper $dumper,
+        private MethodPathAnalyser $methodPathAnalyser,
+        private ClassAstResolver $classAstResolver
+    ) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
     }
 
@@ -38,18 +46,14 @@ class TypeStructureResolver
      */
     public function resolveFromExpression(ClassMethodContext $context, array $methodJourney, Expr $expr): array
     {
-        switch (true) {
-            case $expr instanceof MethodCall:
-                return $this->handleMethodCall($context, $methodJourney, $expr) ?: [];
+        $result = match (true) {
+            $expr instanceof MethodCall => fn() => $this->handleMethodCall($context, $methodJourney, $expr),
+            $expr instanceof Variable => fn() => $this->handleVariable($context, $methodJourney, $expr->name),
+            $expr instanceof Array_ => fn() => $this->handleArray($context, $methodJourney, $expr),
+            default => fn() => []
+        };
 
-            case $expr instanceof Variable:
-                return $this->handleVariable($context, $methodJourney, $expr->name) ?: [];
-            
-            case $expr instanceof Array_:
-                return $this->handleArray($context, $methodJourney, $expr) ?: [];
-        }
-
-        return [];
+        return $result() ?? [];
     }
 
     /**
@@ -78,12 +82,27 @@ class TypeStructureResolver
      */
     private function handleMethodCall(ClassMethodContext $context, array $methodJourney, MethodCall $node): array|null
     {
+        $this->output->writeln("Test method call " . $this->dumper->dump($node));
         $nodeVar = $node->var;
         switch (true) {
             case $nodeVar instanceof Variable:
                 $variableName = $nodeVar->name;
 
+                /**
+                 * In case that the method call is directly to another function (could be in same class or a different)
+                 * we will need to find the called function. 
+                 */
+                if ($variableName == "this") {
+                    $calledMethod = $this->classAstResolver->findMethodInClass($context->class, $node->name->name);
+                    $methodPaths = $this->methodPathAnalyser->analyse($calledMethod);
+
+                    foreach ($methodPaths as $path) {
+
+                    }
+                }
+
                 $nodeExpr = $this->variableAssignmentFinder->findAssignment($variableName, $methodJourney);
+                $this->output->writeln("Method call variable: " . $this->dumper->dump($nodeExpr));
                 if ($nodeExpr != null && $nodeExpr instanceof New_) {
                     $className = $nodeExpr->class->name;
                     if (is_string($className)) {
