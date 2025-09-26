@@ -28,6 +28,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class TypeStructureResolver
 {
+    private ?MethodResolverStrategy $methodStrategy = null;
     private VariableAssignmentFinder $variableAssignmentFinder;
 
     public function __construct(
@@ -37,6 +38,11 @@ class TypeStructureResolver
         private ClassAstResolver $classAstResolver
     ) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
+    }
+
+    public function setMethodStrategy(MethodResolverStrategy $strategy): void 
+    {
+        $this->methodStrategy = $strategy;
     }
 
     /**
@@ -83,7 +89,6 @@ class TypeStructureResolver
      */
     private function handleMethodCall(ClassMethodContext $context, array $methodJourney, MethodCall $node): array|null
     {
-        $this->output->writeln("Test method call " . $this->dumper->dump($node));
         $nodeVar = $node->var;
         switch (true) {
             case $nodeVar instanceof Variable:
@@ -93,13 +98,20 @@ class TypeStructureResolver
                  * In case that the method call is directly to another function (could be in same class or a different)
                  * we will need to find the called function. 
                  */
-                if ($variableName == "this") {
+                if ($variableName == "this" && $this->methodStrategy) {
                     $calledMethod = $this->classAstResolver->findMethodInClass($context->class, $node->name->name);
-                    $methodPaths = $this->methodPathExtractor->analyse($calledMethod);
-
-                    foreach ($methodPaths as $path) {
-
+                    if (null === $calledMethod) {
+                        return [];
                     }
+
+                    $newContext = new ClassMethodContext(
+                        class: $context->class,
+                        method: $calledMethod,
+                        imports: $context->imports
+                    );
+
+                    $results = $this->methodStrategy->resolveMethod($newContext);
+                    return $results;
                 }
 
                 $nodeExpr = $this->variableAssignmentFinder->findAssignment($variableName, $methodJourney);

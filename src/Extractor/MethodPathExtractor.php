@@ -26,7 +26,7 @@ class MethodPathExtractor
      * 
      * @return MethodPathDefinition[]
      */
-    public function analyse(ClassMethod $method): array
+    public function extract(ClassMethod $method): array
     {
         $this->paths = [];
         $this->analyseStatements($method->stmts, new MethodPathDefinition());
