@@ -38,6 +38,7 @@ use Apilyser\Resolver\ResponseClassUsageResolver;
 use Apilyser\Resolver\ResponseResolver;
 use Apilyser\Resolver\RouteResolver;
 use Apilyser\Resolver\TypeStructureResolver;
+use Apilyser\Resolver\VariableAssignmentFinder;
 use Apilyser\Traverser\ClassUsageTraverserFactory;
 use Exception;
 use PhpParser\NodeDumper;
@@ -209,6 +210,7 @@ class Injection
             responseResolver: $this->get(ResponseResolver::class),
             httpDelegate: $this->get(HttpDelegate::class),
             classUsageTraverserFactory: $this->get(ClassUsageTraverserFactory::class),
+            classAstResolver: $this->get(ClassAstResolver::class),
             typeStructureResolver: $this->get(TypeStructureResolver::class)
         );
         $this->services[OpenApiAnalyser::class] = new OpenApiAnalyser(

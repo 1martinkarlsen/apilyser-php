@@ -6,25 +6,39 @@ use Apilyser\Definition\MethodPathDefinition;
 use Apilyser\Extractor\MethodPathExtractor;
 use Apilyser\Parser\Api\ApiParser;
 use Apilyser\Parser\Api\HttpDelegate;
+use Apilyser\Resolver\ClassAstResolver;
 use Apilyser\Resolver\MethodResolverStrategy;
 use Apilyser\Resolver\ResponseResolver;
 use Apilyser\Resolver\TypeStructureResolver;
+use Apilyser\Resolver\VariableAssignmentFinder;
 use Apilyser\Traverser\ClassUsageTraverser;
 use Apilyser\Traverser\ClassUsageTraverserFactory;
 use PhpParser\Node;
+use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\New_;
+use PhpParser\Node\Expr\PropertyFetch;
+use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Identifier;
+use PhpParser\Node\Name;
+use PhpParser\Node\NullableType;
+use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Return_;
 
 class MethodAnalyser implements MethodResolverStrategy
 {
     
+    private $variableAssignmentFinder;
+
     public function __construct(
         private MethodPathExtractor $methodPathExtractor,
         private ResponseResolver $responseResolver,
         private HttpDelegate $httpDelegate,
         private ClassUsageTraverserFactory $classUsageTraverserFactory,
+        private ClassAstResolver $classAstResolver,
         private TypeStructureResolver $typeStructureResolver
     ) {
         $this->typeStructureResolver->setMethodStrategy($this);
+        $this->variableAssignmentFinder = new VariableAssignmentFinder();
     }
 
     public function resolveMethod(ClassMethodContext $context): array
@@ -34,44 +48,251 @@ class MethodAnalyser implements MethodResolverStrategy
 
     public function analyse(ClassMethodContext $context): array
     {
-        $paths = $this->methodPathExtractor->extract($context->method);
-
-        $results = [];
-        foreach ($paths as $path) {
-            $result = $this->analysePath($path, $context);
-            array_push(
-                $results,
-                ...$result
-            );
-        }
-
-        return $results;
+        return $this->analyseMethod($context);
     }
 
     /**
-     * @param MethodPathDefinition $path
      * @param ClassMethodContext $context
      * 
      * @return ResponseCall[]
      */
-    private function analysePath(MethodPathDefinition $path, ClassMethodContext $context): array
-    {
-        $usedResponseClasses = $this->findUsedResponseClassesInPath($path, $context);
-        $returns = $this->findReturnsInPath($path, $context, $usedResponseClasses);
+    private function analyseMethod(ClassMethodContext $context): array 
+    {   
+        $paths = $this->methodPathExtractor->extract($context->method);
+        $results = [];
+        
+        foreach ($paths as $path) {
+            $pathResults = $this->analysePath($path, $context);
+            array_push($results, ...$pathResults);
+        }
+        
+        return $results;
+    }
 
+    /**
+     * Analyze a single execution path completely
+     * Returns all possible ResponseCall objects from this path
+     * 
+     * @return ResponseCall[]
+     */
+    private function analysePath(MethodPathDefinition $path, ClassMethodContext $context): array 
+    {
+        $results = [];
         $statementNodes = array_map(
             fn($statement) => $statement->getNode(),
             $path->getStatements()
         );
-
-        $results = [];
+        
+        // Find response class usages.
+        $usedResponseClasses = $this->findUsedResponseClassesInPath($path, $context);
         $classResults = $this->responseResolver->resolveUsedClasses($context, $statementNodes, $usedResponseClasses);
         array_push($results, ...$classResults);
 
-        $returnsResult = $this->responseResolver->resolveReturns($context, $statementNodes, $returns);
-        array_push($results, ...$returnsResult);
+        // Find all method calls in entire path
+        foreach ($statementNodes as $node) {
+            $methodCalls = $this->findMethodCalls($node);
 
+            foreach ($methodCalls as $methodCall) {
+                $childResults = $this->analyseMethodCall($methodCall, $context, $statementNodes);
+                array_push($results, ...$childResults);
+            }
+        }
+        
         return $results;
+    }
+
+    /**
+     * @return MethodCall[]
+     */
+    private function findMethodCalls(Node $node): array 
+    {
+        $methodCalls = [];
+        
+        // If this node itself is a method call, add it
+        if ($node instanceof MethodCall) {
+            $methodCalls[] = $node;
+        }
+        
+        // Recursively search all child nodes
+        foreach ($node->getSubNodeNames() as $name) {
+            $subNode = $node->$name;
+            
+            if ($subNode instanceof Node) {
+                $childCalls = $this->findMethodCalls($subNode);
+                array_push($methodCalls, ...$childCalls);
+            } elseif (is_array($subNode)) {
+                foreach ($subNode as $item) {
+                    if ($item instanceof Node) {
+                        $childCalls = $this->findMethodCalls($item);
+                        array_push($methodCalls, ...$childCalls);
+                    }
+                }
+            }
+        }
+        
+        return $methodCalls;
+    }
+
+    /**
+     * @return ResponseCall[]
+     */
+    private function analyseMethodCall(
+        MethodCall $methodCall, 
+        ClassMethodContext $context, 
+        array $statementNodes
+    ): array {
+        $var = $methodCall->var;
+        
+        // Case 1: $this->method() - same class
+        if ($var instanceof Variable && $var->name === 'this') {
+            return $this->analyseThisMethodCall($methodCall, $context);
+        }
+        
+        // Case 2: $this->service->method() - dependency injection (property)
+        if ($var instanceof PropertyFetch && $var->var instanceof Variable && $var->var->name === 'this') {
+            return $this->analysePropertyMethodCall($methodCall, $context);
+        }
+        
+        // Case 3: $variable->method() - instantiated object
+        if ($var instanceof Variable) {
+            return $this->analyseVariableMethodCall($methodCall, $context, $statementNodes);
+        }
+        
+        return [];
+    }
+
+    private function analyseThisMethodCall(MethodCall $methodCall, ClassMethodContext $context): array 
+    {
+        $methodName = $methodCall->name->name;
+        
+        // Find the method in the class
+        $calledMethod = $this->findMethodInClass($context->class, $methodName);
+        if (!$calledMethod) {
+            return [];
+        }
+        
+        $childContext = new ClassMethodContext(
+            class: $context->class,
+            method: $calledMethod,
+            imports: $context->imports
+        );
+        
+        // Recursively analyze - this will return ALL possible responses from that method
+        return $this->analyseMethod($childContext);
+    }
+
+    private function analysePropertyMethodCall(MethodCall $methodCall, ClassMethodContext $context): array 
+    {
+        //$propertyName = $methodCall->var->name->name;
+        $methodName = $methodCall->name->name;
+        
+        // Find the property in the class
+        $property = $this->classAstResolver->findPropertyInClass($context->class, $methodCall->var);
+        if (!$property) {
+            return [];
+        }
+        
+        // Resolve the property's class
+        $propertyClassName = $this->getPropertyClassName($property);
+        if (!$propertyClassName) {
+            return [];
+        }
+        
+        $classStructure = $this->classAstResolver->resolveClassStructure($propertyClassName, $context->imports);
+        if (!$classStructure) {
+            return [];
+        }
+        
+        // Find the method in the dependency class
+        $calledMethod = $this->findMethodInClass($classStructure->class, $methodName);
+        if (!$calledMethod) {
+            return [];
+        }
+        
+        $childContext = new ClassMethodContext(
+            class: $classStructure->class,
+            method: $calledMethod,
+            imports: $context->imports // Could merge imports from both classes
+        );
+        
+        return $this->analyseMethod($childContext);
+    }
+
+    private function analyseVariableMethodCall(
+        MethodCall $methodCall, 
+        ClassMethodContext $context,
+        array $statementNodes
+    ): array {
+        if (!$methodCall->var instanceof Variable) {
+            return [];
+        }
+
+        $variableName = $methodCall->var->name;
+        $methodName = $methodCall->name->name;
+        
+        // Find where the variable was assigned
+        $assignment = $this->variableAssignmentFinder->findAssignment($variableName, $statementNodes);
+        if (!$assignment || !($assignment instanceof New_)) {
+            return [];
+        }
+        
+        // Get the class name from "new ClassName()"
+        $className = $assignment->class->name ?? null;
+        if (!is_string($className)) {
+            return [];
+        }
+        
+        $classStructure = $this->classAstResolver->resolveClassStructure($className, $context->imports);
+        if (!$classStructure) {
+            return [];
+        }
+        
+        // Find the method in the instantiated class
+        $calledMethod = $this->findMethodInClass($classStructure->class, $methodName);
+        if (!$calledMethod) {
+            return [];
+        }
+        
+        $childContext = new ClassMethodContext(
+            class: $classStructure->class,
+            method: $calledMethod,
+            imports: $context->imports
+        );
+        
+        return $this->analyseMethod($childContext);
+    }
+
+    private function getPropertyClassName(Property $property): ?string 
+    {
+        $type = $property->type;
+        
+        if ($type instanceof NullableType) {
+            $type = $type->type;
+        }
+        
+        if ($type instanceof Name) {
+            return $type->toString();
+        }
+        
+        if ($type instanceof Identifier) {
+            // Built-in types like 'string', 'int', 'array' - not classes
+            return null;
+        }
+        
+        return null;
+    }
+
+    /**
+     * Find the method in a class by name
+     */
+    private function findMethodInClass(\PhpParser\Node\Stmt\Class_ $class, string $methodName): ?\PhpParser\Node\Stmt\ClassMethod 
+    {
+        foreach ($class->stmts as $stmt) {
+            if ($stmt instanceof \PhpParser\Node\Stmt\ClassMethod && $stmt->name->name === $methodName) {
+                return $stmt;
+            }
+        }
+        return null;
     }
 
     /**
@@ -90,24 +311,6 @@ class MethodAnalyser implements MethodResolverStrategy
         }
 
         return $usedResponseClasses;
-    }
-
-    /**
-     * @return Node[]
-     */
-    private function findReturnsInPath(MethodPathDefinition $path, ClassMethodContext $context): array
-    {
-        $returns = [];
-
-        foreach ($path->getStatements() as $stmts) {
-            $node = $stmts->getNode();
-
-            if ($node instanceof Return_) {
-                $returns[] = $node;
-            }
-        }
-
-        return $returns;
     }
 
     /**

@@ -28,7 +28,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class TypeStructureResolver
 {
-    private ?MethodResolverStrategy $methodStrategy = null;
+    //private ?MethodResolverStrategy $methodStrategy = null;
     private VariableAssignmentFinder $variableAssignmentFinder;
 
     public function __construct(
@@ -42,7 +42,7 @@ class TypeStructureResolver
 
     public function setMethodStrategy(MethodResolverStrategy $strategy): void 
     {
-        $this->methodStrategy = $strategy;
+        //$this->methodStrategy = $strategy;
     }
 
     /**
@@ -60,7 +60,7 @@ class TypeStructureResolver
             default => fn() => []
         };
 
-        return $result() ?? [];
+        return array_unique($result() ?? []);
     }
 
     /**
@@ -98,7 +98,7 @@ class TypeStructureResolver
                  * In case that the method call is directly to another function (could be in same class or a different)
                  * we will need to find the called function. 
                  */
-                if ($variableName == "this" && $this->methodStrategy) {
+                /*if ($variableName == "this" && $this->methodStrategy) {
                     $calledMethod = $this->classAstResolver->findMethodInClass($context->class, $node->name->name);
                     if (null === $calledMethod) {
                         return [];
@@ -111,11 +111,12 @@ class TypeStructureResolver
                     );
 
                     $results = $this->methodStrategy->resolveMethod($newContext);
-                    return $results;
-                }
+                    return $this->convertResponseCallsToBodyDefinitions($results);
+                }*/
 
                 $nodeExpr = $this->variableAssignmentFinder->findAssignment($variableName, $methodJourney);
-                $this->output->writeln("Method call variable: " . $this->dumper->dump($nodeExpr));
+
+                // Ex $this->otherClass->methodCall()
                 if ($nodeExpr != null && $nodeExpr instanceof New_) {
                     $className = $nodeExpr->class->name;
                     if (is_string($className)) {
@@ -140,6 +141,7 @@ class TypeStructureResolver
                                     );
                                     $results = $this->extractArray($newContext, $methodJourney, $node->name->name);
                                 } else {
+                                    // TODO: Other functions can return other things than array
                                     $results = [];
                                 }
                                 
@@ -206,7 +208,18 @@ class TypeStructureResolver
             $resolvedItems[] = $itemDef;
         }
 
-        return $resolvedItems;
+        return array_unique($resolvedItems);
+    }
+
+    private function handlePropertyFetch(ClassMethodContext $context, array $methodJourney, PropertyFetch $node): array
+    {
+        $property = $this->classAstResolver->findPropertyInClass($context->class, $node);
+        if (!$property) {
+            return [];
+        }
+        
+        $bodyDef = $this->getBodyFromProperty($context, $methodJourney, $property, $node->name->name);
+        return $bodyDef ? [$bodyDef] : [];
     }
 
     /**
@@ -451,5 +464,22 @@ class TypeStructureResolver
         return null;
     }
 
+    private function convertResponseCallsToBodyDefinitions(array $responseCalls): array
+    {
+        $bodyDefinitions = [];
+        
+        foreach ($responseCalls as $responseCall) {
+            if ($responseCall instanceof \Apilyser\Resolver\ResponseCall && $responseCall->structure) {
+                $bodyDefinitions[] = new ResponseBodyDefinition(
+                    name: null, // or extract from structure
+                    type: $responseCall->type,
+                    children: $responseCall->structure, // Adjust based on your ResponseCall structure
+                    nullable: false
+                );
+            }
+        }
+        
+        return $bodyDefinitions;
+    }
 
 }

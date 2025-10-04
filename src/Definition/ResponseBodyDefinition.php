@@ -85,4 +85,9 @@ class ResponseBodyDefinition {
 
         //return "{ name: ". $this->name .", type: ". $this->type . "" . $childStr . ", nullable: ". $this->nullable ." }";
     }
+
+    public function __toString()
+    {
+        return $this->toString();
+    }
 }

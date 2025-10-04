@@ -40,22 +40,4 @@ class ResponseResolver
 
         return $results;
     }
-
-    /**
-     * @return ResponseCall[]
-     */
-    public function resolveReturns(ClassMethodContext $context, array $methodJourney, array $returns): array
-    {
-        $results = [];
-
-        foreach ($returns as $return) {
-            $result = $this->typeStructureResolver->resolveFromExpression($context, $methodJourney, $return->expr);
-
-            if ($result != null) {
-                $results[] = $result;
-            }
-        }
-
-        return $results;
-    }
 }
