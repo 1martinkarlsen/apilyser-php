@@ -95,7 +95,6 @@ class TypeStructureResolver
 
         switch (true) {
             case $nodeVar instanceof Variable && $nodeVar->name === "this":
-                $this->output->writeln("TEST this");
                 $calledMethod = $this->classAstResolver->findMethodInClass($context->class, $node->name->name);
                 if (null === $calledMethod) {
                     return null;
@@ -116,8 +115,6 @@ class TypeStructureResolver
                     }
 
                 }
-
-                $this->output->writeln("TEST: ". count($structures));
 
                 return $structures;
 
@@ -167,20 +164,6 @@ class TypeStructureResolver
                 }
                 return null;
 
-                /*$structures = [];
-                $childFunctionPaths = $this->methodPathExtractor->extract($newContext->method);
-                foreach ($childFunctionPaths as $childFunctionPath) {
-                    $structure = $this->analysePathForStructure($childFunctionPath, $newContext);
-                    if (null !== $structure) {
-                        $structures[] = $structure;
-                    }
-
-                }
-
-                $this->output->writeln("TEST: ". count($structures));
-
-                return $structures;*/
-
             case $nodeVar instanceof PropertyFetch:
                 $property = $this->classAstResolver->findPropertyInClass($context->class, $nodeVar);
                 if (null === $property) {
@@ -214,20 +197,6 @@ class TypeStructureResolver
                     return $results;
                 }
                 return null;
-
-                /*$structures = [];
-                $childFunctionPaths = $this->methodPathExtractor->extract($newContext->method);
-                foreach ($childFunctionPaths as $childFunctionPath) {
-                    $structure = $this->analysePathForStructure($childFunctionPath, $newContext);
-                    if (null !== $structure) {
-                        $structures[] = $structure;
-                    }
-
-                }
-
-                $this->output->writeln("TEST: ". count($structures));
-
-                return $structures;*/
         };
 
         return null;
@@ -250,19 +219,6 @@ class TypeStructureResolver
 
         return array_unique($resolvedItems);
     }
-
-    private function handlePropertyFetch(ClassMethodContext $context, array $methodJourney, PropertyFetch $node): array
-    {
-        $property = $this->classAstResolver->findPropertyInClass($context->class, $node);
-        if (!$property) {
-            return [];
-        }
-        
-        $bodyDef = $this->getBodyFromProperty($context, $methodJourney, $property, $node->name->name);
-        return $bodyDef ? [$bodyDef] : [];
-    }
-
-
 
     private function analysePathForStructure(MethodPathDefinition $path, ClassMethodContext $context): ?array
     {
@@ -302,12 +258,6 @@ class TypeStructureResolver
         
         return $returns;
     }
-
-
-
-
-
-
 
     /**
      * @param ClassMethodContext $context
@@ -358,71 +308,6 @@ class TypeStructureResolver
         }
 
         return null;
-
-
-        /*if ($typeNode instanceof NullableType) {
-            // Property is Nullable
-            if ($typeNode->type instanceof Identifier) {
-                if ($typeNode->type->name == "array") {
-                    $children = [];
-                    foreach ($property->props as $prop) {
-                        $children[] = $this->getBodyFromPropertyItem($context, $prop);
-                    }
-
-                    return new ResponseBodyDefinition(
-                        name: $name,
-                        type: $typeNode->type->name,
-                        children: empty($children) ? null : $children,
-                        nullable: true
-                    );
-                } else {
-                    return new ResponseBodyDefinition(
-                        name: $name,
-                        type: $typeNode->type->name,
-                        nullable: true
-                    );
-                }
-            } else if ($typeNode->type instanceof Name) {
-                // Custom object
-                return new ResponseBodyDefinition(
-                    name: $typeNode->type->name,
-                    type: 'object',
-                    nullable: true
-                );
-            }
-        } else if ($typeNode instanceof Identifier) {
-            // Property is simple class like 'string', 'int', 'array' etc.
-            if ($property->type->name == "array") {
-                $children = [];
-                foreach ($property->props as $prop) {
-                    $children = $this->getBodyFromPropertyItem($context, $prop);
-                }
-
-                return new ResponseBodyDefinition(
-                    name: $name,
-                    type: $property->type->name,
-                    children: empty($children) ? null : $children,
-                    nullable: false
-                );
-            } else {
-                return new ResponseBodyDefinition(
-                    name: $name,
-                    type: $property->type->name,
-                    nullable: false
-                );
-            }
-        } else if ($typeNode instanceof Name) {
-            // Property is custom object with namespace
-            return new ResponseBodyDefinition(
-                name: $property->type->name,
-                type: 'object',
-                nullable: true
-            );
-        } else {
-            return null;
-        }
-
-        return null;*/
     }
 
     /**
@@ -546,24 +431,6 @@ class TypeStructureResolver
         }
 
         return null;
-    }
-
-    private function convertResponseCallsToBodyDefinitions(array $responseCalls): array
-    {
-        $bodyDefinitions = [];
-        
-        foreach ($responseCalls as $responseCall) {
-            if ($responseCall instanceof \Apilyser\Resolver\ResponseCall && $responseCall->structure) {
-                $bodyDefinitions[] = new ResponseBodyDefinition(
-                    name: null, // or extract from structure
-                    type: $responseCall->type,
-                    children: $responseCall->structure, // Adjust based on your ResponseCall structure
-                    nullable: false
-                );
-            }
-        }
-        
-        return $bodyDefinitions;
     }
 
 }
