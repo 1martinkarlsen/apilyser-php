@@ -22,7 +22,6 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\Node\Stmt\Return_;
 
 class MethodAnalyser implements MethodResolverStrategy
 {

@@ -4,6 +4,7 @@ namespace Apilyser\Resolver;
 
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Analyser\MethodPathAnalyser;
+use Apilyser\Definition\MethodPathDefinition;
 use Apilyser\Definition\ResponseBodyDefinition;
 use Apilyser\Extractor\MethodPathExtractor;
 use Apilyser\Traverser\ArrayKeyTraverser;
@@ -22,6 +23,7 @@ use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Property;
+use PhpParser\Node\Stmt\Return_;
 use PhpParser\NodeDumper;
 use PhpParser\NodeTraverser;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -90,105 +92,143 @@ class TypeStructureResolver
     private function handleMethodCall(ClassMethodContext $context, array $methodJourney, MethodCall $node): array|null
     {
         $nodeVar = $node->var;
-        switch (true) {
-            case $nodeVar instanceof Variable:
-                $variableName = $nodeVar->name;
 
-                /**
-                 * In case that the method call is directly to another function (could be in same class or a different)
-                 * we will need to find the called function. 
-                 */
-                /*if ($variableName == "this" && $this->methodStrategy) {
-                    $calledMethod = $this->classAstResolver->findMethodInClass($context->class, $node->name->name);
-                    if (null === $calledMethod) {
-                        return [];
+        switch (true) {
+            case $nodeVar instanceof Variable && $nodeVar->name === "this":
+                $this->output->writeln("TEST this");
+                $calledMethod = $this->classAstResolver->findMethodInClass($context->class, $node->name->name);
+                if (null === $calledMethod) {
+                    return null;
+                }
+
+                $newContext = new ClassMethodContext(
+                    class: $context->class,
+                    method: $calledMethod,
+                    imports: $context->imports
+                );
+                
+                $structures = [];
+                $childFunctionPaths = $this->methodPathExtractor->extract($newContext->method);
+                foreach ($childFunctionPaths as $childFunctionPath) {
+                    $structure = $this->analysePathForStructure($childFunctionPath, $newContext);
+                    if (null !== $structure) {
+                        $structures[] = $structure;
                     }
 
+                }
+
+                $this->output->writeln("TEST: ". count($structures));
+
+                return $structures;
+
+            case $nodeVar instanceof Variable:
+                $nodeExpr = $this->variableAssignmentFinder->findAssignment($nodeVar->name, $methodJourney);
+                if (null === $nodeExpr || !($nodeExpr instanceof New_)) {
+                    return null;
+                }
+
+                $className = $nodeExpr->class->name;
+                if (!is_string($className)) {
+                    return null;
+                }
+
+                $classStructure = $this->classAstResolver->resolveClassStructure($className, $context->imports);
+                if (null === $classStructure) {
+                    return null;
+                }
+
+                $calledMethod = $this->classAstResolver->findMethodInClass($classStructure->class, $node->name->name);
+                if (null === $calledMethod) {
+                    return null;
+                }
+
+                $returnType = null;
+                if ($calledMethod->returnType instanceof NullableType) {
+                    $returnType = $calledMethod->returnType->type->name;
+                } else if ($calledMethod->returnType instanceof Identifier) {
+                    $returnType = $calledMethod->returnType->name;
+                }
+
+                $results = null;
+                if ($returnType == 'array') {
                     $newContext = new ClassMethodContext(
-                        class: $context->class,
+                        class: $classStructure->class,
                         method: $calledMethod,
                         imports: $context->imports
                     );
-
-                    $results = $this->methodStrategy->resolveMethod($newContext);
-                    return $this->convertResponseCallsToBodyDefinitions($results);
-                }*/
-
-                $nodeExpr = $this->variableAssignmentFinder->findAssignment($variableName, $methodJourney);
-
-                // Ex $this->otherClass->methodCall()
-                if ($nodeExpr != null && $nodeExpr instanceof New_) {
-                    $className = $nodeExpr->class->name;
-                    if (is_string($className)) {
-                        $classStructure = $this->classAstResolver->resolveClassStructure($className, $context->imports);
-                        if ($classStructure != null) {
-
-                            $calledMethod = $this->classAstResolver->findMethodInClass($classStructure->class, $node->name->name);
-                            if ($calledMethod != null) {
-                                $returnType = null;
-                                if ($calledMethod->returnType instanceof NullableType) {
-                                    $returnType = $calledMethod->returnType->type->name;
-                                } else if ($calledMethod->returnType instanceof Identifier) {
-                                    $returnType = $calledMethod->returnType->name;
-                                }
-
-                                $results = null;
-                                if ($returnType == 'array') {
-                                    $newContext = new ClassMethodContext(
-                                        class: $classStructure->class,
-                                        method: $calledMethod,
-                                        imports: $context->imports
-                                    );
-                                    $results = $this->extractArray($newContext, $methodJourney, $node->name->name);
-                                } else {
-                                    // TODO: Other functions can return other things than array
-                                    $results = [];
-                                }
-                                
-                                if ($results != null) {
-                                    return $results;
-                                }
-                                return null;
-                            }
-                        }
-
-                        return null;
-                    }
+                    $results = $this->extractArray($newContext, $methodJourney, $node->name->name);
+                } else {
+                    // TODO: Other functions can return other things than array
+                    $results = [];
                 }
-                break;
+                
+                if ($results != null) {
+                    return $results;
+                }
+                return null;
+
+                /*$structures = [];
+                $childFunctionPaths = $this->methodPathExtractor->extract($newContext->method);
+                foreach ($childFunctionPaths as $childFunctionPath) {
+                    $structure = $this->analysePathForStructure($childFunctionPath, $newContext);
+                    if (null !== $structure) {
+                        $structures[] = $structure;
+                    }
+
+                }
+
+                $this->output->writeln("TEST: ". count($structures));
+
+                return $structures;*/
 
             case $nodeVar instanceof PropertyFetch:
-                $variableName = $nodeVar->name;
-
                 $property = $this->classAstResolver->findPropertyInClass($context->class, $nodeVar);
-                if ($property != null) {
-                    $classStructure = null;
-
-                    if ($property->type instanceof NullableType && $property->type->type instanceof Name) {
-                        $classStructure = $this->classAstResolver->resolveClassStructure($property->type->type->name, $context->imports);
-                    } else if ($property->type instanceof Name) {
-                        $classStructure = $this->classAstResolver->resolveClassStructure($property->type->name, $context->imports);
-                    }
-
-                    if ($classStructure != null) {
-                        $calledMethod = $this->classAstResolver->findMethodInClass($classStructure->class, $node->name->name);
-
-                        if ($calledMethod != null) {
-                            $newContext = new ClassMethodContext(
-                                class: $classStructure->class,
-                                method: $calledMethod,
-                                imports: $context->imports
-                            );
-                            $results = $this->extractArray($newContext, $methodJourney, $node->name->name);
-                            if ($results != null) {
-                                return $results;
-                            }
-                            return null;
-                        }
-                    }
+                if (null === $property) {
+                    return null;
                 }
-                break;
-        }
+
+                $classStructure = null;
+                if ($property->type instanceof NullableType && $property->type->type instanceof Name) {
+                    $classStructure = $this->classAstResolver->resolveClassStructure($property->type->type->name, $context->imports);
+                } else if ($property->type instanceof Name) {
+                    $classStructure = $this->classAstResolver->resolveClassStructure($property->type->name, $context->imports);
+                }
+
+                if (null === $classStructure) {
+                    return null;
+                }
+
+                $calledMethod = $this->classAstResolver->findMethodInClass($classStructure->class, $node->name->name);
+                if (null === $calledMethod) {
+                    return null;
+                }
+
+                $newContext = new ClassMethodContext(
+                    class: $classStructure->class,
+                    method: $calledMethod,
+                    imports: $context->imports
+                );
+
+                $results = $this->extractArray($newContext, $methodJourney, $node->name->name);
+                if ($results != null) {
+                    return $results;
+                }
+                return null;
+
+                /*$structures = [];
+                $childFunctionPaths = $this->methodPathExtractor->extract($newContext->method);
+                foreach ($childFunctionPaths as $childFunctionPath) {
+                    $structure = $this->analysePathForStructure($childFunctionPath, $newContext);
+                    if (null !== $structure) {
+                        $structures[] = $structure;
+                    }
+
+                }
+
+                $this->output->writeln("TEST: ". count($structures));
+
+                return $structures;*/
+        };
 
         return null;
     }
@@ -221,6 +261,53 @@ class TypeStructureResolver
         $bodyDef = $this->getBodyFromProperty($context, $methodJourney, $property, $node->name->name);
         return $bodyDef ? [$bodyDef] : [];
     }
+
+
+
+    private function analysePathForStructure(MethodPathDefinition $path, ClassMethodContext $context): ?array
+    {
+        // Find returns in this specific path
+        $returns = $this->findReturnsInPath($path);
+        
+        if (empty($returns)) {
+            return null;
+        }
+        
+        // Take the first return (or combine if multiple?)
+        $returnNode = $returns[0];
+        if (!$returnNode->expr) {
+            return null;
+        }
+        
+        $statementNodes = array_map(
+            fn($stmt) => $stmt->getNode(),
+            $path->getStatements()
+        );
+        
+        // Recursively resolve the return expression
+        return $this->resolveFromExpression($context, $statementNodes, $returnNode->expr);
+    }
+
+    private function findReturnsInPath(MethodPathDefinition $path): array
+    {
+        $returns = [];
+        
+        foreach ($path->getStatements() as $stmt) {
+            $node = $stmt->getNode();
+            
+            if ($node instanceof Return_) {
+                $returns[] = $node;
+            }
+        }
+        
+        return $returns;
+    }
+
+
+
+
+
+
 
     /**
      * @param ClassMethodContext $context
@@ -271,9 +358,6 @@ class TypeStructureResolver
         }
 
         return null;
-
-
-
 
 
         /*if ($typeNode instanceof NullableType) {
