@@ -23,7 +23,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\Property;
 
-class MethodAnalyser implements MethodResolverStrategy
+class MethodAnalyser
 {
     
     private $variableAssignmentFinder;
@@ -36,13 +36,7 @@ class MethodAnalyser implements MethodResolverStrategy
         private ClassAstResolver $classAstResolver,
         private TypeStructureResolver $typeStructureResolver
     ) {
-        $this->typeStructureResolver->setMethodStrategy($this);
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
-    }
-
-    public function resolveMethod(ClassMethodContext $context): array
-    {
-        return $this->analyse($context);
     }
 
     public function analyse(ClassMethodContext $context): array

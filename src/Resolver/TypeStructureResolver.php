@@ -31,7 +31,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class TypeStructureResolver
 {
-    //private ?MethodResolverStrategy $methodStrategy = null;
     private VariableAssignmentFinder $variableAssignmentFinder;
 
     public function __construct(
@@ -42,11 +41,6 @@ class TypeStructureResolver
         private ClassAstResolver $classAstResolver
     ) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
-    }
-
-    public function setMethodStrategy(MethodResolverStrategy $strategy): void 
-    {
-        //$this->methodStrategy = $strategy;
     }
 
     /**
