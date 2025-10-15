@@ -3,9 +3,9 @@
 namespace Apilyser\Resolver;
 
 use Apilyser\Extractor\ClassExtractor;
+use Apilyser\Extractor\ClassUsage;
 use Apilyser\Parser\Api\ApiParser;
 use Apilyser\Parser\Api\HttpDelegate;
-use Apilyser\Resolver\ClassUsage;
 
 class ApiFrameworkResolver
 {
@@ -16,6 +16,9 @@ class ApiFrameworkResolver
     ) {}
 
     /**
+     * @param array $stmts
+     * @param array $imports
+     * 
      * @return ClassUsage[]
      */
     public function resolve(array $stmts, array $imports): array

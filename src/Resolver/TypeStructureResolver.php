@@ -4,8 +4,8 @@ namespace Apilyser\Resolver;
 
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Definition\ResponseBodyDefinition;
-use Apilyser\Extractor\MethodPathExtractor;
 use Apilyser\Traverser\ArrayKeyTraverser;
+use PhpParser\Node;
 use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
@@ -23,17 +23,13 @@ use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\NodeDumper;
-use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class TypeStructureResolver
 {
     private VariableAssignmentFinder $variableAssignmentFinder;
 
     public function __construct(
-        private MethodPathExtractor $methodPathExtractor,
         private ClassAstResolver $classAstResolver
     ) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
@@ -41,6 +37,7 @@ class TypeStructureResolver
 
     /**
      * @param ClassMethodContext $context
+     * @param Node[] $methodJourney
      * @param Expr $expr
      * 
      * @return ResponseBodyDefinition[]
@@ -77,6 +74,7 @@ class TypeStructureResolver
 
     /**
      * @param ClassMethodContext $context
+     * @param Node[] $methodJourney
      * @param MethodCall $node
      * 
      * @return ?ResponseBodyDefinition[]
@@ -115,6 +113,7 @@ class TypeStructureResolver
 
     /**
      * @param ClassMethodContext $context
+     * @param Node[] $methodJourney
      * @param Array_ $node
      * 
      * @return ResponseBodyDefinition[]

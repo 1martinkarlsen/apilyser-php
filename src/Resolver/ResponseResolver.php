@@ -4,13 +4,13 @@ namespace Apilyser\Resolver;
 
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Extractor\ClassUsage;
+use PhpParser\Node;
 
 class ResponseResolver
 {
 
     public function __construct(
-        private ResponseClassUsageResolver $classUsageResolver,
-        private TypeStructureResolver $typeStructureResolver
+        private ResponseClassUsageResolver $classUsageResolver
     ) {}
 
     /**

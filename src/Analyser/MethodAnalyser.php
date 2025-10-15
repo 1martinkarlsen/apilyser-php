@@ -3,11 +3,12 @@
 namespace Apilyser\Analyser;
 
 use Apilyser\Definition\MethodPathDefinition;
+use Apilyser\Extractor\ClassUsage;
 use Apilyser\Extractor\MethodPathExtractor;
 use Apilyser\Parser\Api\ApiParser;
 use Apilyser\Parser\Api\HttpDelegate;
 use Apilyser\Resolver\ClassAstResolver;
-use Apilyser\Resolver\MethodResolverStrategy;
+use Apilyser\Resolver\ResponseCall;
 use Apilyser\Resolver\ResponseResolver;
 use Apilyser\Resolver\TypeStructureResolver;
 use Apilyser\Resolver\VariableAssignmentFinder;

@@ -24,9 +24,9 @@ class VariableAssignmentFinder
      * 
      * @return ?Expr
      */
-    public function findAssignment(string $variableName, array $nodes): ?Expr
+    public function findAssignment(string $variableName, array|null $nodes): ?Expr
     {
-        if ($nodes === null) {
+        if (null === $nodes) {
             return null;
         }
 

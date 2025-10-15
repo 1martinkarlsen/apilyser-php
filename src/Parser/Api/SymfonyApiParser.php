@@ -91,6 +91,7 @@ class SymfonyApiParser implements ApiParser {
     function tryParseCallLikeAsResponse(
         ClassMethodContext $context,
         Node $node,
+        array $methodJourney,
         ?ResponseCall $modifierResponseCall = null
     ): ?ResponseCall {
 
@@ -101,7 +102,7 @@ class SymfonyApiParser implements ApiParser {
 
         // Handling MethodCall
         if ($node instanceof MethodCall) {
-            return $this->handleMethodCall($context, $node, $modifierResponseCall);
+            return $this->handleMethodCall($context, $node, $methodJourney, $modifierResponseCall);
         }
 
         return null;
@@ -110,6 +111,7 @@ class SymfonyApiParser implements ApiParser {
     private function handleMethodCall(
         ClassMethodContext $context,
         MethodCall $node, 
+        array $methodJourney,
         ?ResponseCall $modifierResponseCall,
     ): ?ResponseCall {
         if ($node->name instanceof Identifier) {
@@ -135,6 +137,7 @@ class SymfonyApiParser implements ApiParser {
                     if (isset($args[0])) {
                         $modifierResponseCall->structure = $this->typeStructureResolver->resolveFromExpression(
                             context: $context,
+                            methodJourney: $methodJourney,
                             expr: $args[0]->value
                         );
                     }

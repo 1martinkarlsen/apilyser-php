@@ -20,6 +20,6 @@ class RouteParser
      */
     public function parse(): array
     {
-        return $this->routeResolver->resolveStrategy($this->projectPath);
+        return $this->routeResolver->resolveRoutes($this->projectPath);
     }
 }

@@ -41,6 +41,7 @@ interface ApiParser {
     /**
      * @param ClassMethodContext $context
      * @param Node $node
+     * @param array $methodJourney
      * @param ?ResponseCall $modifierResponseCall
      * 
      * @return ?ResponseCall
@@ -48,6 +49,7 @@ interface ApiParser {
     function tryParseCallLikeAsResponse(
         ClassMethodContext $context,
         Node $node,
+        array $methodJourney,
         ?ResponseCall $modifierResponseCall = null
     ): ?ResponseCall;
 }
