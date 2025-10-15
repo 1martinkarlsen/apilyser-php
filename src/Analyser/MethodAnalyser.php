@@ -39,6 +39,11 @@ class MethodAnalyser
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
     }
 
+    /**
+     * @param ClassMethodContext $context
+     * 
+     * @return ResponseCall[]
+     */
     public function analyse(ClassMethodContext $context): array
     {
         return $this->analyseMethod($context);
@@ -52,8 +57,8 @@ class MethodAnalyser
     private function analyseMethod(ClassMethodContext $context): array 
     {   
         $paths = $this->methodPathExtractor->extract($context->method);
+
         $results = [];
-        
         foreach ($paths as $path) {
             $pathResults = $this->analysePath($path, $context);
             array_push($results, ...$pathResults);
@@ -63,7 +68,7 @@ class MethodAnalyser
     }
 
     /**
-     * Analyze a single execution path completely
+     * Analyze a single execution path
      * Returns all possible ResponseCall objects from this path
      * 
      * @return ResponseCall[]
@@ -78,7 +83,7 @@ class MethodAnalyser
         
         // Find response class usages.
         $usedResponseClasses = $this->findUsedResponseClassesInPath($path, $context);
-        $classResults = $this->responseResolver->resolveUsedClasses($context, $statementNodes, $usedResponseClasses);
+        $classResults = $this->responseResolver->resolve($context, $statementNodes, $usedResponseClasses);
         array_push($results, ...$classResults);
 
         // Find all method calls in entire path

@@ -22,7 +22,7 @@ class ResponseResolver
      * 
      * @return ResponseCall[]
      */
-    public function resolveUsedClasses(ClassMethodContext $context, array $methodJourney, array $usedClasses): array
+    public function resolve(ClassMethodContext $context, array $methodJourney, array $usedClasses): array
     {
         $results = []; 
         foreach ($usedClasses as $usedClass) {

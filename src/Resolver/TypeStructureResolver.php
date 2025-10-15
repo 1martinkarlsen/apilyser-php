@@ -103,8 +103,7 @@ class TypeStructureResolver
             // Simple return types like 'int', 'string' etc.
             // This is wrong
             $result = $this->findValueType($newMethodContext, $methodJourney, $node->var);
-            $results[] = $result;
-            
+            $results[] = $result; 
         }
 
         if ($results != null) {
