@@ -3,14 +3,13 @@
 namespace Apilyser\Resolver;
 
 use Apilyser\Analyser\ClassMethodContext;
-use Apilyser\Analyser\MethodPathAnalyser;
-use Apilyser\Definition\MethodPathDefinition;
 use Apilyser\Definition\ResponseBodyDefinition;
 use Apilyser\Extractor\MethodPathExtractor;
 use Apilyser\Traverser\ArrayKeyTraverser;
 use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
+use PhpParser\Node\Expr\Cast\Bool_;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\PropertyFetch;
@@ -21,10 +20,12 @@ use PhpParser\Node\NullableType;
 use PhpParser\Node\PropertyItem;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\Int_;
+use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\NodeDumper;
+use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -36,6 +37,7 @@ class TypeStructureResolver
     public function __construct(
         public OutputInterface $output,
         public NodeDumper $dumper,
+        private NodeFinder $nodeFinder,
         private MethodPathExtractor $methodPathExtractor,
         private ClassAstResolver $classAstResolver
     ) {
@@ -91,34 +93,78 @@ class TypeStructureResolver
      */
     private function handleMethodCall(ClassMethodContext $context, array $methodJourney, MethodCall $node): array|null
     {
+        $newMethodContext = $this->findMethodContext($context, $methodJourney, $node);
+
+        if (null === $newMethodContext) {
+            return null;
+        }
+
+        $returnType = null;
+        if ($newMethodContext->method->returnType instanceof NullableType) {
+            $returnType = $newMethodContext->method->returnType->type->name;
+        } else if ($newMethodContext->method->returnType instanceof Identifier) {
+            $returnType = $newMethodContext->method->returnType->name;
+        }
+
+        $results = [];
+        if ($returnType === 'array') {
+            $results = $this->extractArray($newMethodContext, $methodJourney, $node->name->name);
+        } else {
+            // Simple return types like 'int', 'string' etc.
+            // This is wrong
+            $result = $this->findValueType($newMethodContext, $methodJourney, $node->var);
+            $results[] = $result;
+            
+        }
+
+        if ($results != null) {
+            return $results;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param ClassMethodContext $context
+     * @param Array_ $node
+     * 
+     * @return ResponseBodyDefinition[]
+     */
+    private function handleArray(ClassMethodContext $context, array $methodJourney, Array_ $node): array
+    {
+        $resolvedItems = [];
+
+        foreach ($node->items as $item) {
+            $itemDef = $this->resolveArrayItemStructure($context, $methodJourney, $item);
+            if ($itemDef !== null) {
+                $resolvedItems[] = $itemDef;
+            }
+        }
+
+        return array_unique($resolvedItems);
+    }
+
+    /**
+     * @return ClassMethodContext|null
+     */
+    private function findMethodContext(ClassMethodContext $context, array $methodJourney, MethodCall $node)
+    {
         $nodeVar = $node->var;
 
-        switch (true) {
-            case $nodeVar instanceof Variable && $nodeVar->name === "this":
+        $result = match (true) {
+            $nodeVar instanceof Variable && $nodeVar->name === "this" => fn() => function ($context, $node, $nodeVar, $methodJourney) {
                 $calledMethod = $this->classAstResolver->findMethodInClass($context->class, $node->name->name);
                 if (null === $calledMethod) {
                     return null;
                 }
 
-                $newContext = new ClassMethodContext(
+                return new ClassMethodContext(
                     class: $context->class,
                     method: $calledMethod,
                     imports: $context->imports
                 );
-                
-                $structures = [];
-                $childFunctionPaths = $this->methodPathExtractor->extract($newContext->method);
-                foreach ($childFunctionPaths as $childFunctionPath) {
-                    $structure = $this->analysePathForStructure($childFunctionPath, $newContext);
-                    if (null !== $structure) {
-                        $structures[] = $structure;
-                    }
-
-                }
-
-                return $structures;
-
-            case $nodeVar instanceof Variable:
+            },
+            $nodeVar instanceof Variable => fn() => function($context, $node, $nodeVar, $methodJourney) {
                 $nodeExpr = $this->variableAssignmentFinder->findAssignment($nodeVar->name, $methodJourney);
                 if (null === $nodeExpr || !($nodeExpr instanceof New_)) {
                     return null;
@@ -139,32 +185,13 @@ class TypeStructureResolver
                     return null;
                 }
 
-                $returnType = null;
-                if ($calledMethod->returnType instanceof NullableType) {
-                    $returnType = $calledMethod->returnType->type->name;
-                } else if ($calledMethod->returnType instanceof Identifier) {
-                    $returnType = $calledMethod->returnType->name;
-                }
-
-                $results = null;
-                if ($returnType == 'array') {
-                    $newContext = new ClassMethodContext(
-                        class: $classStructure->class,
-                        method: $calledMethod,
-                        imports: $context->imports
-                    );
-                    $results = $this->extractArray($newContext, $methodJourney, $node->name->name);
-                } else {
-                    // TODO: Other functions can return other things than array
-                    $results = [];
-                }
-                
-                if ($results != null) {
-                    return $results;
-                }
-                return null;
-
-            case $nodeVar instanceof PropertyFetch:
+                return new ClassMethodContext(
+                    class: $classStructure->class,
+                    method: $calledMethod,
+                    imports: $context->imports
+                );
+            },
+            $nodeVar instanceof PropertyFetch => fn() => function($context, $node, $nodeVar, $methodJourney) {
                 $property = $this->classAstResolver->findPropertyInClass($context->class, $nodeVar);
                 if (null === $property) {
                     return null;
@@ -186,77 +213,16 @@ class TypeStructureResolver
                     return null;
                 }
 
-                $newContext = new ClassMethodContext(
+                return new ClassMethodContext(
                     class: $classStructure->class,
                     method: $calledMethod,
                     imports: $context->imports
                 );
-
-                $results = $this->extractArray($newContext, $methodJourney, $node->name->name);
-                if ($results != null) {
-                    return $results;
-                }
-                return null;
+            },
+            default => fn() => null
         };
 
-        return null;
-    }
-
-    /**
-     * @param ClassMethodContext $context
-     * @param Array_ $node
-     * 
-     * @return ResponseBodyDefinition[]
-     */
-    private function handleArray(ClassMethodContext $context, array $methodJourney, Array_ $node): array
-    {
-        $resolvedItems = [];
-
-        foreach ($node->items as $item) {
-            $itemDef = $this->resolveArrayItemStructure($context, $methodJourney, $item);
-            $resolvedItems[] = $itemDef;
-        }
-
-        return array_unique($resolvedItems);
-    }
-
-    private function analysePathForStructure(MethodPathDefinition $path, ClassMethodContext $context): ?array
-    {
-        // Find returns in this specific path
-        $returns = $this->findReturnsInPath($path);
-        
-        if (empty($returns)) {
-            return null;
-        }
-        
-        // Take the first return (or combine if multiple?)
-        $returnNode = $returns[0];
-        if (!$returnNode->expr) {
-            return null;
-        }
-        
-        $statementNodes = array_map(
-            fn($stmt) => $stmt->getNode(),
-            $path->getStatements()
-        );
-        
-        // Recursively resolve the return expression
-        return $this->resolveFromExpression($context, $statementNodes, $returnNode->expr);
-    }
-
-    private function findReturnsInPath(MethodPathDefinition $path): array
-    {
-        $returns = [];
-        
-        foreach ($path->getStatements() as $stmt) {
-            $node = $stmt->getNode();
-            
-            if ($node instanceof Return_) {
-                $returns[] = $node;
-            }
-        }
-        
-        return $returns;
+        return $result()($context, $node, $nodeVar, $methodJourney) ?? null;
     }
 
     /**
@@ -333,9 +299,9 @@ class TypeStructureResolver
      * @param ClassMethodContext $context
      * @param ArrayItem $item
      * 
-     * @return ResponseBodyDefinition
+     * @return ResponseBodyDefinition|null
      */
-    private function resolveArrayItemStructure(ClassMethodContext $context, array $methodJourney, ArrayItem $item): ResponseBodyDefinition
+    private function resolveArrayItemStructure(ClassMethodContext $context, array $methodJourney, ArrayItem $item): ?ResponseBodyDefinition
     {
         $itemKey = null;
         switch (true) {
@@ -352,21 +318,68 @@ class TypeStructureResolver
         }
 
         $itemValue = $item->value;
-        if ($itemValue instanceof Scalar) {
-            return new ResponseBodyDefinition(
-                name: $itemKey,
-                type: $itemValue->getType(),
-                nullable: false
-            );
-        } else {
-            $def = $this->resolveFromExpression($context, $methodJourney, $itemValue);
-            return new ResponseBodyDefinition(
-                name: $itemKey,
-                type: 'array',
-                children: empty($def) ? null : $def,
-                nullable: false
-            );
+        switch (true) {
+            case $itemValue instanceof Scalar:
+                $typeName = $this->getScalarTypeName($itemValue);
+                return new ResponseBodyDefinition(
+                    name: $itemKey,
+                    type: $typeName,
+                    nullable: false
+                );
+
+            case $itemValue instanceof MethodCall:
+                if (null === $itemKey || empty($itemKey)) {
+                    // If no key, it must be an array
+                    $def = $this->resolveFromExpression($context, $methodJourney, $itemValue);
+                    return new ResponseBodyDefinition(
+                        name: $itemKey,
+                        type: 'array',
+                        children: empty($def) ? null : $def,
+                        nullable: false
+                    );
+                }
+                
+                $methodCallContext = $this->findMethodContext($context, $methodJourney, $itemValue);
+                if (null === $methodCallContext) {
+                    return null;
+                }
+
+                $returnType = null;
+                if ($methodCallContext->method->returnType instanceof NullableType) {
+                    $returnType = $methodCallContext->method->returnType->type->name;
+                } else if ($methodCallContext->method->returnType instanceof Identifier) {
+                    $returnType = $methodCallContext->method->returnType->name;
+                }
+
+                return new ResponseBodyDefinition(
+                    name: $itemKey,
+                    type: $returnType,
+                    children: [],
+                    nullable: false
+                );
+
+            case $itemValue instanceof Array_:
+                $def = $this->resolveFromExpression($context, $methodJourney, $itemValue);
+                return new ResponseBodyDefinition(
+                    name: $itemKey,
+                    type: 'array',
+                    children: empty($def) ? null : $def,
+                    nullable: false
+                );
         }
+
+        return null;
+    }
+
+    private function getScalarTypeName(Scalar $scalar): string
+    {
+        return match (true) {
+            $scalar instanceof String_ => 'string',
+            $scalar instanceof Int_ => 'int',
+            $scalar instanceof LNumber => 'float',
+            $scalar instanceof Bool_ => 'bool',
+            default => 'mixed'
+        };
     }
 
     /**
@@ -402,7 +415,6 @@ class TypeStructureResolver
      */
     private function findValueType(ClassMethodContext $context, array $methodJourney, Expr $value): ?ResponseBodyDefinition
     {
-        
         switch (true) {
             case $value instanceof PropertyFetch:
                 $property = $this->classAstResolver->findPropertyInClass($context->class, $value);
