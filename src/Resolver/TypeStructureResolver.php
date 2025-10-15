@@ -23,7 +23,6 @@ use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\Node\Stmt\Return_;
 use PhpParser\NodeDumper;
 use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
@@ -34,9 +33,6 @@ class TypeStructureResolver
     private VariableAssignmentFinder $variableAssignmentFinder;
 
     public function __construct(
-        public OutputInterface $output,
-        public NodeDumper $dumper,
-        private NodeFinder $nodeFinder,
         private MethodPathExtractor $methodPathExtractor,
         private ClassAstResolver $classAstResolver
     ) {
