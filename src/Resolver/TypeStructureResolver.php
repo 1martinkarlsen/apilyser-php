@@ -19,6 +19,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\PropertyItem;
 use PhpParser\Node\Scalar;
+use PhpParser\Node\Scalar\DNumber;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
@@ -361,11 +362,12 @@ class TypeStructureResolver
 
     private function getScalarTypeName(Scalar $scalar): string
     {
+        // true/false are not Scalar nodes, they are ConstFetch nodes.
+        // This function only handles actual scalar literals.
         return match (true) {
             $scalar instanceof String_ => 'string',
-            $scalar instanceof Int_ => 'int',
-            $scalar instanceof LNumber => 'float',
-            $scalar instanceof Bool_ => 'bool',
+            $scalar instanceof LNumber => 'int',
+            $scalar instanceof DNumber => 'float',
             default => 'mixed'
         };
     }

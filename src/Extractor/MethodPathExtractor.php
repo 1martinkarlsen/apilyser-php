@@ -121,6 +121,11 @@ class MethodPathExtractor
         }
     }
 
+    /**
+     * @param While_|For_|Foreach_ $loopStmt
+     * @param MethodPathDefinition $basePath
+     * @param array $remainingStmts
+     */
     private function handleLoop(Node $loopStmt, MethodPathDefinition $basePath, array $remainingStmts): void
     {
         // Path that enters the loop

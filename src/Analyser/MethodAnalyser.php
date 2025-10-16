@@ -186,7 +186,11 @@ class MethodAnalyser
         $methodName = $methodCall->name->name;
         
         // Find the property in the class
-        $property = $this->classAstResolver->findPropertyInClass($context->class, $methodCall->var);
+        $propertyFetch = $methodCall->var;
+        if (!$propertyFetch instanceof PropertyFetch) {
+            return [];
+        }
+        $property = $this->classAstResolver->findPropertyInClass($context->class, $propertyFetch);
         if (!$property) {
             return [];
         }
