@@ -6,7 +6,6 @@ use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\Variable;
-use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\NodeFinder;
 
 class VariableAssignmentFinder
@@ -25,9 +24,9 @@ class VariableAssignmentFinder
      * 
      * @return ?Expr
      */
-    public function findAssignment(string $variableName, array $nodes): ?Expr
+    public function findAssignment(string $variableName, array|null $nodes): ?Expr
     {
-        if ($nodes === null) {
+        if (null === $nodes) {
             return null;
         }
 

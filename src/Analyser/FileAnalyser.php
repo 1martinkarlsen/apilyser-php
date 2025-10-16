@@ -45,7 +45,7 @@ final class FileAnalyser
                 return $node instanceof ClassMethod && $node->name->name == $functionName;
             });
 
-            if ($function != null) {
+            if ($function != null && $function instanceof ClassMethod) {
                 $endpoint = $this->endpointAnalyser->analyse(
                     route: $route,
                     context: new ClassMethodContext(

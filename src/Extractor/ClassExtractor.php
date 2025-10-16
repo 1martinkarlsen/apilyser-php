@@ -42,7 +42,7 @@ class ClassExtractor
     }
 
     /**
-     * @param ApiParser $apiParser
+     * @param string $className
      * @param Node[] $stmts
      * @param string[] $imports
      * 
