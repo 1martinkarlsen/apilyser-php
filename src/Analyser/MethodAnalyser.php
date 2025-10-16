@@ -142,17 +142,17 @@ class MethodAnalyser
     ): array {
         $var = $methodCall->var;
         
-        // Case 1: $this->method() - same class
+        // If method in same class
         if ($var instanceof Variable && $var->name === 'this') {
             return $this->analyseThisMethodCall($methodCall, $context);
         }
         
-        // Case 2: $this->service->method() - dependency injection (property)
+        // If method from different class that exist in current class (ex $this->service->someMethod())
         if ($var instanceof PropertyFetch && $var->var instanceof Variable && $var->var->name === 'this') {
             return $this->analysePropertyMethodCall($methodCall, $context);
         }
         
-        // Case 3: $variable->method() - instantiated object
+        // From object variable
         if ($var instanceof Variable) {
             return $this->analyseVariableMethodCall($methodCall, $context, $statementNodes);
         }
@@ -182,7 +182,6 @@ class MethodAnalyser
 
     private function analysePropertyMethodCall(MethodCall $methodCall, ClassMethodContext $context): array 
     {
-        //$propertyName = $methodCall->var->name->name;
         $methodName = $methodCall->name->name;
         
         // Find the property in the class
@@ -195,7 +194,6 @@ class MethodAnalyser
             return [];
         }
         
-        // Resolve the property's class
         $propertyClassName = $this->getPropertyClassName($property);
         if (!$propertyClassName) {
             return [];
@@ -206,7 +204,6 @@ class MethodAnalyser
             return [];
         }
         
-        // Find the method in the dependency class
         $calledMethod = $this->findMethodInClass($classStructure->class, $methodName);
         if (!$calledMethod) {
             return [];
@@ -215,7 +212,7 @@ class MethodAnalyser
         $childContext = new ClassMethodContext(
             class: $classStructure->class,
             method: $calledMethod,
-            imports: $context->imports // Could merge imports from both classes
+            imports: $context->imports
         );
         
         return $this->analyseMethod($childContext);
@@ -233,7 +230,6 @@ class MethodAnalyser
         $variableName = $methodCall->var->name;
         $methodName = $methodCall->name->name;
         
-        // Find where the variable was assigned
         $assignment = $this->variableAssignmentFinder->findAssignment($variableName, $statementNodes);
         if (!$assignment || !($assignment instanceof New_)) {
             return [];
@@ -250,7 +246,6 @@ class MethodAnalyser
             return [];
         }
         
-        // Find the method in the instantiated class
         $calledMethod = $this->findMethodInClass($classStructure->class, $methodName);
         if (!$calledMethod) {
             return [];

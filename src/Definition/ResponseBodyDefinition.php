@@ -74,16 +74,12 @@ class ResponseBodyDefinition {
             }
         }
 
-        //$childStr = $this->children ? ", children: ". implode($childArr) : "";
-
         return json_encode([
             'name' => $this->name,
             'type' => $this->type,
             'children' => $childArr,
             'nullable' => $this->nullable
         ], JSON_UNESCAPED_SLASHES);
-
-        //return "{ name: ". $this->name .", type: ". $this->type . "" . $childStr . ", nullable: ". $this->nullable ." }";
     }
 
     public function __toString()
