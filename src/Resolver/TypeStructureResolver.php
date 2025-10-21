@@ -9,7 +9,6 @@ use PhpParser\Node;
 use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
-use PhpParser\Node\Expr\Cast\Bool_;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\PropertyFetch;
@@ -24,13 +23,17 @@ use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Property;
+use PhpParser\NodeDumper;
 use PhpParser\NodeTraverser;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class TypeStructureResolver
 {
     private VariableAssignmentFinder $variableAssignmentFinder;
 
     public function __construct(
+        private OutputInterface $output,
+        private NodeDumper $nodeDumper,
         private ClassAstResolver $classAstResolver
     ) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
@@ -148,6 +151,7 @@ class TypeStructureResolver
                 }
 
                 return new ClassMethodContext(
+                    namespace: $context->namespace,
                     class: $context->class,
                     method: $calledMethod,
                     imports: $context->imports
@@ -164,7 +168,7 @@ class TypeStructureResolver
                     return null;
                 }
 
-                $classStructure = $this->classAstResolver->resolveClassStructure($className, $context->imports);
+                $classStructure = $this->classAstResolver->resolveClassStructure($context->namespace, $className, $context->imports);
                 if (null === $classStructure) {
                     return null;
                 }
@@ -175,25 +179,21 @@ class TypeStructureResolver
                 }
 
                 return new ClassMethodContext(
+                    namespace: $classStructure->namespace,
                     class: $classStructure->class,
                     method: $calledMethod,
                     imports: $context->imports
                 );
             },
+            /*$nodeVar instanceof PropertyFetch && $nodeVar->name === "this" => fn() => function ($context, $node, $nodeVar, $methodJourney) {
+
+            },*/
             $nodeVar instanceof PropertyFetch => fn() => function($context, $node, $nodeVar, $methodJourney) {
-                $property = $this->classAstResolver->findPropertyInClass($context->class, $nodeVar);
-                if (null === $property) {
-                    return null;
-                }
-
-                $classStructure = null;
-                if ($property->type instanceof NullableType && $property->type->type instanceof Name) {
-                    $classStructure = $this->classAstResolver->resolveClassStructure($property->type->type->name, $context->imports);
-                } else if ($property->type instanceof Name) {
-                    $classStructure = $this->classAstResolver->resolveClassStructure($property->type->name, $context->imports);
-                }
-
+                $this->output->writeln("Property fetch: " . $nodeVar->name->name);
+                $this->output->writeln("class: " . $this->nodeDumper->dump($context->class));
+                $classStructure = $this->findClassFromProperty($context, $nodeVar);
                 if (null === $classStructure) {
+                    $this->output->writeln("NULL");
                     return null;
                 }
 
@@ -203,6 +203,7 @@ class TypeStructureResolver
                 }
 
                 return new ClassMethodContext(
+                    namespace: $classStructure->namespace,
                     class: $classStructure->class,
                     method: $calledMethod,
                     imports: $context->imports
@@ -212,6 +213,36 @@ class TypeStructureResolver
         };
 
         return $result()($context, $node, $nodeVar, $methodJourney) ?? null;
+    }
+
+    private function findClassFromProperty(ClassMethodContext $context, PropertyFetch $nodeVar): ?ClassStructure
+    {
+        $property = $this->classAstResolver->findPropertyInClass($context->class, $nodeVar);
+        if (null !== $property) {
+            // Handle property
+            if ($property->type instanceof NullableType && $property->type->type instanceof Name) {
+                return $this->classAstResolver->resolveClassStructure($context->namespace, $property->type->type->name, $context->imports);
+            }
+            
+            if ($property->type instanceof Name) {
+                return $this->classAstResolver->resolveClassStructure($context->namespace, $property->type->name, $context->imports);
+            }
+
+            return null;
+        }
+
+        $constructorParam = $this->classAstResolver->findConstructorParam($context->class, $nodeVar->name->name);
+        if (null !== $constructorParam) {
+            // Handle constructor param
+            if ($constructorParam->type instanceof Name) {
+                $this->output->writeln("HEJ " . $constructorParam->type->name);
+                return $this->classAstResolver->resolveClassStructure($context->namespace, $constructorParam->type->name, $context->imports);
+            }
+
+            return null;
+        }
+
+        return null;
     }
 
     /**

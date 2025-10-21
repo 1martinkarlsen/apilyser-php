@@ -137,10 +137,13 @@ class Injection
             rootPath: $this->rootPath
         );
         $this->services[ClassAstResolver::class] = new ClassAstResolver(
+            output: $this->get(OutputInterface::class),
             namespaceResolver: $this->get(NamespaceResolver::class),
             nodeParser: $this->get(NodeParser::class)
         );
         $this->services[TypeStructureResolver::class] = new TypeStructureResolver(
+            output: $this->get(OutputInterface::class),
+            nodeDumper: $this->get(NodeDumper::class),
             classAstResolver: $this->get(ClassAstResolver::class)
         );
 
@@ -202,6 +205,8 @@ class Injection
 
         // Analyzer
         $this->services[MethodAnalyser::class] = new MethodAnalyser(
+            nodeDumper: $this->get(NodeDumper::class),
+            output: $this->get(OutputInterface::class),
             methodPathExtractor: $this->get(MethodPathExtractor::class),
             responseResolver: $this->get(ResponseResolver::class),
             httpDelegate: $this->get(HttpDelegate::class),
