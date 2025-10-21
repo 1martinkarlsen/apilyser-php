@@ -23,8 +23,6 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\NodeDumper;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class MethodAnalyser
 {
@@ -32,8 +30,6 @@ class MethodAnalyser
     private $variableAssignmentFinder;
 
     public function __construct(
-        private NodeDumper $nodeDumper,
-        private OutputInterface $output,
         private MethodPathExtractor $methodPathExtractor,
         private ResponseResolver $responseResolver,
         private HttpDelegate $httpDelegate,
@@ -61,7 +57,6 @@ class MethodAnalyser
      */
     private function analyseMethod(ClassMethodContext $context): array 
     {   
-        //$this->output->writeln("PATH: " . $this->nodeDumper->dump($context->method));
         $paths = $this->methodPathExtractor->extract($context->method);
 
         $results = [];

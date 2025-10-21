@@ -23,17 +23,13 @@ use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\NodeDumper;
 use PhpParser\NodeTraverser;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class TypeStructureResolver
 {
     private VariableAssignmentFinder $variableAssignmentFinder;
 
     public function __construct(
-        private OutputInterface $output,
-        private NodeDumper $nodeDumper,
         private ClassAstResolver $classAstResolver
     ) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
@@ -185,15 +181,9 @@ class TypeStructureResolver
                     imports: $context->imports
                 );
             },
-            /*$nodeVar instanceof PropertyFetch && $nodeVar->name === "this" => fn() => function ($context, $node, $nodeVar, $methodJourney) {
-
-            },*/
             $nodeVar instanceof PropertyFetch => fn() => function($context, $node, $nodeVar, $methodJourney) {
-                $this->output->writeln("Property fetch: " . $nodeVar->name->name);
-                $this->output->writeln("class: " . $this->nodeDumper->dump($context->class));
                 $classStructure = $this->findClassFromProperty($context, $nodeVar);
                 if (null === $classStructure) {
-                    $this->output->writeln("NULL");
                     return null;
                 }
 
@@ -235,7 +225,6 @@ class TypeStructureResolver
         if (null !== $constructorParam) {
             // Handle constructor param
             if ($constructorParam->type instanceof Name) {
-                $this->output->writeln("HEJ " . $constructorParam->type->name);
                 return $this->classAstResolver->resolveClassStructure($context->namespace, $constructorParam->type->name, $context->imports);
             }
 

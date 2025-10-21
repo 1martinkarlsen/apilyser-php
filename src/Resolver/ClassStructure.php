@@ -3,7 +3,6 @@
 namespace Apilyser\Resolver;
 
 use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Namespace_;
 
 class ClassStructure
@@ -19,12 +18,12 @@ class ClassStructure
      */
     public array $imports;
 
-    public ClassLike $class;
+    public Class_ $class;
     
     public function __construct(
         Namespace_ $namespace,
         array $imports,
-        ClassLike $class
+        Class_ $class
     ) {
         $this->namespace = $namespace;
         $this->imports = $imports;
