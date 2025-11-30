@@ -24,12 +24,14 @@ use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\NodeTraverser;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class TypeStructureResolver
 {
     private VariableAssignmentFinder $variableAssignmentFinder;
 
     public function __construct(
+        private OutputInterface $output,
         private ClassAstResolver $classAstResolver
     ) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
@@ -96,6 +98,8 @@ class TypeStructureResolver
 
         $results = [];
         if ($returnType === 'array') {
+            // TODO: Issue here, becuase extractArray is mapping an array but because the function
+            // is calling another function which returns an array, we need to handle method call.
             $results = $this->extractArray($newMethodContext, $methodJourney, $node->name->name);
         } else {
             // Simple return types like 'int', 'string' etc.
@@ -400,6 +404,9 @@ class TypeStructureResolver
      */
     private function extractArray(ClassMethodContext $context, array $methodJourney, string $calledMethodName): array
     {
+        $this->output->writeln("Class -> " . $context->class->name);
+        $this->output->writeln("Method -> " . $context->method->name->name);
+
         $traverser = new NodeTraverser();
         $keyExtractor = new ArrayKeyTraverser($calledMethodName);
         $traverser->addVisitor($keyExtractor);
