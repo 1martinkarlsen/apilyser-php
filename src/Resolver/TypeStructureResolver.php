@@ -9,7 +9,6 @@ use PhpParser\Node;
 use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
-use PhpParser\Node\Expr\Cast\Bool_;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\PropertyFetch;
@@ -25,12 +24,14 @@ use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\NodeTraverser;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class TypeStructureResolver
 {
     private VariableAssignmentFinder $variableAssignmentFinder;
 
     public function __construct(
+        private OutputInterface $output,
         private ClassAstResolver $classAstResolver
     ) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
@@ -97,6 +98,8 @@ class TypeStructureResolver
 
         $results = [];
         if ($returnType === 'array') {
+            // TODO: Issue here, becuase extractArray is mapping an array but because the function
+            // is calling another function which returns an array, we need to handle method call.
             $results = $this->extractArray($newMethodContext, $methodJourney, $node->name->name);
         } else {
             // Simple return types like 'int', 'string' etc.
@@ -148,6 +151,7 @@ class TypeStructureResolver
                 }
 
                 return new ClassMethodContext(
+                    namespace: $context->namespace,
                     class: $context->class,
                     method: $calledMethod,
                     imports: $context->imports
@@ -164,7 +168,7 @@ class TypeStructureResolver
                     return null;
                 }
 
-                $classStructure = $this->classAstResolver->resolveClassStructure($className, $context->imports);
+                $classStructure = $this->classAstResolver->resolveClassStructure($context->namespace, $className, $context->imports);
                 if (null === $classStructure) {
                     return null;
                 }
@@ -175,24 +179,14 @@ class TypeStructureResolver
                 }
 
                 return new ClassMethodContext(
+                    namespace: $classStructure->namespace,
                     class: $classStructure->class,
                     method: $calledMethod,
                     imports: $context->imports
                 );
             },
             $nodeVar instanceof PropertyFetch => fn() => function($context, $node, $nodeVar, $methodJourney) {
-                $property = $this->classAstResolver->findPropertyInClass($context->class, $nodeVar);
-                if (null === $property) {
-                    return null;
-                }
-
-                $classStructure = null;
-                if ($property->type instanceof NullableType && $property->type->type instanceof Name) {
-                    $classStructure = $this->classAstResolver->resolveClassStructure($property->type->type->name, $context->imports);
-                } else if ($property->type instanceof Name) {
-                    $classStructure = $this->classAstResolver->resolveClassStructure($property->type->name, $context->imports);
-                }
-
+                $classStructure = $this->findClassFromProperty($context, $nodeVar);
                 if (null === $classStructure) {
                     return null;
                 }
@@ -203,6 +197,7 @@ class TypeStructureResolver
                 }
 
                 return new ClassMethodContext(
+                    namespace: $classStructure->namespace,
                     class: $classStructure->class,
                     method: $calledMethod,
                     imports: $context->imports
@@ -212,6 +207,35 @@ class TypeStructureResolver
         };
 
         return $result()($context, $node, $nodeVar, $methodJourney) ?? null;
+    }
+
+    private function findClassFromProperty(ClassMethodContext $context, PropertyFetch $nodeVar): ?ClassStructure
+    {
+        $property = $this->classAstResolver->findPropertyInClass($context->class, $nodeVar);
+        if (null !== $property) {
+            // Handle property
+            if ($property->type instanceof NullableType && $property->type->type instanceof Name) {
+                return $this->classAstResolver->resolveClassStructure($context->namespace, $property->type->type->name, $context->imports);
+            }
+            
+            if ($property->type instanceof Name) {
+                return $this->classAstResolver->resolveClassStructure($context->namespace, $property->type->name, $context->imports);
+            }
+
+            return null;
+        }
+
+        $constructorParam = $this->classAstResolver->findConstructorParam($context->class, $nodeVar->name->name);
+        if (null !== $constructorParam) {
+            // Handle constructor param
+            if ($constructorParam->type instanceof Name) {
+                return $this->classAstResolver->resolveClassStructure($context->namespace, $constructorParam->type->name, $context->imports);
+            }
+
+            return null;
+        }
+
+        return null;
     }
 
     /**
@@ -380,6 +404,9 @@ class TypeStructureResolver
      */
     private function extractArray(ClassMethodContext $context, array $methodJourney, string $calledMethodName): array
     {
+        $this->output->writeln("Class -> " . $context->class->name);
+        $this->output->writeln("Method -> " . $context->method->name->name);
+
         $traverser = new NodeTraverser();
         $keyExtractor = new ArrayKeyTraverser($calledMethodName);
         $traverser->addVisitor($keyExtractor);

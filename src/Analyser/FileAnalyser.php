@@ -8,6 +8,7 @@ use Apilyser\Extractor\FileClassesExtractor;
 use Apilyser\Parser\NodeParser;
 use Apilyser\Parser\Route;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\NodeFinder;
 
 final class FileAnalyser
@@ -29,13 +30,18 @@ final class FileAnalyser
         $fileContent = file_get_contents($route->controllerPath);
         $fileStmts = $this->nodeParser->parse($fileContent);
 
+        $namespace = $this->nodeFinder->findFirstInstanceOf($fileStmts, Namespace_::class);
+        if (null === $namespace) {
+            return [];
+        }
+
         $imports = $this->classImportsExtractor->extract($fileStmts);
         $classes = $this->fileClassesExtractor->extract($fileStmts);
 
-        return $this->analyseClasses($route, $classes, $imports);
+        return $this->analyseClasses($route, $namespace, $classes, $imports);
     }
 
-    private function analyseClasses(Route $route, array $classes, array $imports): array
+    private function analyseClasses(Route $route, Namespace_ $namespace, array $classes, array $imports): array
     {
         $endpoints = [];
 
@@ -49,6 +55,7 @@ final class FileAnalyser
                 $endpoint = $this->endpointAnalyser->analyse(
                     route: $route,
                     context: new ClassMethodContext(
+                        namespace: $namespace,
                         imports: $imports,
                         class: $class,
                         method: $function

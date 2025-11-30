@@ -171,6 +171,7 @@ class MethodAnalyser
         }
         
         $childContext = new ClassMethodContext(
+            namespace: $context->namespace,
             class: $context->class,
             method: $calledMethod,
             imports: $context->imports
@@ -199,7 +200,7 @@ class MethodAnalyser
             return [];
         }
         
-        $classStructure = $this->classAstResolver->resolveClassStructure($propertyClassName, $context->imports);
+        $classStructure = $this->classAstResolver->resolveClassStructure($context->namespace, $propertyClassName, $context->imports);
         if (!$classStructure) {
             return [];
         }
@@ -210,6 +211,7 @@ class MethodAnalyser
         }
         
         $childContext = new ClassMethodContext(
+            namespace: $classStructure->namespace,
             class: $classStructure->class,
             method: $calledMethod,
             imports: $context->imports
@@ -241,7 +243,7 @@ class MethodAnalyser
             return [];
         }
         
-        $classStructure = $this->classAstResolver->resolveClassStructure($className, $context->imports);
+        $classStructure = $this->classAstResolver->resolveClassStructure($context->namespace, $className, $context->imports);
         if (!$classStructure) {
             return [];
         }
@@ -252,6 +254,7 @@ class MethodAnalyser
         }
         
         $childContext = new ClassMethodContext(
+            namespace: $classStructure->namespace,
             class: $classStructure->class,
             method: $calledMethod,
             imports: $context->imports
