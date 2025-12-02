@@ -3,7 +3,6 @@
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Analyser\MethodAnalyser;
 use Apilyser\Analyser\ResponseAnalyser;
-use Apilyser\Definition\ResponseDefinition;
 use Apilyser\Extractor\MethodPathExtractor;
 use Apilyser\Parser\Api\HttpDelegate;
 use Apilyser\Parser\Api\SymfonyApiParser;
@@ -15,7 +14,6 @@ use Apilyser\Resolver\Node\NewClassResponseResolver;
 use Apilyser\Resolver\ResponseClassUsageResolver;
 use Apilyser\Resolver\ResponseResolver;
 use Apilyser\Resolver\TypeStructureResolver;
-use Apilyser\tests\Analyser\ResponseAnalyserIntegrationData;
 use Apilyser\Traverser\ClassUsageTraverserFactory;
 use PhpParser\ParserFactory;
 use PHPUnit\Framework\TestCase;
