@@ -11,4 +11,9 @@ class ServiceResponseAnalyserIntegrationData
     {
         return new JsonResponse(["id" => 1, "user_name" => "Test"], 200);
     }
+
+    function getProperty(): int
+    {
+        return 1;
+    }
 }

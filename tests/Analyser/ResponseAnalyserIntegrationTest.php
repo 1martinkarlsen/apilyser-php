@@ -211,4 +211,160 @@ class ResponseAnalyserIntegrationTest extends TestCase
 
         $this->assertEquals(expected: 401, actual: $first->statusCode);
     }
+
+    public function testFindWithVariableParameterStatusCode()
+    {
+        $context = $this->parseDataClassMethod("withParameterVariableStatusCode");
+        $result = $this->analyser->analyse($context);
+        
+        // Dine assertions her
+        $this->assertNotNull($result);
+        $first = $result[0];
+
+        $this->assertEquals(expected: 200, actual: $first->statusCode);
+    }
+
+    public function testFindWithMethodCallStatusCode()
+    {
+        $context = $this->parseDataClassMethod("withMethodCallStatusCode");
+        $result = $this->analyser->analyse($context);
+        
+        // Dine assertions her
+        $this->assertNotNull($result);
+        $first = $result[0];
+
+        $this->assertEquals(expected: 200, actual: $first->statusCode);
+    }
+
+    public function testFindWithDefaultStatusCode()
+    {
+        $context = $this->parseDataClassMethod("withDefaultStatusCode");
+        $result = $this->analyser->analyse($context);
+        
+        // Dine assertions her
+        $this->assertNotNull($result);
+        $first = $result[0];
+
+        $this->assertEquals(expected: 200, actual: $first->statusCode);
+    }
+
+    public function testFindWithDirectArrayBody()
+    {
+        $context = $this->parseDataClassMethod("withDirectArrayBody");
+        $result = $this->analyser->analyse($context);
+        
+        // Dine assertions her
+        $this->assertNotNull($result);
+        $first = $result[0];
+        $body = $first->structure;
+
+        $this->assertNotEmpty($body);
+        $this->assertNotNull($body[0]);
+
+        $firstBodyItem = $body[0];
+
+        $this->assertEquals(expected: "id", actual: $firstBodyItem->getName());
+        $this->assertEquals(expected: "int", actual: $firstBodyItem->getType());
+        $this->assertEquals(expected: false, actual: $firstBodyItem->getIsNullable());
+    }
+
+    public function testFindWithDirectNullBody()
+    {
+        $context = $this->parseDataClassMethod("withDirectNullBody");
+        $result = $this->analyser->analyse($context);
+        
+        // Dine assertions her
+        $this->assertNotNull($result);
+        $first = $result[0];
+        $body = $first->structure;
+
+        $this->assertEmpty($body);
+    }
+
+    public function testFindWithDirectEmptyArrayBody()
+    {
+        $context = $this->parseDataClassMethod("withDirectEmptyArrayBody");
+        $result = $this->analyser->analyse($context);
+        
+        // Dine assertions her
+        $this->assertNotNull($result);
+        $first = $result[0];
+        $body = $first->structure;
+
+        $this->assertEmpty($body);
+    }
+
+    public function testFindWithDirectArrayWithVariableBody()
+    {
+        $context = $this->parseDataClassMethod("withDirectArrayWithVariablesBody");
+        $result = $this->analyser->analyse($context);
+        
+        // Dine assertions her
+        $this->assertNotNull($result);
+        $first = $result[0];
+        $body = $first->structure;
+
+        $this->assertNotEmpty($body);
+
+        // Testing local variable
+        $first = $body[0];
+        $this->assertNotNull($first);
+        $this->assertEquals(expected: "id", actual: $first->getName());
+        $this->assertEquals(expected: "int", actual: $first->getType());
+        $this->assertEquals(expected: false, actual: $first->getIsNullable());
+
+        // Testing service method to receive property
+        $second = $body[1];
+        $this->assertNotNull($second);
+        $this->assertEquals(expected: "name", actual: $second->getName());
+        $this->assertEquals(expected: "string", actual: $second->getType());
+        $this->assertEquals(expected: false, actual: $second->getIsNullable());
+
+        // Testing local function to return property
+        $third = $body[1];
+        $this->assertNotNull($third);
+        $this->assertEquals(expected: "email", actual: $third->getName());
+        $this->assertEquals(expected: "string", actual: $third->getType());
+        $this->assertEquals(expected: false, actual: $third->getIsNullable());
+    }
+
+    public function testFindWithVariableArrayBody()
+    {
+        $context = $this->parseDataClassMethod("withVariableArrayBody");
+        $result = $this->analyser->analyse($context);
+        
+        // Dine assertions her
+        $this->assertNotNull($result);
+        $first = $result[0];
+        $body = $first->structure;
+
+        $this->assertNotEmpty($body);
+
+        // Testing local variable
+        $first = $body[0];
+        $this->assertNotNull($first);
+        $this->assertEquals(expected: "id", actual: $first->getName());
+        $this->assertEquals(expected: "int", actual: $first->getType());
+        $this->assertEquals(expected: false, actual: $first->getIsNullable());
+    }
+
+    public function testFindWithMethodCallBody()
+    {
+        $context = $this->parseDataClassMethod("withMethodCallBody");
+        $result = $this->analyser->analyse($context);
+        
+        // Dine assertions her
+        $this->assertNotNull($result);
+        $first = $result[0];
+        $body = $first->structure;
+
+        $this->assertNotEmpty($body);
+
+        // Testing local variable
+        $first = $body[0];
+        $this->assertNotNull($first);
+        $this->assertEquals(expected: "id", actual: $first->getName());
+        $this->assertEquals(expected: "int", actual: $first->getType());
+        $this->assertEquals(expected: false, actual: $first->getIsNullable());
+    }
 }
