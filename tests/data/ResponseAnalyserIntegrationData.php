@@ -8,6 +8,13 @@ use Symfony\Component\HttpFoundation\Response;
 class ResponseAnalyserIntegrationData
 {
 
+    private ServiceResponseAnalyserIntegrationData $service;
+
+    public function __construct()
+    {
+        $this->service = new ServiceResponseAnalyserIntegrationData();
+    }
+
     public function withOneDirectReturn(): Response
     {
         return new JsonResponse(["id" => 1, "user_name" => "Test"], 200);
@@ -50,5 +57,21 @@ class ResponseAnalyserIntegrationData
     private function privateMethodCallReturn(): Response
     {
         return new JsonResponse(["id" => 1, "user_name" => "Test"], 200);
+    }
+
+    public function withServiceCallReturn() : Response
+    {
+        return $this->service->serviceCallReturn();
+    }
+
+    public function withVariableStatusCode(): Response
+    {
+        $statusCode = 401;
+        return new JsonResponse(null, $statusCode);
+    }
+
+    public function withConstantStatusCode(): Response
+    {
+        return new JsonResponse(null, Response::HTTP_BAD_REQUEST);
     }
 }

@@ -123,6 +123,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
         );
     }
 
+    // Testing for finding responses where response is directly returned.
     public function testFindWithOneDirectReturn()
     {   
         $context = $this->parseDataClassMethod("withOneDirectReturn");
@@ -131,8 +132,12 @@ class ResponseAnalyserIntegrationTest extends TestCase
         // Dine assertions her
         $this->assertNotNull($result);
         $this->assertCount(expectedCount: 1, haystack: $result);
+
+        $first = $result[0];
+        $this->assertEquals(expected: 200, actual: $first->statusCode);
     }
 
+    // Testing for finding responses where there could be multiple direct responses.
     public function testFindWithMultipleDirectReturn()
     {
         $context = $this->parseDataClassMethod("withMultipleDirectReturn");
@@ -171,5 +176,39 @@ class ResponseAnalyserIntegrationTest extends TestCase
         // Dine assertions her
         $this->assertNotNull($result);
         $this->assertCount(expectedCount: 1, haystack: $result);
+    }
+
+    public function testFindWithServiceCallReturn()
+    {
+        $context = $this->parseDataClassMethod("withServiceCallReturn");
+        $result = $this->analyser->analyse($context);
+        
+        // Dine assertions her
+        $this->assertNotNull($result);
+        $this->assertCount(expectedCount: 1, haystack: $result);
+    }
+
+    public function testFindWithVariableStatusCode()
+    {
+        $context = $this->parseDataClassMethod("withVariableStatusCode");
+        $result = $this->analyser->analyse($context);
+        
+        // Dine assertions her
+        $this->assertNotNull($result);
+        $first = $result[0];
+
+        $this->assertEquals(expected: 401, actual: $first->statusCode);
+    }
+
+    public function testFindWithConstantStatusCode()
+    {
+        $context = $this->parseDataClassMethod("withConstantStatusCode");
+        $result = $this->analyser->analyse($context);
+        
+        // Dine assertions her
+        $this->assertNotNull($result);
+        $first = $result[0];
+
+        $this->assertEquals(expected: 401, actual: $first->statusCode);
     }
 }
