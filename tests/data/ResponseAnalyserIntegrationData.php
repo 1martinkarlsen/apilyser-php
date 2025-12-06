@@ -70,6 +70,12 @@ class ResponseAnalyserIntegrationData
         return new JsonResponse(null, $statusCode);
     }
 
+    private $classScopedVariableStatusCode = 401;
+    public function withClassScopedVariableStatusCode(): Response
+    {
+        return new JsonResponse(null, $this->classScopedVariableStatusCode);
+    }
+
     public function withConstantStatusCode(): Response
     {
         return new JsonResponse(null, Response::HTTP_BAD_REQUEST);
@@ -97,7 +103,7 @@ class ResponseAnalyserIntegrationData
 
     public function withDefaultStatusCode(): Response
     {
-        return new JsonResponse(null);
+        return new JsonResponse();
     }
 
     public function withDirectArrayBody(): Response

@@ -4,11 +4,13 @@ namespace Apilyser\Resolver;
 
 use Apilyser\Parser\NodeParser;
 use PhpParser\Node;
+use PhpParser\Node\Const_;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Const_ as StmtConst_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Use_;
@@ -76,6 +78,19 @@ class ClassAstResolver
                     imports: $classImports,
                     class: $classNode
                 );
+            }
+        } else {
+            try {
+                $reflection = new \ReflectionClass($fullClassName);
+                $filePath = $reflection->getFileName();
+
+                if (!$filePath) {
+                    echo "Namespace " . $filePath . " ||";
+                } else {
+                    echo "Namespace error";
+                }
+            } catch (\ReflectionException $e) {
+                return null;
             }
         }
 
@@ -148,5 +163,12 @@ class ClassAstResolver
         }
 
         return $propertyParam;
+    }
+
+    public function findConstInClass(Class_ $class, string $constName): ?Const_
+    {
+        return $this->nodeFinder->findFirst($class->stmts, function (Node $node) use ($constName) {
+            return $node instanceof Const_ && $node->name->name === $constName;
+        });
     }
 }

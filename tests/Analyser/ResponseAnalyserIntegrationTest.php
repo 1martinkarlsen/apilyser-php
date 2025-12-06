@@ -14,6 +14,7 @@ use Apilyser\Resolver\Node\NewClassResponseResolver;
 use Apilyser\Resolver\ResponseClassUsageResolver;
 use Apilyser\Resolver\ResponseResolver;
 use Apilyser\Resolver\TypeStructureResolver;
+use Apilyser\Resolver\VariableAssignmentFinder;
 use Apilyser\Traverser\ClassUsageTraverserFactory;
 use PhpParser\ParserFactory;
 use PHPUnit\Framework\TestCase;
@@ -33,7 +34,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
         $this->output = $this->createMock(OutputInterface::class);
         $this->namespaceResolver = new NamespaceResolver(
             output: $this->output,
-            rootPath: ""
+            rootPath: __DIR__ . "/../../"
         );
         $this->classAstResolver = new ClassAstResolver(
             namespaceResolver: $this->namespaceResolver,
@@ -56,7 +57,9 @@ class ResponseAnalyserIntegrationTest extends TestCase
                             new NewClassResponseResolver(
                                 namespaceResolver: $this->namespaceResolver,
                                 typeStructureResolver: $this->typeStructureResolver,
-                                httpDelegate: $this->httpDelegate
+                                httpDelegate: $this->httpDelegate,
+                                variableAssignmentFinder: new VariableAssignmentFinder(),
+                                classAstResolver: $this->classAstResolver
                             ),
                             new MethodCallResponseResolver(httpDelegate: $this->httpDelegate)
                         ]
@@ -198,6 +201,18 @@ class ResponseAnalyserIntegrationTest extends TestCase
         $this->assertEquals(expected: 401, actual: $first->statusCode);
     }
 
+    public function testFindWithClassScopeVariableStatusCode()
+    {
+        $context = $this->parseDataClassMethod("withClassScopedVariableStatusCode");
+        $result = $this->analyser->analyse($context);
+        
+        // Dine assertions her
+        $this->assertNotNull($result);
+        $first = $result[0];
+
+        $this->assertEquals(expected: 401, actual: $first->statusCode);
+    }
+
     public function testFindWithConstantStatusCode()
     {
         $context = $this->parseDataClassMethod("withConstantStatusCode");
@@ -207,7 +222,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
         $this->assertNotNull($result);
         $first = $result[0];
 
-        $this->assertEquals(expected: 401, actual: $first->statusCode);
+        $this->assertEquals(expected: 400, actual: $first->statusCode);
     }
 
     public function testFindWithVariableParameterStatusCode()

@@ -53,7 +53,7 @@ class NamespaceResolver {
         // Path to composer.json
         $composerJsonPath = rtrim($this->rootPath, DIRECTORY_SEPARATOR) . 
                             DIRECTORY_SEPARATOR . 'composer.json';
-        
+
         // Check if composer.json exists
         if (!file_exists($composerJsonPath)) {
             $this->output->writeln("Could not find composer for " . $composerJsonPath);
@@ -88,7 +88,7 @@ class NamespaceResolver {
         $vendorDir = $this->rootPath . DIRECTORY_SEPARATOR . 'vendor';
         $installedJsonPath = $vendorDir . DIRECTORY_SEPARATOR . 'composer' . 
                             DIRECTORY_SEPARATOR . 'installed.json';
-        
+
         if (file_exists($installedJsonPath)) {
             $installedData = json_decode(file_get_contents($installedJsonPath), true);
             
