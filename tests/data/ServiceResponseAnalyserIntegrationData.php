@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\tests\Analyser;
+namespace Apilyser\tests\Data;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -12,8 +12,8 @@ class ServiceResponseAnalyserIntegrationData
         return new JsonResponse(["id" => 1, "user_name" => "Test"], 200);
     }
 
-    function getProperty(): int
+    function getProperty(): string
     {
-        return 1;
+        return "hello";
     }
 }

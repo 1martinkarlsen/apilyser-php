@@ -39,7 +39,8 @@ class ClassAstResolver
     {
         $fullClassName = $this->namespaceResolver->findFullNamespaceForClass(
             className: $className,
-            imports: $imports
+            imports: $imports,
+            currentNamespace: $namespace
         );
 
         // If the class name is not fully qualified (i.e., it was not in the imports),

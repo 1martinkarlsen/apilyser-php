@@ -59,7 +59,11 @@ class NewClassResponseResolver implements ResponseNodeResolver
         }
 
         $className = $node->class->name;
-        $fullClassName = $this->namespaceResolver->findFullNamespaceForClass($className, $context->imports);
+        $fullClassName = $this->namespaceResolver->findFullNamespaceForClass(
+            className: $className, 
+            imports: $context->imports,
+            currentNamespace: $context->namespace
+        );
 
         $responseParser = $this->getResponseParser($fullClassName);
         if (!$responseParser) {

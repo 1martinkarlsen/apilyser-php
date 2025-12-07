@@ -1,5 +1,7 @@
 <?php
 
+namespace Apilyser\tests\Analyser;
+
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Analyser\MethodAnalyser;
 use Apilyser\Analyser\ResponseAnalyser;
@@ -334,7 +336,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
         $this->assertEquals(expected: false, actual: $second->getIsNullable());
 
         // Testing local function to return property
-        $third = $body[1];
+        $third = $body[2];
         $this->assertNotNull($third);
         $this->assertEquals(expected: "email", actual: $third->getName());
         $this->assertEquals(expected: "string", actual: $third->getType());

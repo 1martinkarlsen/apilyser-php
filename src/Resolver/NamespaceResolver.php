@@ -2,6 +2,7 @@
 
 namespace Apilyser\Resolver;
 
+use PhpParser\Node\Stmt\Namespace_;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -26,14 +27,23 @@ class NamespaceResolver {
      * 
      * @return string
      */
-    public function findFullNamespaceForClass(string $className, array $imports): string
-    {
+    public function findFullNamespaceForClass(
+        string $className, 
+        array $imports,
+        ?Namespace_ $currentNamespace = null
+    ): string {
         foreach ($imports as $import) {
             $importArr = explode("\\", $import);
             $lastElm = end($importArr);
             if ($lastElm == $className) {
                 return $import;
             }
+        }
+
+        // If not in imports and we have current namespace context,
+        // assume it's in the same namespace
+        if ($currentNamespace !== null && $currentNamespace->name !== null) {
+            return $currentNamespace->name->toString() . "\\" . $className;
         }
 
         return $className;
@@ -73,6 +83,20 @@ class NamespaceResolver {
         // Process project's own mappings
         if (isset($composerConfig['autoload']['psr-4'])) {
             foreach ($composerConfig['autoload']['psr-4'] as $prefix => $paths) {
+                $prefix = rtrim($prefix, '\\') . '\\';
+                if (is_array($paths)) {
+                    foreach ($paths as $path) {
+                        $psr4Mappings[$prefix][] = $this->rootPath . DIRECTORY_SEPARATOR . $path;
+                    }
+                } else {
+                    $psr4Mappings[$prefix][] = $this->rootPath . DIRECTORY_SEPARATOR . $paths;
+                }
+            }
+        }
+
+        // Process autoload-dev mappings (for tests)
+        if (isset($composerConfig['autoload-dev']['psr-4'])) {
+            foreach ($composerConfig['autoload-dev']['psr-4'] as $prefix => $paths) {
                 $prefix = rtrim($prefix, '\\') . '\\';
                 if (is_array($paths)) {
                     foreach ($paths as $path) {

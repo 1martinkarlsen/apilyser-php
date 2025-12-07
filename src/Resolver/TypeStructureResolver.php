@@ -379,9 +379,178 @@ class TypeStructureResolver
                     children: empty($def) ? null : $def,
                     nullable: false
                 );
+            case $itemValue instanceof Variable:
+                return $this->handleVariableArrayItem($context, $methodJourney, $itemValue, $itemKey);
         }
 
         return null;
+    }
+
+    /**
+     * Handles a variable in an array item - checks both local scope and class scope
+     * 
+     * @param ClassMethodContext $context
+     * @param Node[] $methodJourney
+     * @param Variable $variable
+     * @param string|int|null $itemKey
+     * 
+     * @return ResponseBodyDefinition|null
+     */
+    private function handleVariableArrayItem(
+        ClassMethodContext $context, 
+        array $methodJourney, 
+        Variable $variable, 
+        string|int|null $itemKey
+    ): ?ResponseBodyDefinition
+    {
+        $variableName = $variable->name;
+    
+        // 1. First, check for local variable assignment in method scope
+        $assignedExpr = $this->variableAssignmentFinder->findAssignment($variableName, $methodJourney);
+        
+        if ($assignedExpr !== null) {
+            // Variable is assigned in method - resolve its expression
+            return $this->resolveVariableFromExpression($context, $methodJourney, $assignedExpr, $itemKey);
+        }
+        
+        // 2. Check if it's a class property ($this->propertyName)
+        // We need to construct a PropertyFetch to search for it
+        $propertyFetch = new PropertyFetch(
+            new Variable('this'),
+            new Identifier($variableName)
+        );
+        
+        $property = $this->classAstResolver->findPropertyInClass($context->class, $propertyFetch);
+        
+        if ($property !== null) {
+            // Found as class property
+            return $this->getBodyFromProperty($context, $methodJourney, $property, $itemKey ?? $variableName);
+        }
+        
+        // 3. Check if it's a constructor parameter (promoted property or injected dependency)
+        $constructorParam = $this->classAstResolver->findConstructorParam($context->class, $variableName);
+        
+        if ($constructorParam !== null) {
+            return $this->getBodyFromConstructorParam($context, $constructorParam, $itemKey ?? $variableName);
+        }
+        
+        // 4. Variable not found anywhere - return unknown
+        return new ResponseBodyDefinition(
+            name: $itemKey ?? $variableName,
+            type: null,
+            nullable: true
+        );
+    }
+
+    /**
+     * Resolves a variable's type from its assigned expression
+     * 
+     * @param ClassMethodContext $context
+     * @param Node[] $methodJourney
+     * @param Expr $expr
+     * @param string|int|null $itemKey
+     * 
+     * @return ResponseBodyDefinition|null
+     */
+    private function resolveVariableFromExpression(
+        ClassMethodContext $context,
+        array $methodJourney,
+        Expr $expr,
+        string|int|null $itemKey
+    ): ?ResponseBodyDefinition
+    {
+        switch (true) {
+            case $expr instanceof Scalar:
+                $typeName = $this->getScalarTypeName($expr);
+                return new ResponseBodyDefinition(
+                    name: $itemKey,
+                    type: $typeName,
+                    nullable: false
+                );
+                
+            case $expr instanceof Array_:
+                $def = $this->resolveFromExpression($context, $methodJourney, $expr);
+                return new ResponseBodyDefinition(
+                    name: $itemKey,
+                    type: 'array',
+                    children: empty($def) ? null : $def,
+                    nullable: false
+                );
+                
+            case $expr instanceof MethodCall:
+                $def = $this->handleMethodCall($context, $methodJourney, $expr);
+                return new ResponseBodyDefinition(
+                    name: $itemKey,
+                    type: 'array',
+                    children: empty($def) ? null : $def,
+                    nullable: false
+                );
+                
+            case $expr instanceof New_:
+                if ($expr->class instanceof Name) {
+                    return new ResponseBodyDefinition(
+                        name: $itemKey,
+                        type: 'object',
+                        nullable: false
+                    );
+                }
+                break;
+                
+            case $expr instanceof Variable:
+                // Recursive call - variable assigned to another variable
+                return $this->handleVariableArrayItem($context, $methodJourney, $expr, $itemKey);
+        }
+        
+        return null;
+    }
+
+    /**
+     * Gets body definition from a constructor parameter
+     * 
+     * @param ClassMethodContext $context
+     * @param Param $param
+     * @param string|int $name
+     * 
+     * @return ResponseBodyDefinition|null
+     */
+    private function getBodyFromConstructorParam(
+        ClassMethodContext $context,
+        \PhpParser\Node\Param $param,
+        string|int $name
+    ): ?ResponseBodyDefinition
+    {
+        $isNullable = false;
+        $paramType = $param->type;
+        
+        if ($paramType instanceof NullableType) {
+            $isNullable = true;
+            $paramType = $paramType->type;
+        }
+        
+        if ($paramType instanceof Identifier) {
+            // Simple type like 'string', 'int', 'array'
+            return new ResponseBodyDefinition(
+                name: $name,
+                type: $paramType->name,
+                nullable: $isNullable
+            );
+        }
+        
+        if ($paramType instanceof Name) {
+            // Custom class type
+            return new ResponseBodyDefinition(
+                name: $name,
+                type: 'object',
+                nullable: $isNullable
+            );
+        }
+        
+        // No type hint
+        return new ResponseBodyDefinition(
+            name: $name,
+            type: 'mixed',
+            nullable: true
+        );
     }
 
     private function getScalarTypeName(Scalar $scalar): string
@@ -416,7 +585,8 @@ class TypeStructureResolver
 
         $bodyContent = [];
         foreach ($items as $item) {
-            $body = $this->findValueType($context, $methodJourney, $item->value);
+
+            $body = $this->findValueType($context, $methodJourney, $item->value, $item->key);
             if ($body != null) {
                 array_push($bodyContent, $body);
             }
@@ -430,8 +600,9 @@ class TypeStructureResolver
      * 
      * @return ResponseBodyDefinition|null
      */
-    private function findValueType(ClassMethodContext $context, array $methodJourney, Expr $value): ?ResponseBodyDefinition
+    private function findValueType(ClassMethodContext $context, array $methodJourney, Expr $value, ?Expr $key = null): ?ResponseBodyDefinition
     {
+        echo "hihi  " . get_class($value) . "\r\n";
         switch (true) {
             case $value instanceof PropertyFetch:
                 $property = $this->classAstResolver->findPropertyInClass($context->class, $value);
@@ -457,6 +628,17 @@ class TypeStructureResolver
                 }
 
                 return null;
+            case $value instanceof Scalar:
+                $name = null;
+                if ($key instanceof String_) {
+                    $name = $key->value;
+                }
+                $typeName = $this->getScalarTypeName($value);
+                return new ResponseBodyDefinition(
+                    name: $name,
+                    type: $typeName,
+                    nullable: false
+                );
         }
 
         return null;
