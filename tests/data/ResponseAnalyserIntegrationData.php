@@ -156,4 +156,125 @@ class ResponseAnalyserIntegrationData
         return $data;
     }
     
+    public function withMultipleEarlyReturns(): Response
+    {
+        $valid = true;
+        $authorized = true;
+        
+        if (!$valid) {
+            return new JsonResponse(['error' => 'Invalid request'], 400);
+        }
+        
+        if (!$authorized) {
+            return new JsonResponse(['error' => 'Unauthorized'], 401);
+        }
+        
+        return new JsonResponse(['success' => true, 'data' => 'result'], 200);
+    }
+
+    public function withTryCatchBlock(): Response
+    {
+        try {
+            $data = ['result' => 'success'];
+            return new JsonResponse($data, 200);
+        } catch (\InvalidArgumentException $e) {
+            return new JsonResponse(['error' => 'Not found'], 404);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Server error'], 500);
+        }
+    }
+    
+    public function withSwitchStatement(): Response
+    {
+        $type = 'success';
+        
+        switch ($type) {
+            case 'success':
+                return new JsonResponse(['result' => 'ok'], 200);
+            case 'not_found':
+                return new JsonResponse(['error' => 'Not found'], 404);
+            case 'bad_request':
+                return new JsonResponse(['error' => 'Bad request'], 400);
+            default:
+                return new JsonResponse(['error' => 'Server error'], 500);
+        }
+    }
+
+    /**
+     * Test case: Ternary operator for status code
+     * Expected: Should find both 200 and 400
+     * Confidence: Medium (conditional)
+     */
+    public function withTernaryStatusCode(): Response
+    {
+        $success = true;
+        return new JsonResponse(
+            ['data' => 'test'], 
+            $success ? 200 : 400
+        );
+    }
+
+    /**
+     * Test case: Ternary operator for body
+     * Expected: Should detect both possible body structures OR mark as medium confidence
+     * Confidence: Medium
+     */
+    public function withTernaryBody(): Response
+    {
+        $success = true;
+        return new JsonResponse(
+            $success ? ['result' => 'success'] : ['error' => 'failed'],
+            200
+        );
+    }
+
+    /**
+     * Test case: Nested ternary (edge case)
+     * Expected: Should find 200, 400, 500 OR mark as low confidence
+     * Confidence: Low/Medium
+     */
+    public function withNestedTernary(): Response
+    {
+        $status = 1;
+        return new JsonResponse(
+            ['data' => 'test'],
+            $status === 1 ? 200 : ($status === 2 ? 400 : 500)
+        );
+    }
+
+    /**
+     * Test case: Variable reassigned multiple times
+     * Expected: Should find all 3 possible status codes (200, 400, 401)
+     * Confidence: Medium (complex flow)
+     */
+    public function withReassignedStatusCode(): Response
+    {
+        $code = 200;
+        
+        $hasError = false;
+        if ($hasError) {
+            $code = 400;
+        }
+        
+        $unauthorized = false;
+        if ($unauthorized) {
+            $code = 401;
+        }
+        
+        return new JsonResponse(['status' => 'done'], $code);
+    }
+
+    /**
+     * Test case: Null coalescing operator
+     * Expected: Should detect default 200 + possible other values
+     * Confidence: Medium
+     */
+    public function withNullCoalescingStatusCode(): Response
+    {
+        $statusCode = null;
+        return new JsonResponse(
+            ['data' => 'test'],
+            $statusCode ?? 200
+        );
+    }
 }
