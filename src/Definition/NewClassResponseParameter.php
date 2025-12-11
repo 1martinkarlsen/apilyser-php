@@ -9,6 +9,7 @@ class NewClassResponseParameter
         public string $statusCodeName,
         public string $bodyName,
         public int $statusCodeIndex,
-        public int $bodyIndex
+        public int $bodyIndex,
+        public ?int $defaultStatusCode = null
     ) {}
 }

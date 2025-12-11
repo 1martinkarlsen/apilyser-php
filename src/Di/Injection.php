@@ -176,7 +176,9 @@ class Injection
         $this->services[NewClassResponseResolver::class] = new NewClassResponseResolver(
             namespaceResolver: $this->get(NamespaceResolver::class),
             typeStructureResolver: $this->get(TypeStructureResolver::class),
-            httpDelegate: $this->get(HttpDelegate::class)
+            httpDelegate: $this->get(HttpDelegate::class),
+            variableAssignmentFinder: $this->get(VariableAssignmentFinder::class),
+            classAstResolver: $this->get(ClassAstResolver::class)
         );
         $this->services[MethodCallResponseResolver::class] = new MethodCallResponseResolver(
             httpDelegate: $this->get(HttpDelegate::class)
