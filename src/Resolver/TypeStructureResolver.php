@@ -602,7 +602,6 @@ class TypeStructureResolver
      */
     private function findValueType(ClassMethodContext $context, array $methodJourney, Expr $value, ?Expr $key = null): ?ResponseBodyDefinition
     {
-        echo "hihi  " . get_class($value) . "\r\n";
         switch (true) {
             case $value instanceof PropertyFetch:
                 $property = $this->classAstResolver->findPropertyInClass($context->class, $value);

@@ -80,19 +80,6 @@ class ClassAstResolver
                     class: $classNode
                 );
             }
-        } else {
-            try {
-                $reflection = new \ReflectionClass($fullClassName);
-                $filePath = $reflection->getFileName();
-
-                if (!$filePath) {
-                    echo "Namespace " . $filePath . " ||";
-                } else {
-                    echo "Namespace error";
-                }
-            } catch (\ReflectionException $e) {
-                return null;
-            }
         }
 
         return null;
