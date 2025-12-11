@@ -47,15 +47,10 @@ class ResponseAnalyserIntegrationTest extends TestCase
     
     protected function setUp(): void
     {
-        $rootPath = $this->findProjectRoot();
-        echo "\nProject root: $rootPath\n";
-        echo "Current dir: " . getcwd() . "\n";
-        echo "__DIR__: " . __DIR__ . "\n";
-
         $this->output = $this->createMock(OutputInterface::class);
         $this->namespaceResolver = new NamespaceResolver(
             output: $this->output,
-            rootPath: $rootPath
+            rootPath: $this->findProjectRoot()
         );
         $this->classAstResolver = new ClassAstResolver(
             namespaceResolver: $this->namespaceResolver,
@@ -97,7 +92,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     private function parseDataClassMethod(string $methodName): ClassMethodContext
     {
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
-        $dir = __DIR__ . '/../data/ResponseAnalyserIntegrationData.php';
+        $dir = __DIR__ . '/../Data/ResponseAnalyserIntegrationData.php';
         $code = file_get_contents($dir);
         $ast = $parser->parse($code);
         
