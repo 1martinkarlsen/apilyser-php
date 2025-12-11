@@ -30,13 +30,27 @@ class ResponseAnalyserIntegrationTest extends TestCase
     private TypeStructureResolver $typeStructureResolver;
     private HttpDelegate $httpDelegate;
     private ResponseAnalyser $analyser;
+
+    private function findProjectRoot(): string
+    {
+        $dir = __DIR__;
+        
+        while ($dir !== '/') {
+            if (file_exists($dir . '/composer.json')) {
+                return $dir;
+            }
+            $dir = dirname($dir);
+        }
+        
+        throw new \RuntimeException('Could not find project root (composer.json not found)');
+    }
     
     protected function setUp(): void
     {
         $this->output = $this->createMock(OutputInterface::class);
         $this->namespaceResolver = new NamespaceResolver(
             output: $this->output,
-            rootPath: __DIR__ . "/../../"
+            rootPath: $this->findProjectRoot()
         );
         $this->classAstResolver = new ClassAstResolver(
             namespaceResolver: $this->namespaceResolver,
