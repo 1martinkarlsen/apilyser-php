@@ -47,10 +47,15 @@ class ResponseAnalyserIntegrationTest extends TestCase
     
     protected function setUp(): void
     {
+        $rootPath = $this->findProjectRoot();
+        echo "\nProject root: $rootPath\n";
+        echo "Current dir: " . getcwd() . "\n";
+        echo "__DIR__: " . __DIR__ . "\n";
+
         $this->output = $this->createMock(OutputInterface::class);
         $this->namespaceResolver = new NamespaceResolver(
             output: $this->output,
-            rootPath: $this->findProjectRoot()
+            rootPath: $rootPath
         );
         $this->classAstResolver = new ClassAstResolver(
             namespaceResolver: $this->namespaceResolver,
