@@ -26,6 +26,7 @@ class ValidateApiCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+    
         $rootPath = getcwd();
 
         try {

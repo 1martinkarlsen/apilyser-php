@@ -173,6 +173,8 @@ class Injection
             namespaceResolver: $this->get(NamespaceResolver::class)
         );
 
+        $this->services[VariableAssignmentFinder::class] = new VariableAssignmentFinder();
+
         $this->services[NewClassResponseResolver::class] = new NewClassResponseResolver(
             namespaceResolver: $this->get(NamespaceResolver::class),
             typeStructureResolver: $this->get(TypeStructureResolver::class),

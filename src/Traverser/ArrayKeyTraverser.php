@@ -3,8 +3,8 @@
 namespace Apilyser\Traverser;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr\ArrayItem;
-use PhpParser\Node\Scalar\LNumber;
+use PhpParser\Node\ArrayItem;
+use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\NodeVisitorAbstract;
@@ -34,7 +34,7 @@ class ArrayKeyTraverser extends NodeVisitorAbstract
         }
         
         // Alternative case for direct string keys (not wrapped in quotes in the source)
-        if ($this->inTargetMethod && $node instanceof ArrayItem && $node->key instanceof LNumber) {
+        if ($this->inTargetMethod && $node instanceof ArrayItem && $node->key instanceof Int_) {
             $this->arrayKeys[] = $node;
         }
         
@@ -52,12 +52,12 @@ class ArrayKeyTraverser extends NodeVisitorAbstract
     }
 
     /**
-     * @return \PhpParser\Node\ArrayItem[]|null
+     * @return \PhpParser\Node\ArrayItem[]
      */
-    public function getArrayItems(): array|null
+    public function getArrayItems(): array
     {
         if (empty($this->arrayKeys)) {
-            return null;
+            return [];
         } else {
             return $this->arrayKeys;
         }

@@ -117,7 +117,7 @@ class NewClassResponseResolver implements ResponseNodeResolver
                     );
                 } else if ($arg->name->name == $parameterInfo->statusCodeName) {
                     $statusCodes = $this->findStatusCodes($arg->value, $context, $methodJourney);
-                    $statusCode = !empty($statusCodes) ? $statusCode[0] : null;
+                    $statusCode = !empty($statusCodes) ? $statusCodes[0] : null;
                     $statusCodeProvided = true;
                 }
             } else {
