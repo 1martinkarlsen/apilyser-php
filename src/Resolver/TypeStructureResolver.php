@@ -19,6 +19,7 @@ use PhpParser\Node\NullableType;
 use PhpParser\Node\PropertyItem;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\DNumber;
+use PhpParser\Node\Scalar\Float_;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
@@ -559,8 +560,8 @@ class TypeStructureResolver
         // This function only handles actual scalar literals.
         return match (true) {
             $scalar instanceof String_ => 'string',
-            $scalar instanceof LNumber => 'int',
-            $scalar instanceof DNumber => 'float',
+            $scalar instanceof Int_ => 'int',
+            $scalar instanceof Float_ => 'float',
             default => 'mixed'
         };
     }
@@ -573,9 +574,6 @@ class TypeStructureResolver
      */
     private function extractArray(ClassMethodContext $context, array $methodJourney, string $calledMethodName): array
     {
-        $this->output->writeln("Class -> " . $context->class->name);
-        $this->output->writeln("Method -> " . $context->method->name->name);
-
         $traverser = new NodeTraverser();
         $keyExtractor = new ArrayKeyTraverser($calledMethodName);
         $traverser->addVisitor($keyExtractor);
