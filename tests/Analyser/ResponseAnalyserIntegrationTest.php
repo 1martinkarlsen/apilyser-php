@@ -83,8 +83,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
                 ),
                 httpDelegate: $this->httpDelegate,
                 classUsageTraverserFactory: new ClassUsageTraverserFactory($this->namespaceResolver),
-                classAstResolver: $this->classAstResolver,
-                typeStructureResolver: $this->typeStructureResolver
+                classAstResolver: $this->classAstResolver
             )
         );
     }
