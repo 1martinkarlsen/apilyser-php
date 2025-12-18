@@ -83,11 +83,10 @@ class MethodPathExtractor
         // True branch
         $truePath = clone $basePath;
         $truePath->addCondition("if", $ifStmt->cond, true);
-        $this->extractPaths($ifStmt->stmts, $truePath);
         
         // Continue with remaining statements after if block (if no return/throw)
         if (!$this->pathEndsWithTermination($ifStmt->stmts)) {
-            $this->extractPaths($remainingStmts, $truePath);
+            $this->extractPaths($ifStmt->stmts, $truePath);
         } else {
             $mergedStmts = array_merge($ifStmt->stmts, $remainingStmts);
             $this->extractPaths($mergedStmts, $truePath);
@@ -97,11 +96,10 @@ class MethodPathExtractor
         foreach ($ifStmt->elseifs as $elseif) {
             $elseifPath = clone $basePath;
             $elseifPath->addCondition("elseif", $elseif->cond, true);
-            $this->extractPaths($elseif->stmts, $elseifPath);
             
             // Continue with remaining statements after elseif block
             if (!$this->pathEndsWithTermination($elseif->stmts)) {
-                $this->extractPaths($remainingStmts, $elseifPath);
+                $this->extractPaths($elseif->stmts, $elseifPath);
             } else {
                 $mergedStmts = array_merge($elseif->stmts, $remainingStmts);
                 $this->extractPaths($mergedStmts, $elseifPath);
@@ -112,11 +110,10 @@ class MethodPathExtractor
         if ($ifStmt->else) {
             $elsePath = clone $basePath;
             $elsePath->addCondition("else", $ifStmt->cond, false);
-            $this->extractPaths($ifStmt->else->stmts, $elsePath);
             
             // Continue with remaining statements after else block
             if (!$this->pathEndsWithTermination($ifStmt->else->stmts)) {
-                $this->extractPaths($remainingStmts, $elsePath);
+                $this->extractPaths($ifStmt->else->stmts, $elsePath);
             } else {
                 $mergedStmts = array_merge($ifStmt->else->stmts, $remainingStmts);
                 $this->extractPaths($mergedStmts, $elsePath);
@@ -140,17 +137,21 @@ class MethodPathExtractor
         $loopPath = clone $basePath;
         $loopPath->addCondition("loop-enter", $this->getLoopCondition($loopStmt), true);
         
+        $loopBodyStmts = [];
         if ($loopStmt instanceof Node\Stmt\While_) {
-            $this->extractPaths($loopStmt->stmts, $loopPath);
+            $loopBodyStmts = $loopStmt->stmts;
         } elseif ($loopStmt instanceof Node\Stmt\For_) {
-            $this->extractPaths($loopStmt->stmts, $loopPath);
+            $loopBodyStmts = $loopStmt->stmts;
         } elseif ($loopStmt instanceof Node\Stmt\Foreach_) {
-            $this->extractPaths($loopStmt->stmts, $loopPath);
+            $loopBodyStmts = $loopStmt->stmts;
         }
         
         // Continue with remaining statements after loop (if no break/return)
-        if (!$this->pathEndsWithTermination($loopStmt->stmts)) {
-            $this->extractPaths($remainingStmts, $loopPath);
+        if (!$this->pathEndsWithTermination($loopBodyStmts)) {
+            $this->extractPaths($loopBodyStmts, $loopPath);
+        } else {
+            $mergedStmts = array_merge($loopBodyStmts, $remainingStmts);
+            $this->extractPaths($mergedStmts, $loopPath);
         }
         
         // Path that skips the loop
@@ -172,11 +173,12 @@ class MethodPathExtractor
                 $hasDefaultCase = true;
             }
             
-            $this->extractPaths($case->stmts, $casePath);
-            
             // Continue with remaining statements after switch (if no break/return)
             if (!$this->pathEndsWithTermination($case->stmts)) {
-                $this->extractPaths($remainingStmts, $casePath);
+                $this->extractPaths($case->stmts, $casePath);
+            } else {
+                $mergedStmts = array_merge($case->stmts, $remainingStmts);
+                $this->extractPaths($mergedStmts, $casePath);
             }
         }
         
