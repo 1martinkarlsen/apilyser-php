@@ -25,9 +25,12 @@ class ApiValidator
             if (!$result->success) {
                 array_push($errors, $result);
 
-                $this->output->writeln("" . $result->endpoint->method . " " . $result->endpoint->path . "");
+                $this->output->writeln("<info>" . $result->endpoint->method . " " . $result->endpoint->path . "</info>");
                 foreach ($result->errors as $error) {
                     $this->output->writeln("[" . $error->errorType . "] " . $error->getMessage());
+                    foreach ($error->errors as $errorMessage) {
+                        $this->output->writeln(" - " . $errorMessage);
+                    }
                 }
             }
         }

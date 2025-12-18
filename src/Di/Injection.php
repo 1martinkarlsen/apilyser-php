@@ -211,8 +211,7 @@ class Injection
             responseResolver: $this->get(ResponseResolver::class),
             httpDelegate: $this->get(HttpDelegate::class),
             classUsageTraverserFactory: $this->get(ClassUsageTraverserFactory::class),
-            classAstResolver: $this->get(ClassAstResolver::class),
-            typeStructureResolver: $this->get(TypeStructureResolver::class)
+            classAstResolver: $this->get(ClassAstResolver::class)
         );
         $this->services[OpenApiAnalyser::class] = new OpenApiAnalyser(
             openApiDocPath: $this->rootPath . $this->configuration[Configuration::CFG_OPEN_API_PATH]

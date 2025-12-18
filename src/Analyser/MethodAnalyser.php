@@ -23,6 +23,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\Property;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class MethodAnalyser
 {
@@ -34,8 +35,7 @@ class MethodAnalyser
         private ResponseResolver $responseResolver,
         private HttpDelegate $httpDelegate,
         private ClassUsageTraverserFactory $classUsageTraverserFactory,
-        private ClassAstResolver $classAstResolver,
-        private TypeStructureResolver $typeStructureResolver
+        private ClassAstResolver $classAstResolver
     ) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
     }

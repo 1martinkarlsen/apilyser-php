@@ -17,15 +17,6 @@ class ResponseDefinition
         public int $statusCode
     ) {}
 
-    public function asArray(): array
-    {
-        return [
-            'type' => $this->type,
-            'structure' => $this->structure,
-            'statusCode' => $this->statusCode
-        ];
-    }
-
     // Methods to compare with OpenAPI response spec
     public function toString(): string
     {
@@ -33,7 +24,7 @@ class ResponseDefinition
 
         if ($this->structure != null) {
             foreach($this->structure as $struct) {
-                array_push($dataArr, $struct->asArray());
+                array_push($dataArr, $struct->__toString());
             }
         }
 
