@@ -106,8 +106,7 @@ class Injection
     private function configure(): void
     {
         $configLoader = new ConfigurationLoader();
-        $cfg = $configLoader->loadFromFile($this->rootPath . "/" . Configuration::CONFIG_PATH);
-        $this->configuration = $cfg;
+        $this->configuration = $configLoader->loadFromFile($this->rootPath . "/" . Configuration::CONFIG_PATH);
     }
 
     /**
@@ -250,6 +249,13 @@ class Injection
         $this->services[SymfonyAttributeParser::class] = new SymfonyAttributeParser(
             extractor: $this->get(AttributeExtractor::class)
         );
+
+        $customRouteParserConfig = $this->configuration[Configuration::CFG_CUSTOM_ROUTE_PARSER];
+        if (isset($customRouteParserConfig)) {
+            foreach ($customRouteParserConfig as $customRouteParser) {
+                // TODO: Instantiate class from reflection and add to strategies list
+            }
+        }
 
         $this->services[RouteResolver::class] = new RouteResolver(
             strategies: [
