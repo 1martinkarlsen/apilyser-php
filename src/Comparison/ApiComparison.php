@@ -46,8 +46,6 @@ class ApiComparison {
 
         // Loop through docs to find routes
         foreach ($specEndpoints as $endpointSpec) {
-            $this->output->writeln("<info>". $endpointSpec->method ." " . $endpointSpec->path . "</info>");
-
             $path = $endpointSpec->path;
             $method = $endpointSpec->method;
 

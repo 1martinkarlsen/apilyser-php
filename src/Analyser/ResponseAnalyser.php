@@ -29,10 +29,6 @@ class ResponseAnalyser
 
         $res = array_unique($result);
 
-        foreach ($res as $response) {
-            $this->output->writeln("Response: " . $response->toString());
-        }
-
         return $res;
     }
 

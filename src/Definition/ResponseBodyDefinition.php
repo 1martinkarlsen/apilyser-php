@@ -46,31 +46,13 @@ class ResponseBodyDefinition {
         return $this->nullable;
     }
 
-    public function asArray(): array
-    {
-        $childArr = [];
-
-        if ($this->children != null) {
-            foreach ($this->children as $child) {
-                $childArr[] = $child->asArray();
-            }
-        }
-
-        return [
-            'name' => $this->name,
-            'type' => $this->type,
-            'children' => $childArr,
-            'nullable' => $this->nullable
-        ];
-    }
-
     public function toString(): string
     {
         $childArr = [];
 
         if ($this->children != null) {
             foreach ($this->children as $child) {
-                $childArr[] = $child->toString();
+                $childArr[] = $child->__toString();
             }
         }
 

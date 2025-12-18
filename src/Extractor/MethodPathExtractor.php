@@ -88,6 +88,9 @@ class MethodPathExtractor
         // Continue with remaining statements after if block (if no return/throw)
         if (!$this->pathEndsWithTermination($ifStmt->stmts)) {
             $this->extractPaths($remainingStmts, $truePath);
+        } else {
+            $mergedStmts = array_merge($ifStmt->stmts, $remainingStmts);
+            $this->extractPaths($mergedStmts, $truePath);
         }
         
         // Handle elseif chains
@@ -99,6 +102,9 @@ class MethodPathExtractor
             // Continue with remaining statements after elseif block
             if (!$this->pathEndsWithTermination($elseif->stmts)) {
                 $this->extractPaths($remainingStmts, $elseifPath);
+            } else {
+                $mergedStmts = array_merge($elseif->stmts, $remainingStmts);
+                $this->extractPaths($mergedStmts, $elseifPath);
             }
         }
         
@@ -111,6 +117,9 @@ class MethodPathExtractor
             // Continue with remaining statements after else block
             if (!$this->pathEndsWithTermination($ifStmt->else->stmts)) {
                 $this->extractPaths($remainingStmts, $elsePath);
+            } else {
+                $mergedStmts = array_merge($ifStmt->else->stmts, $remainingStmts);
+                $this->extractPaths($mergedStmts, $elsePath);
             }
         } else {
             // Implicit else path (condition was false, continue after if)
