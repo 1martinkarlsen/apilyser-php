@@ -25,6 +25,8 @@ class ResponseAnalyserIntegrationData
         $x = 1;
         if ($x > 0) {
             return new JsonResponse(["id" => 1, "user_name" => "Test"], 200);
+        } else if ($x > 0 && $x < 10) {
+            return new JsonResponse(["id" => 1, "user_name" => "Test", "email" => "hej@hej.dk"], 200);
         } else {
             return new JsonResponse(null, 401);
         }
@@ -170,6 +172,12 @@ class ResponseAnalyserIntegrationData
         }
         
         return new JsonResponse(['success' => true, 'data' => 'result'], 200);
+    }
+
+    public function withMultipleDtoModelReturn(): Response
+    {
+        $data = $this->service->getConditionalResponse();
+        return new JsonResponse($data, 200);
     }
 
     public function withTryCatchBlock(): Response

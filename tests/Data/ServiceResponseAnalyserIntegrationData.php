@@ -16,4 +16,14 @@ class ServiceResponseAnalyserIntegrationData
     {
         return "hello";
     }
+
+    function getConditionalResponse(): array
+    {
+        $x = 1;
+        if ($x > 0) {
+            return ["id" => 1, "user_name" => "Test"];
+        } else {
+            return ["id" => 1, "user_name" => "Test", "email" => "hej@hej.dk"];
+        }
+    }
 }

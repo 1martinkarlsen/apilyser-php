@@ -161,7 +161,25 @@ class ResponseAnalyserIntegrationTest extends TestCase
         
         // Dine assertions her
         $this->assertNotNull($result);
-        $this->assertCount(expectedCount: 2, haystack: $result);
+        $this->assertCount(expectedCount: 3, haystack: $result);
+
+        // First response
+        $first = $result[0];
+        $this->assertEquals(expected: 200, actual: $first->statusCode);
+        $this->assertNotNull($first->structure);
+        $this->assertCount(expectedCount: 2, haystack: $first->structure);
+
+        // Second response
+        $second = $result[1];
+        $this->assertEquals(expected: 200, actual: $second->statusCode);
+        $this->assertNotNull($second->structure);
+        $this->assertCount(expectedCount: 3, haystack: $second->structure);
+
+        // Third response
+        $third = $result[2];
+        $this->assertEquals(expected: 401, actual: $third->statusCode);
+        $this->assertNotNull($third->structure);
+        $this->assertCount(expectedCount: 0, haystack: $third->structure);
     }
 
     public function testFindWithVariableReturn()
@@ -410,6 +428,15 @@ class ResponseAnalyserIntegrationTest extends TestCase
         $this->assertContains(200, $statusCodes);
         $this->assertContains(400, $statusCodes);
         $this->assertContains(401, $statusCodes);
+    }
+
+    public function testFindwithMultipleDtoModelReturn()
+    {
+        $context = $this->parseDataClassMethod("withMultipleDtoModelReturn");
+        $result = $this->analyser->analyse($context);
+
+        $this->assertNotNull($result);
+        $this->assertCount(2, $result, "Should find all 2 return statements");
     }
 
     public function testFindWithTryCatchBlock()
