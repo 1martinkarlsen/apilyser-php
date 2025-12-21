@@ -28,6 +28,8 @@ class Configuration implements ConfigurationInterface
                     ->cannotBeEmpty()
                 ->end()
                 ->arrayNode(self::CFG_CUSTOM_ROUTE_PARSER)
+                    ->scalarPrototype()
+                    ->end()
                 ->end()
             ->end();
 

@@ -4,10 +4,10 @@
 use Apilyser\Command\ValidateApiCommand;
 use Symfony\Component\Console\Application;
 
-require __DIR__.'/../vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 $application = new Application();
 
-$application->add(new ValidateApiCommand());
+$application->addCommand(new ValidateApiCommand());
 
 $application->run();

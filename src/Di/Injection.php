@@ -25,6 +25,7 @@ use Apilyser\Parser\Api\HttpDelegate;
 use Apilyser\Parser\Api\SymfonyApiParser;
 use Apilyser\Parser\FileParser;
 use Apilyser\Parser\NodeParser;
+use Apilyser\Parser\Route\RouteStrategy;
 use Apilyser\Parser\Route\SymfonyAttributeParser;
 use Apilyser\Parser\Route\SymfonyAttributeStrategy;
 use Apilyser\Parser\Route\SymfonyYamlRouteStrategy;
@@ -251,9 +252,15 @@ class Injection
         );
 
         $customRouteParserConfig = $this->configuration[Configuration::CFG_CUSTOM_ROUTE_PARSER];
+        $parsers = [];
         if (isset($customRouteParserConfig)) {
             foreach ($customRouteParserConfig as $customRouteParser) {
                 // TODO: Instantiate class from reflection and add to strategies list
+
+                $instance = new $customRouteParser();
+                if ($instance instanceof RouteStrategy) {
+                    array_push($parsers, $instance);
+                }
             }
         }
 
@@ -266,7 +273,8 @@ class Injection
                     fileParser: $this->get(FileParser::class),
                     attributeParser: $this->get(SymfonyAttributeParser::class),
                     fileClassesExtractor: $this->get(FileClassesExtractor::class)
-                )
+                ),
+                ...$parsers
             ]
         );
 
