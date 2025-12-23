@@ -5,9 +5,8 @@ use Apilyser\Command\ValidateApiCommand;
 use Symfony\Component\Console\Application;
 
 $autoloadPaths = [
-    __DIR__ . '/../../../autoload.php',     // vendor/yourlib/bin/../../../autoload.php = vendor/autoload.php
-    __DIR__ . '/../../examples/php-backend/vendor/autoload.php', // Symlinked (../../php/bin/ -> ../../vendor/)
-    __DIR__ . '/../vendor/autoload.php',    // Når du udvikler library'et selv
+    __DIR__ . '/../../../autoload.php', // Project autoloader
+    __DIR__ . '/../vendor/autoload.php', // Library autoloader
 ];
 
 $loaded = false;
