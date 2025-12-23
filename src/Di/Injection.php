@@ -255,8 +255,6 @@ class Injection
         $parsers = [];
         if (isset($customRouteParserConfig)) {
             foreach ($customRouteParserConfig as $customRouteParser) {
-                // TODO: Instantiate class from reflection and add to strategies list
-
                 $instance = new $customRouteParser();
                 if ($instance instanceof RouteStrategy) {
                     array_push($parsers, $instance);
