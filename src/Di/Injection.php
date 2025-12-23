@@ -25,6 +25,7 @@ use Apilyser\Parser\Api\HttpDelegate;
 use Apilyser\Parser\Api\SymfonyApiParser;
 use Apilyser\Parser\FileParser;
 use Apilyser\Parser\NodeParser;
+use Apilyser\Parser\Route\RouteStrategy;
 use Apilyser\Parser\Route\SymfonyAttributeParser;
 use Apilyser\Parser\Route\SymfonyAttributeStrategy;
 use Apilyser\Parser\Route\SymfonyYamlRouteStrategy;
@@ -106,8 +107,7 @@ class Injection
     private function configure(): void
     {
         $configLoader = new ConfigurationLoader();
-        $cfg = $configLoader->loadFromFile($this->rootPath . "/" . Configuration::CONFIG_PATH);
-        $this->configuration = $cfg;
+        $this->configuration = $configLoader->loadFromFile($this->rootPath . "/" . Configuration::CONFIG_PATH);
     }
 
     /**
@@ -251,6 +251,17 @@ class Injection
             extractor: $this->get(AttributeExtractor::class)
         );
 
+        $customRouteParserConfig = $this->configuration[Configuration::CFG_CUSTOM_ROUTE_PARSER];
+        $parsers = [];
+        if (isset($customRouteParserConfig)) {
+            foreach ($customRouteParserConfig as $customRouteParser) {
+                $instance = new $customRouteParser();
+                if ($instance instanceof RouteStrategy) {
+                    array_push($parsers, $instance);
+                }
+            }
+        }
+
         $this->services[RouteResolver::class] = new RouteResolver(
             strategies: [
                 new SymfonyYamlRouteStrategy(namespaceResolver: $this->get(NamespaceResolver::class)),
@@ -260,7 +271,8 @@ class Injection
                     fileParser: $this->get(FileParser::class),
                     attributeParser: $this->get(SymfonyAttributeParser::class),
                     fileClassesExtractor: $this->get(FileClassesExtractor::class)
-                )
+                ),
+                ...$parsers
             ]
         );
 

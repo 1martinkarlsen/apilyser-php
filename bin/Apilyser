@@ -4,7 +4,23 @@
 use Apilyser\Command\ValidateApiCommand;
 use Symfony\Component\Console\Application;
 
-require __DIR__.'/../vendor/autoload.php';
+$autoloadPaths = [
+    __DIR__ . '/../../../autoload.php', // Project autoloader
+    __DIR__ . '/../vendor/autoload.php', // Library autoloader
+];
+
+$loaded = false;
+foreach ($autoloadPaths as $file) {
+    if (file_exists($file)) {
+        require $file;
+        $loaded = true;
+        break;
+    }
+}
+
+if (!$loaded) {
+    die('Autoloader not found');
+}
 
 $application = new Application();
 
