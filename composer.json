@@ -1,6 +1,6 @@
 {
-    "name": "apilyser/apilyser",
-    "description": "API doc validator",
+    "name": "1martinkarlsen/apilyser",
+    "description": "API documentation and code validator",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -16,7 +16,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-        "Apilyser\\tests\\": "tests/"
+            "Apilyser\\tests\\": "tests/"
         }
     },
     "require": {
