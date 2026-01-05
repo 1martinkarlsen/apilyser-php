@@ -1,0 +1,19 @@
+{
+    "main": "bin/apilyser",
+    "output": "apilyser.phar",
+    "directories": ["src"],
+    "finder": [
+        {
+            "name": ["*.php", "*.json", "*.xml"],
+            "in": "vendor"
+        }
+    ],
+    "finder-bin": [
+        {
+            "name": "*",
+            "exclude": ["*.php"],
+            "in": "vendor/symfony"
+        }
+    ],
+    "compression": "GZ"
+}
