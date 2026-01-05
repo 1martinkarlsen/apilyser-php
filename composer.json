@@ -30,12 +30,19 @@
     "require-dev": {
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-symfony": "^2.0",
-        "phpunit/phpunit": "^11.5"
+        "phpunit/phpunit": "^11.5",
+        "humbug/box": "^4.6"
     },
     "bin": [
-        "bin/apilyser"
+        "bin/apilyser",
+        "apilyser.phar"
     ],
     "scripts": {
         "test": "phpunit tests"
+    },
+    "config": {
+        "allow-plugins": {
+            "bamarni/composer-bin-plugin": true
+        }
     }
 }
