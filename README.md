@@ -5,7 +5,7 @@ A PHP static analysis tool to discover misalignment between the code and the Ope
 
 ### Installation
 Install using composer<br />
-The library is still under development
+```composer require --dev 1martinkarlsen/apilyser```
 
 ### Configuration
 After installation, a `apilyzer.yaml` file is required for the library to work.<br />
