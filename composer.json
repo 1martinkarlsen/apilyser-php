@@ -34,15 +34,9 @@
         "humbug/box": "^4.6"
     },
     "bin": [
-        "bin/apilyser",
         "apilyser.phar"
     ],
     "scripts": {
         "test": "phpunit tests"
-    },
-    "config": {
-        "allow-plugins": {
-            "bamarni/composer-bin-plugin": true
-        }
     }
 }
