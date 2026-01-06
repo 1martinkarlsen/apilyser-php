@@ -4,8 +4,8 @@
 use Apilyser\Command\ValidateApiCommand;
 use Symfony\Component\Console\Application;
 
-if (Phar::running()) {
-    require 'phar://' . __FILE__ . '/vendor/autoload.php';
+if (Phar::running(false)) {
+    require Phar::running(false) . '/vendor/autoload.php';
 } else {
     $autoloadPaths = [
         __DIR__ . '/../../../autoload.php', // Project autoloader
