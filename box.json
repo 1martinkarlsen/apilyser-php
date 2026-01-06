@@ -1,7 +1,7 @@
 {
     "main": "bin/apilyser",
     "output": "apilyser.phar",
-    "directories": ["src"],
+    "directories": ["src", "vendor"],
     "finder": [
         {
             "name": ["*.php", "*.json", "*.xml"],
