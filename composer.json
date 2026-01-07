@@ -34,7 +34,7 @@
         "humbug/box": "^4.6"
     },
     "bin": [
-        "apilyser.phar"
+        "bin/Apilyser"
     ],
     "scripts": {
         "test": "phpunit tests"
