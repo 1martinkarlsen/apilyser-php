@@ -34,7 +34,7 @@
         "humbug/box": "^4.6"
     },
     "bin": [
-        "bin/Apilyser"
+        "bin/apilyser"
     ],
     "scripts": {
         "test": "phpunit tests"
