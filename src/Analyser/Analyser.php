@@ -24,11 +24,6 @@ class Analyser
      */
     public function analyse(string $folderPath): array
     {
-        $spec = $this->openApiAnalyser->analyse();
-        if ($spec == null) {
-            throw new Exception("Could not find Open API documentation");
-        }
-
         // Analyse all routes
         $routes = $this->routeResolver->resolveRoutes($folderPath);
 
@@ -40,6 +35,11 @@ class Analyser
                 $endpoints,
                 ...$endpoint
             );
+        }
+
+        $spec = $this->openApiAnalyser->analyse();
+        if ($spec == null) {
+            throw new Exception("Could not find Open API documentation");
         }
 
         return $this->comparison->compare(
