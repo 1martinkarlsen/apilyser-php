@@ -81,7 +81,7 @@ class MethodParameterExtractor
 
                 return new MethodParam(
                     name: $varName,
-                    type: $param->type->name,
+                    type: $paramTypeName,
                     isBuiltinType: false,
                     fullNamespace: $this->namespaceResolver->findFullNamespaceForClass($paramTypeName, $imports)
                 );
