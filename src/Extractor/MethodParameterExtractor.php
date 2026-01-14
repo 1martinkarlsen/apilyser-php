@@ -2,16 +2,24 @@
 
 namespace Apilyser\Extractor;
 
+use Apilyser\Parser\NodeParser;
 use Apilyser\Resolver\NamespaceResolver;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\NodeDumper;
+use PhpParser\NodeFinder;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class MethodParameterExtractor
 {
-    public function __construct(private NamespaceResolver $namespaceResolver) {}
+    public function __construct(
+        private OutputInterface $output,
+        private NodeDumper $dumper,
+        private NamespaceResolver $namespaceResolver
+    ) {}
 
     /**
      * Loops through params and parses each parameter
@@ -65,7 +73,7 @@ class MethodParameterExtractor
             case $param->type instanceof Name:
                 // This means that the propertye is a namespaced object (e.g. Response)
                 if (null === $param->type->name) {
-                    echo "NO NAME FOUND: " . get_class($param->type);
+                    echo "NO NAME FOUND: " . $this->output->writeln($this->dumper->dump($param));
                 }
 
                 return new MethodParam(
