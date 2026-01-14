@@ -72,15 +72,18 @@ class MethodParameterExtractor
             
             case $param->type instanceof Name:
                 // This means that the propertye is a namespaced object (e.g. Response)
-                if (null === $param->type->name) {
-                    echo "NO NAME FOUND: " . $this->output->writeln($this->dumper->dump($param));
+                $paramTypeName = null;
+                if (null !== $param->type->name) {
+                    $paramTypeName = $param->type->name;
+                } else {
+                    $paramTypeName = $param->type->getParts()[0];
                 }
 
                 return new MethodParam(
                     name: $varName,
                     type: $param->type->name,
                     isBuiltinType: false,
-                    fullNamespace: $this->namespaceResolver->findFullNamespaceForClass($param->type->name, $imports)
+                    fullNamespace: $this->namespaceResolver->findFullNamespaceForClass($paramTypeName, $imports)
                 );
 
             default:
