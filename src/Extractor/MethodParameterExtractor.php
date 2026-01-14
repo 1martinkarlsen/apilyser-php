@@ -16,8 +16,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 class MethodParameterExtractor
 {
     public function __construct(
-        private OutputInterface $output,
-        private NodeDumper $dumper,
         private NamespaceResolver $namespaceResolver
     ) {}
 

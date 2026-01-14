@@ -170,8 +170,6 @@ class Injection
         );
         $this->services[VariableUsageExtractor::class] = new VariableUsageExtractor();
         $this->services[MethodParameterExtractor::class] = new MethodParameterExtractor(
-            output: $this->get(OutputInterface::class),
-            dumper: $this->get(NodeDumper::class),
             namespaceResolver: $this->get(NamespaceResolver::class)
         );
 
