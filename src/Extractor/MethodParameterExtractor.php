@@ -30,6 +30,7 @@ class MethodParameterExtractor
         }
 
         $requestParams = [];
+        echo "Extracting params from method: " . $method->name->name . "\n";
         foreach ($params as $param) {
             $definition = $this->extractParam(param: $param, imports: $imports);
             if ($definition != null) {
@@ -63,6 +64,10 @@ class MethodParameterExtractor
             
             case $param->type instanceof Name:
                 // This means that the propertye is a namespaced object (e.g. Response)
+                if (null === $param->type->name) {
+                    echo "NO NAME FOUND: " . get_class($param->type);
+                }
+
                 return new MethodParam(
                     name: $varName,
                     type: $param->type->name,
