@@ -36,10 +36,6 @@ final class FileAnalyser
         }
 
         $imports = $this->classImportsExtractor->extract($fileStmts);
-        echo "IMPORTS: " . count($imports);
-        foreach ($imports as $import) {
-            echo "IMPORT: " . $import . "\n";
-        }
         $classes = $this->fileClassesExtractor->extract($fileStmts);
 
         return $this->analyseClasses($route, $namespace, $classes, $imports);

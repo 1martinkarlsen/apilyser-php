@@ -81,7 +81,13 @@ class ClassUsageTraverser extends NodeVisitorAbstract
      */
     private function getTargetClassName(Name $name): ?string
     {
-        $fullClassName = $this->namespaceResolver->findFullNamespaceForClass($name->name, $this->imports);
+        if (null !== $name->name) {
+            $className = $name->name;
+        } else {
+            $className = implode("/", $name->getParts());
+        }
+
+        $fullClassName = $this->namespaceResolver->findFullNamespaceForClass($className, $this->imports);
         if ($this->className === $fullClassName) {
             return $this->className;
         }
