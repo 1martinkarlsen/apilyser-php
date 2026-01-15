@@ -166,8 +166,6 @@ class Injection
             classUsageTraverserFactory: $this->get(ClassUsageTraverserFactory::class)
         );
         $this->services[ClassImportsExtractor::class] = new ClassImportsExtractor(
-            output: $this->get(OutputInterface::class),
-            dumper: $this->get(NodeDumper::class),
             nodeFinder: $this->get(NodeFinder::class)
         );
         $this->services[VariableUsageExtractor::class] = new VariableUsageExtractor();
