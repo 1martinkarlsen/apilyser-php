@@ -235,12 +235,13 @@ class OpenApiAnalyser
 
         // Schema does not reference, we will have to look at the type
         $type = $schema['type'];
+        $hasProperties = array_key_exists('properties', $schema);
 
         switch ($type) {
             case 'array':
                 return [];
             case 'object':
-                return $this->handleSchemaProperties($schema['properties']);
+                return $hasProperties ? $this->handleSchemaProperties($schema['properties']) : [];
             default:
                 return [];
         }
