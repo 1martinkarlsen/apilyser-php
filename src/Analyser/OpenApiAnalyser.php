@@ -183,16 +183,16 @@ class OpenApiAnalyser
     /**
      * Map OpenAPI parameter location to RequestType enum
      * 
-     * @param string $location OpenAPI parameter location
+     * @param ?string $location OpenAPI parameter location
      * @return RequestType
      */
-    private function mapParameterLocation(string $location): RequestType
+    private function mapParameterLocation(?string $location): RequestType
     {
         return match ($location) {
             'path' => RequestType::Path,
             'query' => RequestType::Query,
             'body', 'formData' => RequestType::Body,
-            default => RequestType::Query // Default fallback
+            default => RequestType::Unknown // Default fallback
         };
     }
 
