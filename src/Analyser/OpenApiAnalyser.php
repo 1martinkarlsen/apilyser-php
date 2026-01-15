@@ -107,7 +107,7 @@ class OpenApiAnalyser
             $default = $param['schema']['default'] ?? null;
             
             $parameters[] = new ParameterDefinition(
-                $param['name'],
+                $param['name'] ?? "",
                 $type,
                 $location,
                 $param['required'] ?? false,
