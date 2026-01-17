@@ -2,16 +2,12 @@
 
 namespace Apilyser\Extractor;
 
-use Apilyser\Parser\NodeParser;
 use Apilyser\Resolver\NamespaceResolver;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\NodeDumper;
-use PhpParser\NodeFinder;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class MethodParameterExtractor
 {
@@ -36,7 +32,6 @@ class MethodParameterExtractor
         }
 
         $requestParams = [];
-        echo "Extracting params from method: " . $method->name->name . "\n";
         foreach ($params as $param) {
             $definition = $this->extractParam(param: $param, imports: $imports);
             if ($definition != null) {

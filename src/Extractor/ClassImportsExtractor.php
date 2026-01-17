@@ -3,9 +3,7 @@
 namespace Apilyser\Extractor;
 
 use PhpParser\Node\Stmt\Use_;
-use PhpParser\NodeDumper;
 use PhpParser\NodeFinder;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class ClassImportsExtractor
 {

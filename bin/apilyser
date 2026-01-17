@@ -4,7 +4,6 @@
 use Apilyser\Command\ValidateApiCommand;
 use Symfony\Component\Console\Application;
 
-
 $autoloadPaths = [
     __DIR__ . '/../../../autoload.php', // Project autoloader
     __DIR__ . '/../vendor/autoload.php', // Library autoloader
