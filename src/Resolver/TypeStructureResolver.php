@@ -16,6 +16,7 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
+use PhpParser\Node\Param;
 use PhpParser\Node\PropertyItem;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\Float_;
@@ -23,14 +24,12 @@ use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\NodeTraverser;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class TypeStructureResolver
 {
     private VariableAssignmentFinder $variableAssignmentFinder;
 
     public function __construct(
-        private OutputInterface $output,
         private ClassAstResolver $classAstResolver
     ) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
@@ -430,7 +429,7 @@ class TypeStructureResolver
         $constructorParam = $this->classAstResolver->findConstructorParam($context->class, $variableName);
         
         if ($constructorParam !== null) {
-            return $this->getBodyFromConstructorParam($context, $constructorParam, $itemKey ?? $variableName);
+            return $this->getBodyFromConstructorParam($constructorParam, $itemKey ?? $variableName);
         }
         
         // 4. Variable not found anywhere - return unknown
@@ -506,17 +505,15 @@ class TypeStructureResolver
     /**
      * Gets body definition from a constructor parameter
      * 
-     * @param ClassMethodContext $context
      * @param Param $param
      * @param string|int $name
      * 
-     * @return ResponseBodyDefinition|null
+     * @return ResponseBodyDefinition
      */
     private function getBodyFromConstructorParam(
-        ClassMethodContext $context,
-        \PhpParser\Node\Param $param,
+        Param $param,
         string|int $name
-    ): ?ResponseBodyDefinition
+    ): ResponseBodyDefinition
     {
         $isNullable = false;
         $paramType = $param->type;

@@ -107,7 +107,7 @@ class OpenApiAnalyser
             $default = $param['schema']['default'] ?? null;
             
             $parameters[] = new ParameterDefinition(
-                $param['name'],
+                $param['name'] ?? "",
                 $type,
                 $location,
                 $param['required'] ?? false,
@@ -183,16 +183,16 @@ class OpenApiAnalyser
     /**
      * Map OpenAPI parameter location to RequestType enum
      * 
-     * @param string $location OpenAPI parameter location
+     * @param ?string $location OpenAPI parameter location
      * @return RequestType
      */
-    private function mapParameterLocation(string $location): RequestType
+    private function mapParameterLocation(?string $location): RequestType
     {
         return match ($location) {
             'path' => RequestType::Path,
             'query' => RequestType::Query,
             'body', 'formData' => RequestType::Body,
-            default => RequestType::Query // Default fallback
+            default => RequestType::Unknown // Default fallback
         };
     }
 
@@ -235,12 +235,13 @@ class OpenApiAnalyser
 
         // Schema does not reference, we will have to look at the type
         $type = $schema['type'];
+        $hasProperties = array_key_exists('properties', $schema);
 
         switch ($type) {
             case 'array':
                 return [];
             case 'object':
-                return $this->handleSchemaProperties($schema['properties']);
+                return $hasProperties ? $this->handleSchemaProperties($schema['properties']) : [];
             default:
                 return [];
         }

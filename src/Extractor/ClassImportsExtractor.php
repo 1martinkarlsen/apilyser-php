@@ -29,8 +29,14 @@ class ClassImportsExtractor
 
         foreach ($useNamespaces as $useNamespace) {
             foreach ($useNamespace->uses as $use) {
+                $importName = $use->name->name;
+                if (null !== $use->name->name) {
+                    $importName = $use->name->name;
+                } else {
+                    $importName = implode("/", $use->name->getParts());
+                }
                 $alias = $use->alias ? $use->name->toString() : $use->name->getLast();
-                $imports[$alias] = $use->name->name;
+                $imports[$alias] = $importName;
             }
         }
 

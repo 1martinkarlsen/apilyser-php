@@ -141,7 +141,6 @@ class Injection
             nodeParser: $this->get(NodeParser::class)
         );
         $this->services[TypeStructureResolver::class] = new TypeStructureResolver(
-            output: $this->get(OutputInterface::class),
             classAstResolver: $this->get(ClassAstResolver::class)
         );
 

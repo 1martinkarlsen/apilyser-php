@@ -57,7 +57,6 @@ class ResponseAnalyserIntegrationTest extends TestCase
             nodeParser: new NodeParser()
         );
         $this->typeStructureResolver = new TypeStructureResolver(
-            output: $this->output,
             classAstResolver: $this->classAstResolver
         );
         $this->httpDelegate = new HttpDelegate();

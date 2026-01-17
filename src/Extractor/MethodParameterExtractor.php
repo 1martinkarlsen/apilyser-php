@@ -11,7 +11,9 @@ use PhpParser\Node\Stmt\ClassMethod;
 
 class MethodParameterExtractor
 {
-    public function __construct(private NamespaceResolver $namespaceResolver) {}
+    public function __construct(
+        private NamespaceResolver $namespaceResolver
+    ) {}
 
     /**
      * Loops through params and parses each parameter
@@ -63,11 +65,18 @@ class MethodParameterExtractor
             
             case $param->type instanceof Name:
                 // This means that the propertye is a namespaced object (e.g. Response)
+                $paramTypeName = null;
+                if (null !== $param->type->name) {
+                    $paramTypeName = $param->type->name;
+                } else {
+                    $paramTypeName = $param->type->getParts()[0];
+                }
+
                 return new MethodParam(
                     name: $varName,
-                    type: $param->type->name,
+                    type: $paramTypeName,
                     isBuiltinType: false,
-                    fullNamespace: $this->namespaceResolver->findFullNamespaceForClass($param->type->name, $imports)
+                    fullNamespace: $this->namespaceResolver->findFullNamespaceForClass($paramTypeName, $imports)
                 );
 
             default:
