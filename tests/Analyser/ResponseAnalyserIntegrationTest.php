@@ -284,6 +284,15 @@ class ResponseAnalyserIntegrationTest extends TestCase
         $this->assertEquals(expected: 200, actual: $first->statusCode);
     }
 
+    public function testFindwithOnlyStatusCode()
+    {
+        $context = $this->parseDataClassMethod("withOnlyStatusCode");
+        $result = $this->analyser->analyse($context);
+
+        $this->assertEquals(expected: 201, actual: $result[0]->statusCode);
+        $this->assertNull($result[0]->structure);
+    }
+
     public function testFindWithDirectArrayBody()
     {
         $context = $this->parseDataClassMethod("withDirectArrayBody");

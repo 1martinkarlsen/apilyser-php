@@ -113,6 +113,11 @@ class ResponseAnalyserIntegrationData
         return new JsonResponse();
     }
 
+    public function withOnlyStatusCode(): Response
+    {
+        return new JsonResponse(201);
+    }
+
     public function withDirectArrayBody(): Response
     {
         return new JsonResponse(["id" => 1], 200);
