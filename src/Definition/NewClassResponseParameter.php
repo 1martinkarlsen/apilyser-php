@@ -10,6 +10,7 @@ class NewClassResponseParameter
         public string $bodyName,
         public int $statusCodeIndex,
         public int $bodyIndex,
-        public ?int $defaultStatusCode = null
+        public ?int $defaultStatusCode = null,
+        public ?int $singleArgIndexReference = null
     ) {}
 }

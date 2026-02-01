@@ -121,15 +121,22 @@ class NewClassResponseResolver implements ResponseNodeResolver
                     $statusCodeProvided = true;
                 }
             } else {
+                $totalArgs = count($class->args);
+                $newIndex = $index;
+                if ($totalArgs == 1 && $parameterInfo->singleArgIndexReference !== null) {
+                    $newIndex = $parameterInfo->singleArgIndexReference;
+                }
+
+
                 // Positional parameters
-                if ($index == $parameterInfo->bodyIndex) {
+                if ($newIndex == $parameterInfo->bodyIndex) {
                     // Body
                     $body = $this->typeStructureResolver->resolveFromExpression(
                         context: $context,
                         methodJourney: $methodJourney,
                         expr: $arg->value
                     );
-                } else if ($index == $parameterInfo->statusCodeIndex) {
+                } else if ($newIndex == $parameterInfo->statusCodeIndex) {
                     // Status code
                     $statusCodes = $this->findStatusCodes($arg->value, $context, $methodJourney);
                     $statusCode = !empty($statusCodes) ? $statusCodes[0] : null;

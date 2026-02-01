@@ -85,7 +85,8 @@ class SymfonyApiParser implements ApiParser {
             bodyName: self::RESPONSE_BODY_NAME,
             statusCodeIndex: self::RESPONSE_STATUS_INDEX,
             bodyIndex: self::RESPONSE_BODY_INDEX,
-            defaultStatusCode: 200
+            defaultStatusCode: 200,
+            singleArgIndexReference: self::RESPONSE_STATUS_INDEX
         );
     }
 
