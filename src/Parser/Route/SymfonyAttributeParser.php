@@ -31,7 +31,10 @@ class SymfonyAttributeParser
         $classAttr = $this->extractor->extract($class->attrGroups, self::ATTR_ROUTE_NAME);
         $functionAttr = $this->extractor->extract($method->attrGroups, self::ATTR_ROUTE_NAME);
 
-        $classRoute = $this->findRoutePath($classAttr);
+        $classRoute = null;
+        if ($classAttr != null) {
+            $classRoute = $this->findRoutePath($classAttr);
+        }
         $functionRoute = $this->findRoutePath($functionAttr);
         $functionMethod = $this->findRouteMethod($functionAttr);
 
