@@ -203,6 +203,15 @@ class ResponseAnalyserIntegrationTest extends TestCase
         $this->assertCount(expectedCount: 1, haystack: $result);
     }
 
+    public function testFindWithOuterScopeServiceCallReturn()
+    {
+        $context = $this->parseDataClassMethod("withOuterScopeServiceCallReturn");
+        $result = $this->analyser->analyse($context);
+
+        $this->assertNotNull($result);
+        $this->assertCount(expectedCount: 1, haystack: $result);
+    }
+
     public function testFindWithVariableStatusCode()
     {
         $context = $this->parseDataClassMethod("withVariableStatusCode");
@@ -414,6 +423,22 @@ class ResponseAnalyserIntegrationTest extends TestCase
     public function testFindWithTryCatchBlock()
     {
         $context = $this->parseDataClassMethod("withTryCatchBlock");
+        $result = $this->analyser->analyse($context);
+        
+        $this->assertNotNull($result);
+        $this->assertCount(3, $result, "Should find try + 2 catch blocks");
+        
+        $statusCodes = array_map(fn($r) => $r->statusCode, $result);
+        sort($statusCodes);
+        
+        $this->assertContains(200, $statusCodes, "Should find 200 from try block");
+        $this->assertContains(404, $statusCodes, "Should find 404 from first catch");
+        $this->assertContains(500, $statusCodes, "Should find 500 from second catch");
+    }
+
+    public function testFindWithOuterScopeTryCatchBlock()
+    {
+        $context = $this->parseDataClassMethod("withOuterScopeTryCatchBlock");
         $result = $this->analyser->analyse($context);
         
         $this->assertNotNull($result);

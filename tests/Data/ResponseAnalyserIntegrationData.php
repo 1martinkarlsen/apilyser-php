@@ -59,9 +59,16 @@ class ResponseAnalyserIntegrationData
         return new JsonResponse(["id" => 1, "user_name" => "Test"], 200);
     }
 
-    public function withServiceCallReturn() : Response
+    public function withServiceCallReturn(): Response
     {
         return $this->service->serviceCallReturn();
+    }
+
+    public function withOuterScopeServiceCallReturn(): Response
+    {
+        $response = $this->service->serviceCallReturn();
+
+        return $response;
     }
 
     public function withVariableStatusCode(): Response
@@ -182,6 +189,20 @@ class ResponseAnalyserIntegrationData
         } catch (\Exception $e) {
             return new JsonResponse(['error' => 'Server error'], 500);
         }
+    }
+
+    public function withOuterScopeTryCatchBlock(): Response
+    {
+        try {
+            $data = ['result' => 'success'];
+            $response = new JsonResponse($data, 200);
+        } catch (\InvalidArgumentException $e) {
+            $reponse = new JsonResponse(['error' => 'Not found'], 404);
+        } catch (\Exception $e) {
+            $reponse = new JsonResponse(['error' => 'Server error'], 500);
+        }
+
+        return $response;
     }
     
     public function withSwitchStatement(): Response
