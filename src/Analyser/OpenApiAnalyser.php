@@ -122,13 +122,17 @@ class OpenApiAnalyser
             // Usually we'd handle the first content type, typically application/json
             foreach ($contentTypes as $contentType => $content) {
                 if (isset($content['schema'])) {
-                    $parameters[] = new ParameterDefinition(
-                        'requestBody',
-                        'array', // Most API request bodies are objects/arrays
-                        RequestType::Body,
-                        $operation['requestBody']['required'] ?? false,
-                        null
-                    );
+                    if (isset($content['schema']['properties'])) {
+                        foreach ($content['schema']['properties'] as $key => $value) {
+                            $parameters[] = new ParameterDefinition(
+                                name: $key,
+                                type: $this->mapOpenApiTypeToPhp($value['type']),
+                                location: RequestType::Body,
+                                required: $operation['requestBody']['required'] ?? false,
+                                default: null
+                            );
+                        }
+                    }
                     
                     // Only process one content type for now
                     break;
