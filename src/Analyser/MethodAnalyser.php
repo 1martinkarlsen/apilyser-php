@@ -10,7 +10,6 @@ use Apilyser\Parser\Api\HttpDelegate;
 use Apilyser\Resolver\ClassAstResolver;
 use Apilyser\Resolver\ResponseCall;
 use Apilyser\Resolver\ResponseResolver;
-use Apilyser\Resolver\TypeStructureResolver;
 use Apilyser\Resolver\VariableAssignmentFinder;
 use Apilyser\Traverser\ClassUsageTraverser;
 use Apilyser\Traverser\ClassUsageTraverserFactory;
@@ -23,7 +22,6 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\Property;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class MethodAnalyser
 {

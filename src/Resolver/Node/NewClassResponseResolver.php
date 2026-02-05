@@ -127,7 +127,6 @@ class NewClassResponseResolver implements ResponseNodeResolver
                     $newIndex = $parameterInfo->singleArgIndexReference;
                 }
 
-
                 // Positional parameters
                 if ($newIndex == $parameterInfo->bodyIndex) {
                     // Body

@@ -6,7 +6,6 @@ use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Definition\NewClassResponseParameter;
 use Apilyser\Resolver\ResponseCall;
 use PhpParser\Node;
-use PhpParser\Node\Stmt\ClassMethod;
 
 interface ApiParser {
 
@@ -34,7 +33,10 @@ interface ApiParser {
 
     function getQuery(): string;
 
-    function getBody(): string;
+    /**
+     * @return string[]
+     */
+    function getBody(): array;
 
     function getNewClassParameters(): NewClassResponseParameter;
 

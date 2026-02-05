@@ -19,6 +19,7 @@ class SymfonyApiParser implements ApiParser {
 
     private const QUERY = "query";
     private const BODY = "body";
+    private const PAYLOAD_FUNCTION = "getPayload";
     private const RESPONSE_STATUS_NAME = "status";
     private const RESPONSE_BODY_NAME = "data";
     private const RESPONSE_STATUS_INDEX = 1;
@@ -73,9 +74,9 @@ class SymfonyApiParser implements ApiParser {
         return self::QUERY;
     }
 
-    function getBody(): string
+    function getBody(): array
     {
-        return self::BODY;
+        return [self::BODY, self::PAYLOAD_FUNCTION, "get"];
     }
 
     function getNewClassParameters(): NewClassResponseParameter

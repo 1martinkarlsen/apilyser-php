@@ -23,6 +23,8 @@ use PhpParser\Node\Scalar\Float_;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Property;
+use PhpParser\NodeDumper;
+use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
 
 class TypeStructureResolver
@@ -30,7 +32,8 @@ class TypeStructureResolver
     private VariableAssignmentFinder $variableAssignmentFinder;
 
     public function __construct(
-        private ClassAstResolver $classAstResolver
+        private ClassAstResolver $classAstResolver,
+        private NodeFinder $nodeFinder
     ) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
     }
@@ -135,6 +138,8 @@ class TypeStructureResolver
     }
 
     /**
+     * Responsible for finding the method and the class that it exist in, from a method call.
+     * 
      * @return ClassMethodContext|null
      */
     private function findMethodContext(ClassMethodContext $context, array $methodJourney, MethodCall $node)
@@ -157,16 +162,59 @@ class TypeStructureResolver
             },
             $nodeVar instanceof Variable => fn() => function($context, $node, $nodeVar, $methodJourney) {
                 $nodeExpr = $this->variableAssignmentFinder->findAssignment($nodeVar->name, $methodJourney);
-                if (null === $nodeExpr || !($nodeExpr instanceof New_)) {
+
+                $currentContext = null;
+                $className = null;
+                if (null === $nodeExpr) {
+                    // Looking for userRepository is assigned. It's not found so we have to look in function parameters
+                    $param = $this->nodeFinder->findFirst($context->method, function (Node $node) use ($nodeVar) {
+                        if ($node instanceof Param) {
+                            if ($node->var instanceof Variable) {
+                                if ($node->var->name === $nodeVar->name) {
+                                    return true;
+                                }
+                            }
+                        }
+
+                        return false;
+                    });
+
+                    if (null === $param) {
+                        return null;
+                    }
+                    
+                    if ($param->type instanceof Name) {
+                        $currentContext = $context;
+                        $className = $param->type->name;
+                    }
+                }
+
+                if ($nodeExpr instanceof MethodCall) {
+                    $newContext = $this->findMethodContext($context, $methodJourney, $nodeExpr);
+                    if (null === $newContext) {
+                        return null;
+                    }
+
+                    $newClassStructure = $this->classAstResolver->resolveClassStructure(
+                        namespace: $newContext->namespace,
+                        className: $newContext->method->returnType->name,
+                        imports: $newContext->imports
+                    );
+
+                    $currentContext = $newContext;
+                    $className = $newClassStructure->class->name->name;
+                }
+
+                if ($nodeExpr instanceof New_) {
+                    $currentContext = $context;
+                    $className = $nodeExpr->class->name;
+                }
+
+                if (!is_string($className) || $currentContext === null) {
                     return null;
                 }
 
-                $className = $nodeExpr->class->name;
-                if (!is_string($className)) {
-                    return null;
-                }
-
-                $classStructure = $this->classAstResolver->resolveClassStructure($context->namespace, $className, $context->imports);
+                $classStructure = $this->classAstResolver->resolveClassStructure($currentContext->namespace, $className, $currentContext->imports);
                 if (null === $classStructure) {
                     return null;
                 }
@@ -180,7 +228,7 @@ class TypeStructureResolver
                     namespace: $classStructure->namespace,
                     class: $classStructure->class,
                     method: $calledMethod,
-                    imports: $context->imports
+                    imports: $classStructure->imports
                 );
             },
             $nodeVar instanceof PropertyFetch => fn() => function($context, $node, $nodeVar, $methodJourney) {
@@ -349,7 +397,7 @@ class TypeStructureResolver
                         nullable: false
                     );
                 }
-                
+
                 $methodCallContext = $this->findMethodContext($context, $methodJourney, $itemValue);
                 if (null === $methodCallContext) {
                     return null;
@@ -555,7 +603,7 @@ class TypeStructureResolver
         // This function only handles actual scalar literals.
         return match (true) {
             $scalar instanceof String_ => 'string',
-            $scalar instanceof Int_ => 'int',
+            $scalar instanceof Int_ => 'integer',
             $scalar instanceof Float_ => 'float',
             default => 'mixed'
         };

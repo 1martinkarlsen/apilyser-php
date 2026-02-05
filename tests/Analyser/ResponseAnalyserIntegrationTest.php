@@ -18,6 +18,7 @@ use Apilyser\Resolver\ResponseResolver;
 use Apilyser\Resolver\TypeStructureResolver;
 use Apilyser\Resolver\VariableAssignmentFinder;
 use Apilyser\Traverser\ClassUsageTraverserFactory;
+use PhpParser\NodeFinder;
 use PhpParser\ParserFactory;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -30,6 +31,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     private TypeStructureResolver $typeStructureResolver;
     private HttpDelegate $httpDelegate;
     private ResponseAnalyser $analyser;
+    private NodeFinder $nodeFinder;
 
     private function findProjectRoot(): string
     {
@@ -48,6 +50,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $this->output = $this->createMock(OutputInterface::class);
+        $this->nodeFinder = new NodeFinder();
         $this->namespaceResolver = new NamespaceResolver(
             output: $this->output,
             rootPath: $this->findProjectRoot()
@@ -57,7 +60,8 @@ class ResponseAnalyserIntegrationTest extends TestCase
             nodeParser: new NodeParser()
         );
         $this->typeStructureResolver = new TypeStructureResolver(
-            classAstResolver: $this->classAstResolver
+            classAstResolver: $this->classAstResolver,
+            nodeFinder: $this->nodeFinder
         );
         $this->httpDelegate = new HttpDelegate();
         $this->httpDelegate->registerParser(new SymfonyApiParser($this->typeStructureResolver));
@@ -309,7 +313,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
         $firstBodyItem = $body[0];
 
         $this->assertEquals(expected: "id", actual: $firstBodyItem->getName());
-        $this->assertEquals(expected: "int", actual: $firstBodyItem->getType());
+        $this->assertEquals(expected: "integer", actual: $firstBodyItem->getType());
         $this->assertEquals(expected: false, actual: $firstBodyItem->getIsNullable());
     }
 
@@ -355,7 +359,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
         $first = $body[0];
         $this->assertNotNull($first);
         $this->assertEquals(expected: "id", actual: $first->getName());
-        $this->assertEquals(expected: "int", actual: $first->getType());
+        $this->assertEquals(expected: "integer", actual: $first->getType());
         $this->assertEquals(expected: false, actual: $first->getIsNullable());
 
         // Testing service method to receive property
@@ -389,7 +393,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
         $first = $body[0];
         $this->assertNotNull($first);
         $this->assertEquals(expected: "id", actual: $first->getName());
-        $this->assertEquals(expected: "int", actual: $first->getType());
+        $this->assertEquals(expected: "integer", actual: $first->getType());
         $this->assertEquals(expected: false, actual: $first->getIsNullable());
     }
 
@@ -409,7 +413,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
         $first = $body[0];
         $this->assertNotNull($first);
         $this->assertEquals(expected: "id", actual: $first->getName());
-        $this->assertEquals(expected: "int", actual: $first->getType());
+        $this->assertEquals(expected: "integer", actual: $first->getType());
         $this->assertEquals(expected: false, actual: $first->getIsNullable());
     }
 

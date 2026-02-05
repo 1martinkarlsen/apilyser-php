@@ -75,7 +75,7 @@ class ResponsePropertyTypeRule implements ValidationRule {
                 if ($prop->getType() != $code->getType()) {
                     array_push(
                         $errors,
-                        $prop->getName()
+                        $prop->getName() . " expects type: " . $prop->getType() . " but got: " . $code->getType()
                     );
                 }
             }
