@@ -64,7 +64,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
             nodeFinder: $this->nodeFinder
         );
         $this->frameworkRegistry = new FrameworkRegistry();
-        $this->frameworkRegistry->registerParser(new SymfonyAdapter($this->typeStructureResolver));
+        $this->frameworkRegistry->registerAdapter(new SymfonyAdapter($this->typeStructureResolver));
 
         $this->analyser = new ResponseAnalyser(
             output: $this->output,

@@ -82,7 +82,7 @@ class NewClassResponseResolver implements ResponseNodeResolver
     private function getResponseParser(string $fullClassName): ?FrameworkAdapter
     {
         // Find the http parser for this response class.
-        $frameworkAdapters = $this->frameworkRegistry->getParsers();
+        $frameworkAdapters = $this->frameworkRegistry->getAdapters();
         foreach ($frameworkAdapters as $frameworkAdapter) {
             if ($frameworkAdapter->supportResponseClass($fullClassName)) {
                 return $frameworkAdapter;

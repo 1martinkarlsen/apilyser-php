@@ -7,7 +7,6 @@ use Apilyser\Ast\MethodParameterFinder;
 use Apilyser\Ast\RequestCallFinder;
 use Apilyser\Definition\ParameterDefinitionFactory;
 use Apilyser\Framework\FrameworkRegistry;
-use Exception;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassMethod;
 
@@ -42,7 +41,7 @@ class RequestAnalyser
                 $parameterDefinitions[] = $this->parameterDefinitionFactory->createPathDefinition($param);
             } else {
                 if ($param->fullNamespace != null) {
-                    $frameworkAdapter = $this->frameworkRegistry->getRequestParser($param->fullNamespace);
+                    $frameworkAdapter = $this->frameworkRegistry->getRequestAdapter($param->fullNamespace);
 
                     if ($frameworkAdapter != null) {
                         $requestCallFinder = new RequestCallFinder($frameworkAdapter);

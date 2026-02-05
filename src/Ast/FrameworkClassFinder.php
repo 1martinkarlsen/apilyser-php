@@ -24,7 +24,7 @@ class FrameworkClassFinder
         /** @var ClassUsage[] */
         $result = [];
 
-        foreach ($this->frameworkRegistry->getParsers() as $http) {
+        foreach ($this->frameworkRegistry->getAdapters() as $http) {
             $responseClasses = $this->extractUsedClasses(
                 stmts: $stmts,
                 imports: $imports,
