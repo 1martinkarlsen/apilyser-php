@@ -1,17 +1,17 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\Traverser;
+namespace Apilyser\Ast\Visitor;
 
 use Apilyser\Resolver\NamespaceResolver;
 
-class ClassUsageTraverserFactory
+class ClassUsageVisitorFactory
 {
 
     public function __construct(private NamespaceResolver $namespaceResolver) {}
 
     public function create(string $className, array $imports)
     {
-        return new ClassUsageTraverser(
+        return new ClassUsageVisitor(
             namespaceResolver: $this->namespaceResolver,
             className: $className,
             imports: $imports

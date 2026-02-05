@@ -4,13 +4,13 @@ namespace Apilyser\Resolver\Node;
 
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Definition\NewClassResponseParameter;
-use Apilyser\Parser\Api\ApiParser;
-use Apilyser\Parser\Api\HttpDelegate;
+use Apilyser\Framework\FrameworkAdapter;
+use Apilyser\Framework\FrameworkRegistry;
 use Apilyser\Resolver\ClassAstResolver;
 use Apilyser\Resolver\NamespaceResolver;
 use Apilyser\Resolver\ResponseCall;
 use Apilyser\Resolver\TypeStructureResolver;
-use Apilyser\Resolver\VariableAssignmentFinder;
+use Apilyser\Ast\VariableAssignmentFinder;
 use Exception;
 use PhpParser\Node;
 use PhpParser\Node\Expr\ClassConstFetch;
@@ -30,7 +30,7 @@ class NewClassResponseResolver implements ResponseNodeResolver
     public function __construct(
         private NamespaceResolver $namespaceResolver,
         private TypeStructureResolver $typeStructureResolver,
-        private HttpDelegate $httpDelegate,
+        private FrameworkRegistry $frameworkRegistry,
         private VariableAssignmentFinder $variableAssignmentFinder,
         private ClassAstResolver $classAstResolver
     ) {}
@@ -45,13 +45,13 @@ class NewClassResponseResolver implements ResponseNodeResolver
      * @param Node[] $methodJourney
      * @param Node $node
      * @param ?ResponseCall $modifierResponseCall
-     * 
+     *
      * @return ?ResponseCall
      */
     public function resolve(
-        ClassMethodContext $context, 
+        ClassMethodContext $context,
         array $methodJourney,
-        Node $node, 
+        Node $node,
         ?ResponseCall $modifierResponseCall = null
     ): ?ResponseCall {
         if (!$node instanceof New_ || !$node->class instanceof Name) {
@@ -60,7 +60,7 @@ class NewClassResponseResolver implements ResponseNodeResolver
 
         $className = $node->class->name;
         $fullClassName = $this->namespaceResolver->findFullNamespaceForClass(
-            className: $className, 
+            className: $className,
             imports: $context->imports,
             currentNamespace: $context->namespace
         );
@@ -79,13 +79,13 @@ class NewClassResponseResolver implements ResponseNodeResolver
         );
     }
 
-    private function getResponseParser(string $fullClassName): ?ApiParser
+    private function getResponseParser(string $fullClassName): ?FrameworkAdapter
     {
         // Find the http parser for this response class.
-        $httpParsers = $this->httpDelegate->getParsers();
-        foreach ($httpParsers as $httpParser) {
-            if ($httpParser->supportResponseClass($fullClassName)) {
-                return $httpParser;
+        $frameworkAdapters = $this->frameworkRegistry->getParsers();
+        foreach ($frameworkAdapters as $frameworkAdapter) {
+            if ($frameworkAdapter->supportResponseClass($fullClassName)) {
+                return $frameworkAdapter;
             }
         }
 
@@ -95,13 +95,13 @@ class NewClassResponseResolver implements ResponseNodeResolver
     function getResponse(
         ClassMethodContext $context,
         array $methodJourney,
-        New_ $class, 
+        New_ $class,
         NewClassResponseParameter $parameterInfo
     ): ?ResponseCall
     {
         $statusCode = null;
         $body = null;
-        
+
         // Track if status code was explicitly provided
         $statusCodeProvided = false;
 
@@ -158,7 +158,7 @@ class NewClassResponseResolver implements ResponseNodeResolver
 
     /**
      * Finds all possible status codes from a node
-     * 
+     *
      * @param Node $node
      * @param ClassMethodContext $context
      * @param array $methodJourney
@@ -215,11 +215,11 @@ class NewClassResponseResolver implements ResponseNodeResolver
         $constName = $classConstFetch->name;
         if ($constName instanceof Identifier) {
             $classStructure = $this->classAstResolver->resolveClassStructure(
-                $context->namespace, 
-                $classConstFetch->class->name, 
+                $context->namespace,
+                $classConstFetch->class->name,
                 $context->imports
             );
-            
+
             $constant = $this->classAstResolver->findConstInClass($classStructure->class, $constName->name);
 
             if (null !== $constant) {
@@ -238,12 +238,12 @@ class NewClassResponseResolver implements ResponseNodeResolver
         if ($methodCall->var instanceof Variable && $methodCall->var->name === 'this') {
             return $this->handleThisMethodCall($methodCall, $context, $methodJourney);
         }
-        
+
         // Check if it's a method call on another object (e.g., $service->getStatusCode())
         if ($methodCall->var instanceof Variable) {
             return $this->handleExternalMethodCall($methodCall, $context, $methodJourney);
         }
-        
+
         return [];
     }
 
@@ -252,30 +252,30 @@ class NewClassResponseResolver implements ResponseNodeResolver
         if (!$methodCall->name instanceof Identifier) {
             return [];
         }
-        
+
         $methodName = $methodCall->name->name;
-        
+
         // Find the method in the current class
         $method = $this->classAstResolver->findMethodInClass($context->class, $methodName);
-        
+
         if ($method === null) {
             return [];
         }
-        
+
         // Find ALL return statements in the method
         $returnStatements = $this->findAllReturnValues($method->stmts);
-        
+
         if (empty($returnStatements)) {
             return [];
         }
-        
+
         // Collect all possible status codes
         $statusCodes = [];
         foreach ($returnStatements as $returnExpr) {
             $foundCodes = $this->findStatusCodes($returnExpr, $context, $methodJourney);
             $statusCodes = array_merge($statusCodes, $foundCodes);
         }
-        
+
         // Remove duplicates and return
         return array_values(array_unique($statusCodes));
     }
@@ -285,35 +285,35 @@ class NewClassResponseResolver implements ResponseNodeResolver
         if (!$methodCall->var instanceof Variable || !$methodCall->name instanceof Identifier) {
             return [];
         }
-        
+
         $variableName = $methodCall->var->name;
         $methodName = $methodCall->name->name;
-        
+
         // Find where this variable is defined
         $variableType = $this->findVariableType($variableName, $context, $methodJourney);
-        
+
         if ($variableType === null) {
             return [];
         }
-        
+
         // Resolve the class structure for the variable's type
         $classStructure = $this->classAstResolver->resolveClassStructure(
             $context->namespace,
             $variableType,
             $context->imports
         );
-        
+
         if ($classStructure === null) {
             return [];
         }
-        
+
         // Find the method in that class
         $method = $this->classAstResolver->findMethodInClass($classStructure->class, $methodName);
-        
+
         if ($method === null) {
             return [];
         }
-        
+
         // Create a new context for the external class
         $externalContext = new ClassMethodContext(
             namespace: $classStructure->namespace,
@@ -321,79 +321,79 @@ class NewClassResponseResolver implements ResponseNodeResolver
             class: $classStructure->class,
             method: $method
         );
-        
+
         // Find ALL return statements in the external method
         $returnStatements = $this->findAllReturnValues($method->stmts);
-        
+
         if (empty($returnStatements)) {
             return [];
         }
-        
+
         // Collect all possible status codes
         $statusCodes = [];
         foreach ($returnStatements as $returnExpr) {
             $foundCodes = $this->findStatusCodes($returnExpr, $externalContext, []);
             $statusCodes = array_merge($statusCodes, $foundCodes);
         }
-        
+
         // Remove duplicates and return
         return array_values(array_unique($statusCodes));
     }
 
     /**
      * Recursively finds ALL return statement values in a method
-     * 
+     *
      * @param Node[] $stmts
      * @return Node[]
      */
     private function findAllReturnValues(array $stmts): array
     {
         $returnValues = [];
-        
+
         foreach ($stmts as $stmt) {
             if ($stmt instanceof \PhpParser\Node\Stmt\Return_ && $stmt->expr !== null) {
                 $returnValues[] = $stmt->expr;
             }
-            
+
             // Recursively search in nested structures
             if (property_exists($stmt, 'stmts') && is_array($stmt->stmts)) {
                 $nestedReturns = $this->findAllReturnValues($stmt->stmts);
                 $returnValues = array_merge($returnValues, $nestedReturns);
             }
-            
+
             // Handle if-else statements
             if ($stmt instanceof \PhpParser\Node\Stmt\If_) {
                 foreach ($stmt->elseifs as $elseif) {
                     $elseifReturns = $this->findAllReturnValues($elseif->stmts);
                     $returnValues = array_merge($returnValues, $elseifReturns);
                 }
-                
+
                 if ($stmt->else !== null) {
                     $elseReturns = $this->findAllReturnValues($stmt->else->stmts);
                     $returnValues = array_merge($returnValues, $elseReturns);
                 }
             }
-            
+
             // Handle try-catch statements
             if ($stmt instanceof \PhpParser\Node\Stmt\TryCatch) {
                 foreach ($stmt->catches as $catch) {
                     $catchReturns = $this->findAllReturnValues($catch->stmts);
                     $returnValues = array_merge($returnValues, $catchReturns);
                 }
-                
+
                 if ($stmt->finally !== null) {
                     $finallyReturns = $this->findAllReturnValues($stmt->finally->stmts);
                     $returnValues = array_merge($returnValues, $finallyReturns);
                 }
             }
         }
-        
+
         return $returnValues;
     }
 
     /**
      * Finds the type of a variable (class name)
-     * 
+     *
      * @param string $variableName
      * @param ClassMethodContext $context
      * @param Node[] $methodJourney
@@ -409,13 +409,13 @@ class NewClassResponseResolver implements ResponseNodeResolver
                 }
             }
         }
-        
+
         // 2. Check constructor injection
         $constructorParam = $this->classAstResolver->findConstructorParam($context->class, $variableName);
         if ($constructorParam !== null && $constructorParam->type instanceof Name) {
             return $constructorParam->type->name;
         }
-        
+
         return null;
     }
 

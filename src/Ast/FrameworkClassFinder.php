@@ -1,36 +1,34 @@
 <?php
 
-namespace Apilyser\Resolver;
+namespace Apilyser\Ast;
 
-use Apilyser\Extractor\ClassExtractor;
-use Apilyser\Extractor\ClassUsage;
-use Apilyser\Parser\Api\ApiParser;
-use Apilyser\Parser\Api\HttpDelegate;
+use Apilyser\Framework\FrameworkAdapter;
+use Apilyser\Framework\FrameworkRegistry;
 
-class ApiFrameworkResolver
+class FrameworkClassFinder
 {
 
     public function __construct(
-        private ClassExtractor $classExtractor,
-        private HttpDelegate $httpDelegate
+        private ClassUsageFinder $classUsageFinder,
+        private FrameworkRegistry $frameworkRegistry
     ) {}
 
     /**
      * @param array $stmts
      * @param array $imports
-     * 
+     *
      * @return ClassUsage[]
      */
-    public function resolve(array $stmts, array $imports): array
+    public function find(array $stmts, array $imports): array
     {
         /** @var ClassUsage[] */
         $result = [];
 
-        foreach ($this->httpDelegate->getParsers() as $http) {
+        foreach ($this->frameworkRegistry->getParsers() as $http) {
             $responseClasses = $this->extractUsedClasses(
                 stmts: $stmts,
                 imports: $imports,
-                apiParser: $http
+                frameworkAdapter: $http
             );
 
             array_push(
@@ -45,14 +43,14 @@ class ApiFrameworkResolver
     /**
      * @return ClassUsage[]
      */
-    private function extractUsedClasses(array $stmts, array $imports, ApiParser $apiParser): array
+    private function extractUsedClasses(array $stmts, array $imports, FrameworkAdapter $frameworkAdapter): array
     {
         /** @var ClassUsage[] */
         $result = [];
-        $responseClasses = $apiParser->getSupportedResponseClasses();
+        $responseClasses = $frameworkAdapter->getSupportedResponseClasses();
 
         foreach ($responseClasses as $responseClass) {
-            $usages = $this->classExtractor->extract(
+            $usages = $this->classUsageFinder->extract(
                 stmts: $stmts,
                 className: $responseClass,
                 imports: $imports

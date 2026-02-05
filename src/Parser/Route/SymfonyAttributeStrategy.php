@@ -2,8 +2,8 @@
 
 namespace Apilyser\Parser\Route;
 
-use Apilyser\Extractor\FileClassesExtractor;
-use Apilyser\Parser\FileParser;
+use Apilyser\Ast\ClassFinder;
+use Apilyser\Parser\FileScanner;
 use Apilyser\Parser\NodeParser;
 use Apilyser\Parser\Route;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -16,9 +16,9 @@ class SymfonyAttributeStrategy implements RouteStrategy
     public function __construct(
         private NodeFinder $nodeFinder,
         private NodeParser $nodeParser,
-        private FileParser $fileParser,
+        private FileScanner $fileScanner,
         private SymfonyAttributeParser $attributeParser,
-        private FileClassesExtractor $fileClassesExtractor
+        private ClassFinder $classFinder
     ) {}
 
     public function canHandle(string $rootPath): bool
@@ -91,18 +91,18 @@ class SymfonyAttributeStrategy implements RouteStrategy
         }
 
         // Look through all files in path directory
-        $files = $this->fileParser->getFiles($routesRootPath);
-        
+        $files = $this->fileScanner->getFiles($routesRootPath);
+
         foreach ($files as $file) {
             $fileContent = file_get_contents($file);
             $fileStmts = $this->nodeParser->parse($fileContent);
 
-            $classes = $this->fileClassesExtractor->extract($fileStmts);
+            $classes = $this->classFinder->extract($fileStmts);
 
             foreach ($classes as $class) {
                 $classFunctions = $this->nodeFinder->findInstanceOf($class, ClassMethod::class);
                 $filteredFunctions = array_filter(
-                    $classFunctions, 
+                    $classFunctions,
                     function(ClassMethod $method) {
                         return $method->isPublic();
                     }

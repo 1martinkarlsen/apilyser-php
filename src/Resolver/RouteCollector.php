@@ -5,7 +5,7 @@ namespace Apilyser\Resolver;
 use Apilyser\Parser\Route;
 use Apilyser\Parser\Route\RouteStrategy;
 
-class RouteResolver
+class RouteCollector
 {
 
     /**
@@ -25,7 +25,7 @@ class RouteResolver
         foreach ($this->strategies as $strategy) {
             if ($strategy->canHandle($path)) {
                 array_push(
-                    $routes, 
+                    $routes,
                     ...$strategy->parseRoutes($path)
                 );
             }

@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\Extractor;
+namespace Apilyser\Ast;
 
 use Apilyser\Definition\RequestType;
-use Apilyser\Parser\Api\ApiParser;
-use Apilyser\Traverser\VariableUsageTraverser;
+use Apilyser\Framework\FrameworkAdapter;
+use Apilyser\Ast\Visitor\VariableUsageVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\MethodCall;
@@ -17,15 +17,15 @@ use PhpParser\Node\Stmt\Expression;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
 
-class RequestUsageExtractor
+class RequestCallFinder
 {
 
-    public function __construct(private ApiParser $apiParser) {}
+    public function __construct(private FrameworkAdapter $frameworkAdapter) {}
 
     /**
      * @param Node\Stmt[] $methodStmts
      * @param string $paramName
-     * 
+     *
      * @return RequestCall[]
      */
     public function findCalls(array $methodStmts, string $paramName): array
@@ -63,7 +63,7 @@ class RequestUsageExtractor
 
     private function handleMethodCall(MethodCall $method): ?RequestCall
     {
-        if (!in_array($method->name->name, $this->apiParser->getBody())) {
+        if (!in_array($method->name->name, $this->frameworkAdapter->getBody())) {
             return null;
         }
 
@@ -73,16 +73,16 @@ class RequestUsageExtractor
         if ($expr instanceof PropertyFetch || $expr instanceof MethodCall) {
             if ($expr->var instanceof Variable) {
                 switch (true) {
-                    case $expr->name->name === $this->apiParser->getQuery():
+                    case $expr->name->name === $this->frameworkAdapter->getQuery():
                         $location = RequestType::Query;
                         break;
-                    case in_array($expr->name->name, $this->apiParser->getBody()):
+                    case in_array($expr->name->name, $this->frameworkAdapter->getBody()):
                         $location = RequestType::Body;
                         break;
                     default:
                         break;
                 }
-            
+
             }
         }
 
@@ -124,7 +124,7 @@ class RequestUsageExtractor
 
         // Find variable usages
         $tt = new NodeTraverser();
-        $usageFinder = new VariableUsageTraverser($name);
+        $usageFinder = new VariableUsageVisitor($name);
         $tt->addVisitor($usageFinder);
         $tt->traverse($ast);
         $usages = $usageFinder->getUsages();

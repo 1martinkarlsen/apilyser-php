@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\Extractor;
+namespace Apilyser\Ast;
 
-use Apilyser\Traverser\VariableUsageTraverser;
+use Apilyser\Ast\Visitor\VariableUsageVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -12,14 +12,14 @@ use PhpParser\NodeVisitor\ParentConnectingVisitor;
 /**
  * Used for finding usages of specific variables.
  */
-class VariableUsageExtractor {
+class VariableUsageFinder {
 
     public function __construct() {}
 
     /**
      * @param Variable $node
      * @param ClassMethod $method
-     * 
+     *
      * @return Node[]
      */
     public function extractVariableUsage(Variable $node, ClassMethod $method): array
@@ -40,7 +40,7 @@ class VariableUsageExtractor {
 
         // Find variable usages
         $tt = new NodeTraverser();
-        $usageFinder = new VariableUsageTraverser(variableName: $name, findRootParent: false);
+        $usageFinder = new VariableUsageVisitor(variableName: $name, findRootParent: false);
         $tt->addVisitor($usageFinder);
         $tt->traverse($ast);
         $usages = $usageFinder->getUsages();

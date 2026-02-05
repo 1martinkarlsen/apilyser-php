@@ -3,10 +3,10 @@
 namespace Apilyser\Analyser;
 
 use Apilyser\Definition\ParameterDefinition;
-use Apilyser\Extractor\MethodParameterExtractor;
-use Apilyser\Extractor\RequestUsageExtractor;
+use Apilyser\Ast\MethodParameterFinder;
+use Apilyser\Ast\RequestCallFinder;
 use Apilyser\Definition\ParameterDefinitionFactory;
-use Apilyser\Parser\Api\HttpDelegate;
+use Apilyser\Framework\FrameworkRegistry;
 use Exception;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -15,8 +15,8 @@ class RequestAnalyser
 {
 
     public function __construct(
-        private HttpDelegate $httpDelegate,
-        private MethodParameterExtractor $methodParameterExtractor,
+        private FrameworkRegistry $frameworkRegistry,
+        private MethodParameterFinder $methodParameterFinder,
         private ParameterDefinitionFactory $parameterDefinitionFactory
     ) {}
 
@@ -27,7 +27,7 @@ class RequestAnalyser
 
     /**
      * Parses a function to find requests
-     * 
+     *
      * @param ClassMethod $method
      * @param string[] $imports
      * @return ParameterDefinition[]
@@ -35,18 +35,18 @@ class RequestAnalyser
     private function analyzeMethod(ClassMethod $method, array $imports): array {
         $parameterDefinitions = [];
 
-        $methodParams = $this->methodParameterExtractor->extract($method, $imports);
+        $methodParams = $this->methodParameterFinder->extract($method, $imports);
 
         foreach ($methodParams as $param) {
             if ($param->isBuiltinType) {
                 $parameterDefinitions[] = $this->parameterDefinitionFactory->createPathDefinition($param);
             } else {
                 if ($param->fullNamespace != null) {
-                    $apiParser = $this->httpDelegate->getRequestParser($param->fullNamespace);
+                    $frameworkAdapter = $this->frameworkRegistry->getRequestParser($param->fullNamespace);
 
-                    if ($apiParser != null) {
-                        $requestUsageExtractor = new RequestUsageExtractor($apiParser);
-                        $requestCalls = $requestUsageExtractor->findCalls($method->stmts, $param->name);
+                    if ($frameworkAdapter != null) {
+                        $requestCallFinder = new RequestCallFinder($frameworkAdapter);
+                        $requestCalls = $requestCallFinder->findCalls($method->stmts, $param->name);
 
                         foreach ($requestCalls as $call) {
                             $paramDef = $this->parameterDefinitionFactory->createFromRequestCall($call, $param);

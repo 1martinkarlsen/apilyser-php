@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\Traverser;
+namespace Apilyser\Ast\Visitor;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\NodeVisitorAbstract;
 
-class VariableUsageTraverser extends NodeVisitorAbstract
+class VariableUsageVisitor extends NodeVisitorAbstract
 {
 
     /**
@@ -21,8 +21,8 @@ class VariableUsageTraverser extends NodeVisitorAbstract
 
     public function enterNode(Node $node)
     {
-        if ($node instanceof Variable 
-            && is_string($node->name) 
+        if ($node instanceof Variable
+            && is_string($node->name)
             && $node->name === $this->variableName) {
 
             $this->usages[] = $this->lookForParent($node);
@@ -50,7 +50,7 @@ class VariableUsageTraverser extends NodeVisitorAbstract
                 return $parent;
             }
         }
-        
+
         return $node;
     }
 }

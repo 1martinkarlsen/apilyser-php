@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\Extractor;
+namespace Apilyser\Ast;
 
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\NodeFinder;
 
-class FileClassesExtractor
+class ClassFinder
 {
 
     public function __construct(

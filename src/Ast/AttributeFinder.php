@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\Extractor;
+namespace Apilyser\Ast;
 
 use PhpParser\Node\Attribute;
 
-class AttributeExtractor
+class AttributeFinder
 {
 
     public function __construct() {}

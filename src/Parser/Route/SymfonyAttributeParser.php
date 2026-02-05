@@ -2,7 +2,7 @@
 
 namespace Apilyser\Parser\Route;
 
-use Apilyser\Extractor\AttributeExtractor;
+use Apilyser\Ast\AttributeFinder;
 use Apilyser\Parser\Route;
 use PhpParser\Node\Attribute;
 use PhpParser\Node\Expr\Array_;
@@ -18,7 +18,7 @@ class SymfonyAttributeParser
     private const ATTR_METHOD_NAME = "methods";
 
     public function __construct(
-        private AttributeExtractor $extractor
+        private AttributeFinder $extractor
     ) {}
 
     public function hasRoute(array $attrGroups): bool
@@ -42,8 +42,8 @@ class SymfonyAttributeParser
             return null;
         }
 
-        $routePath = $classRoute != null 
-            ? ($classRoute . $functionRoute) 
+        $routePath = $classRoute != null
+            ? ($classRoute . $functionRoute)
             : $functionRoute;
 
         return new Route(
@@ -53,7 +53,7 @@ class SymfonyAttributeParser
     }
 
     private function findRoutePath(Attribute $attr): ?string
-    {   
+    {
         foreach ($attr->args as $arg) {
             if ($arg->name == self::ATTR_PATH_NAME) {
                 if ($arg->value instanceof String_) {

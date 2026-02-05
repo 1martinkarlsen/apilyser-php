@@ -3,8 +3,8 @@
 namespace Apilyser\Analyser;
 
 use Apilyser\Definition\EndpointDefinition;
-use Apilyser\Extractor\ClassImportsExtractor;
-use Apilyser\Extractor\FileClassesExtractor;
+use Apilyser\Ast\ImportFinder;
+use Apilyser\Ast\ClassFinder;
 use Apilyser\Parser\NodeParser;
 use Apilyser\Parser\Route;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -18,8 +18,8 @@ final class FileAnalyser
         private NodeParser $nodeParser,
         private NodeFinder $nodeFinder,
         private EndpointAnalyser $endpointAnalyser,
-        private FileClassesExtractor $fileClassesExtractor,
-        private ClassImportsExtractor $classImportsExtractor
+        private ClassFinder $classFinder,
+        private ImportFinder $importFinder
     ) {}
 
     /**
@@ -35,8 +35,8 @@ final class FileAnalyser
             return [];
         }
 
-        $imports = $this->classImportsExtractor->extract($fileStmts);
-        $classes = $this->fileClassesExtractor->extract($fileStmts);
+        $imports = $this->importFinder->extract($fileStmts);
+        $classes = $this->classFinder->extract($fileStmts);
 
         return $this->analyseClasses($route, $namespace, $classes, $imports);
     }
