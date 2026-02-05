@@ -410,6 +410,8 @@ class TypeStructureResolver
                     $returnType = $methodCallContext->method->returnType->name;
                 }
 
+                $returnType = $this->mapReturnToTypeName($returnType);
+
                 return new ResponseBodyDefinition(
                     name: $itemKey,
                     type: $returnType,
@@ -609,6 +611,17 @@ class TypeStructureResolver
         };
     }
 
+    private function mapReturnToTypeName(string $return): string
+    {
+        return match (true) {
+            $return === 'string' => 'string',
+            $return === 'int' => 'integer',
+            $return === 'float' => 'float',
+            $return === 'array' => 'array',
+            default => 'mixed'
+        };
+    }
+
     /**
      * @param ClassMethodContext $context
      * @param string $calledMethodName
@@ -659,7 +672,7 @@ class TypeStructureResolver
                 if ($res != null && $value->var instanceof PropertyFetch) {
                     $result = new ResponseBodyDefinition(
                         name: $value->var->name->name,
-                        type: $res->getType(),
+                        type: $this->mapReturnToTypeName($res->getType()),
                         children: $children,
                         nullable: $res->getIsNullable()
                     );
