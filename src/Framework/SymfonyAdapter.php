@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\Parser\Api;
+namespace Apilyser\Framework;
 
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Definition\NewClassResponseParameter;
@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class SymfonyApiParser implements ApiParser {
+class SymfonyAdapter implements FrameworkAdapter {
 
     private const QUERY = "query";
     private const BODY = "body";
@@ -113,7 +113,7 @@ class SymfonyApiParser implements ApiParser {
 
     private function handleMethodCall(
         ClassMethodContext $context,
-        MethodCall $node, 
+        MethodCall $node,
         array $methodJourney,
         ?ResponseCall $modifierResponseCall,
     ): ?ResponseCall {

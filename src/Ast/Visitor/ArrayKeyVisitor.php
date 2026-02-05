@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\Traverser;
+namespace Apilyser\Ast\Visitor;
 
 use PhpParser\Node;
 use PhpParser\Node\ArrayItem;
@@ -9,7 +9,7 @@ use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\NodeVisitorAbstract;
 
-class ArrayKeyTraverser extends NodeVisitorAbstract
+class ArrayKeyVisitor extends NodeVisitorAbstract
 {
     /** @var \PhpParser\Node\ArrayItem[] */
     private array $arrayKeys = [];
@@ -32,12 +32,12 @@ class ArrayKeyTraverser extends NodeVisitorAbstract
         if ($this->inTargetMethod && $node instanceof ArrayItem && $node->key instanceof String_) {
             $this->arrayKeys[] = $node;
         }
-        
+
         // Alternative case for direct string keys (not wrapped in quotes in the source)
         if ($this->inTargetMethod && $node instanceof ArrayItem && $node->key instanceof Int_) {
             $this->arrayKeys[] = $node;
         }
-        
+
         return null;
     }
 
@@ -47,7 +47,7 @@ class ArrayKeyTraverser extends NodeVisitorAbstract
         if ($node instanceof ClassMethod && $node->name->toString() === $this->methodName) {
             $this->inTargetMethod = false;
         }
-        
+
         return null;
     }
 

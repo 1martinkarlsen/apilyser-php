@@ -1,6 +1,6 @@
 <?php
 
-use Apilyser\Extractor\AttributeExtractor;
+use Apilyser\Ast\AttributeFinder;
 use Apilyser\Parser\NodeParser;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\NodeFinder;
@@ -9,13 +9,13 @@ use PHPUnit\Framework\TestCase;
 class AttributeExtractorTest extends TestCase
 {
 
-    private AttributeExtractor $extractor;
+    private AttributeFinder $extractor;
     private NodeParser $nodeParser;
     private NodeFinder $nodeFinder;
 
     public function setUp(): void
     {
-        $this->extractor = new AttributeExtractor();
+        $this->extractor = new AttributeFinder();
         $this->nodeParser = new NodeParser();
         $this->nodeFinder = new NodeFinder();
     }

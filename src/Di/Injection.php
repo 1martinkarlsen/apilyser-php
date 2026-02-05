@@ -13,34 +13,33 @@ use Apilyser\ApiValidator;
 use Apilyser\Comparison\ApiComparison;
 use Apilyser\Configuration\Configuration;
 use Apilyser\Configuration\ConfigurationLoader;
-use Apilyser\Extractor\AttributeExtractor;
-use Apilyser\Extractor\ClassExtractor;
-use Apilyser\Extractor\ClassImportsExtractor;
-use Apilyser\Extractor\FileClassesExtractor;
-use Apilyser\Extractor\MethodParameterExtractor;
-use Apilyser\Extractor\VariableUsageExtractor;
+use Apilyser\Ast\AttributeFinder;
+use Apilyser\Ast\ClassUsageFinder;
+use Apilyser\Ast\ImportFinder;
+use Apilyser\Ast\ClassFinder;
+use Apilyser\Ast\MethodParameterFinder;
+use Apilyser\Ast\VariableUsageFinder;
 use Apilyser\Definition\ParameterDefinitionFactory;
-use Apilyser\Extractor\MethodPathExtractor;
-use Apilyser\Parser\Api\HttpDelegate;
-use Apilyser\Parser\Api\SymfonyApiParser;
-use Apilyser\Parser\FileParser;
+use Apilyser\Ast\ExecutionPathFinder;
+use Apilyser\Framework\FrameworkRegistry;
+use Apilyser\Framework\SymfonyAdapter;
+use Apilyser\Parser\FileScanner;
 use Apilyser\Parser\NodeParser;
 use Apilyser\Parser\Route\RouteStrategy;
 use Apilyser\Parser\Route\SymfonyAttributeParser;
 use Apilyser\Parser\Route\SymfonyAttributeStrategy;
 use Apilyser\Parser\Route\SymfonyYamlRouteStrategy;
-use Apilyser\Parser\RouteParser;
-use Apilyser\Resolver\ApiFrameworkResolver;
+use Apilyser\Ast\FrameworkClassFinder;
 use Apilyser\Resolver\ClassAstResolver;
 use Apilyser\Resolver\NamespaceResolver;
 use Apilyser\Resolver\Node\MethodCallResponseResolver;
 use Apilyser\Resolver\Node\NewClassResponseResolver;
 use Apilyser\Resolver\ResponseClassUsageResolver;
 use Apilyser\Resolver\ResponseResolver;
-use Apilyser\Resolver\RouteResolver;
+use Apilyser\Resolver\RouteCollector;
 use Apilyser\Resolver\TypeStructureResolver;
-use Apilyser\Resolver\VariableAssignmentFinder;
-use Apilyser\Traverser\ClassUsageTraverserFactory;
+use Apilyser\Ast\VariableAssignmentFinder;
+use Apilyser\Ast\Visitor\ClassUsageVisitorFactory;
 use Exception;
 use PhpParser\NodeDumper;
 use PhpParser\NodeFinder;
@@ -63,7 +62,7 @@ class Injection
 
         $this->services[Analyser::class] = new Analyser(
             openApiAnalyser: $this->get(OpenApiAnalyser::class),
-            routeResolver: $this->get(RouteResolver::class),
+            routeCollector: $this->get(RouteCollector::class),
             fileAnalyser: $this->get(FileAnalyser::class),
             comparison: $this->get(ApiComparison::class)
         );
@@ -71,7 +70,7 @@ class Injection
 
     /**
      * Creates the ApiValidator
-     * 
+     *
      * @return ApiValidator
      */
     public function createApiValidator(): ApiValidator
@@ -85,10 +84,10 @@ class Injection
 
     /**
      * Get a service from service container.
-     * 
+     *
      * @param string $serviceId
      * @return object
-     * 
+     *
      * @throws Exception
      */
     public function get(string $serviceId): object
@@ -102,7 +101,7 @@ class Injection
 
     /**
      * Responsible for loading and setting up configuration.
-     * 
+     *
      */
     private function configure(): void
     {
@@ -119,17 +118,17 @@ class Injection
         $this->services[NodeDumper::class] = new NodeDumper();
         $this->services[NodeFinder::class] = new NodeFinder();
 
-        $this->services[MethodPathExtractor::class] = new MethodPathExtractor();
+        $this->services[ExecutionPathFinder::class] = new ExecutionPathFinder();
 
         // Factories
         $this->services[ParameterDefinitionFactory::class] = new ParameterDefinitionFactory();
 
         // Parser
         $this->services[NodeParser::class] = new NodeParser();
-        $this->services[FileParser::class] = new FileParser($this->rootPath . $this->configuration[Configuration::CFG_CODE_PATH]);
-        
+        $this->services[FileScanner::class] = new FileScanner($this->rootPath . $this->configuration[Configuration::CFG_CODE_PATH]);
+
         // Route parser
-        $this->services[AttributeExtractor::class] = new AttributeExtractor();
+        $this->services[AttributeFinder::class] = new AttributeFinder();
 
         // Resolver
         $this->services[NamespaceResolver::class] = new NamespaceResolver(
@@ -145,31 +144,31 @@ class Injection
             nodeFinder: $this->get(NodeFinder::class)
         );
 
-        // Traverser
-        $this->services[ClassUsageTraverserFactory::class] = new ClassUsageTraverserFactory(
+        // Ast Visitors
+        $this->services[ClassUsageVisitorFactory::class] = new ClassUsageVisitorFactory(
             namespaceResolver: $this->get(NamespaceResolver::class)
         );
 
-        // Http parsers
-        $this->services[SymfonyApiParser::class] = new SymfonyApiParser(
+        // Framework adapters
+        $this->services[SymfonyAdapter::class] = new SymfonyAdapter(
             typeStructureResolver: $this->get(TypeStructureResolver::class)
         );
-        $httpDelegate = new HttpDelegate();
-        $httpDelegate->registerParser($this->get(SymfonyApiParser::class));
-        $this->services[HttpDelegate::class] = $httpDelegate;
+        $frameworkRegistry = new FrameworkRegistry();
+        $frameworkRegistry->registerParser($this->get(SymfonyAdapter::class));
+        $this->services[FrameworkRegistry::class] = $frameworkRegistry;
 
-        // Extractor
-        $this->services[FileClassesExtractor::class] = new FileClassesExtractor(
+        // Ast Finders
+        $this->services[ClassFinder::class] = new ClassFinder(
             nodeFinder: $this->get(NodeFinder::class)
         );
-        $this->services[ClassExtractor::class] = new ClassExtractor(
-            classUsageTraverserFactory: $this->get(ClassUsageTraverserFactory::class)
+        $this->services[ClassUsageFinder::class] = new ClassUsageFinder(
+            classUsageVisitorFactory: $this->get(ClassUsageVisitorFactory::class)
         );
-        $this->services[ClassImportsExtractor::class] = new ClassImportsExtractor(
+        $this->services[ImportFinder::class] = new ImportFinder(
             nodeFinder: $this->get(NodeFinder::class)
         );
-        $this->services[VariableUsageExtractor::class] = new VariableUsageExtractor();
-        $this->services[MethodParameterExtractor::class] = new MethodParameterExtractor(
+        $this->services[VariableUsageFinder::class] = new VariableUsageFinder();
+        $this->services[MethodParameterFinder::class] = new MethodParameterFinder(
             namespaceResolver: $this->get(NamespaceResolver::class)
         );
 
@@ -178,12 +177,12 @@ class Injection
         $this->services[NewClassResponseResolver::class] = new NewClassResponseResolver(
             namespaceResolver: $this->get(NamespaceResolver::class),
             typeStructureResolver: $this->get(TypeStructureResolver::class),
-            httpDelegate: $this->get(HttpDelegate::class),
+            frameworkRegistry: $this->get(FrameworkRegistry::class),
             variableAssignmentFinder: $this->get(VariableAssignmentFinder::class),
             classAstResolver: $this->get(ClassAstResolver::class)
         );
         $this->services[MethodCallResponseResolver::class] = new MethodCallResponseResolver(
-            httpDelegate: $this->get(HttpDelegate::class)
+            frameworkRegistry: $this->get(FrameworkRegistry::class)
         );
         $this->services[ResponseClassUsageResolver::class] = new ResponseClassUsageResolver(
             classUsageResolvers: [
@@ -195,9 +194,9 @@ class Injection
             classUsageResolver: $this->get(ResponseClassUsageResolver::class)
         );
 
-        $this->services[ApiFrameworkResolver::class] = new ApiFrameworkResolver(
-            classExtractor: $this->get(ClassExtractor::class),
-            httpDelegate: $this->get(HttpDelegate::class)
+        $this->services[FrameworkClassFinder::class] = new FrameworkClassFinder(
+            classUsageFinder: $this->get(ClassUsageFinder::class),
+            frameworkRegistry: $this->get(FrameworkRegistry::class)
         );
 
         // Rules
@@ -207,18 +206,18 @@ class Injection
 
         // Analyzer
         $this->services[MethodAnalyser::class] = new MethodAnalyser(
-            methodPathExtractor: $this->get(MethodPathExtractor::class),
+            executionPathFinder: $this->get(ExecutionPathFinder::class),
             responseResolver: $this->get(ResponseResolver::class),
-            httpDelegate: $this->get(HttpDelegate::class),
-            classUsageTraverserFactory: $this->get(ClassUsageTraverserFactory::class),
+            frameworkRegistry: $this->get(FrameworkRegistry::class),
+            classUsageVisitorFactory: $this->get(ClassUsageVisitorFactory::class),
             classAstResolver: $this->get(ClassAstResolver::class),
         );
         $this->services[OpenApiAnalyser::class] = new OpenApiAnalyser(
             openApiDocPath: $this->rootPath . $this->configuration[Configuration::CFG_OPEN_API_PATH]
         );
         $this->services[RequestAnalyser::class] = new RequestAnalyser(
-            httpDelegate: $this->get(HttpDelegate::class),
-            methodParameterExtractor: $this->get(MethodParameterExtractor::class),
+            frameworkRegistry: $this->get(FrameworkRegistry::class),
+            methodParameterFinder: $this->get(MethodParameterFinder::class),
             parameterDefinitionFactory: $this->get(ParameterDefinitionFactory::class)
         );
         $this->services[ResponseAnalyser::class] = new ResponseAnalyser(
@@ -233,22 +232,22 @@ class Injection
             nodeParser: $this->get(NodeParser::class),
             nodeFinder: $this->get(NodeFinder::class),
             endpointAnalyser: $this->get(EndpointAnalyser::class),
-            fileClassesExtractor: $this->get(FileClassesExtractor::class),
-            classImportsExtractor: $this->get(ClassImportsExtractor::class)
+            classFinder: $this->get(ClassFinder::class),
+            importFinder: $this->get(ImportFinder::class)
         );
     }
 
     /**
      * Responsible for setting up routing.
      * This setup is seperated from the basic setup as the routing comes from different frameworks.
-     * 
+     *
      * It's important to setup basic classes before setting up routing, as the basic classes might be used
      * by the routing.
      */
     private function setupRouting(): void
     {
         $this->services[SymfonyAttributeParser::class] = new SymfonyAttributeParser(
-            extractor: $this->get(AttributeExtractor::class)
+            extractor: $this->get(AttributeFinder::class)
         );
 
         $customRouteParserConfig = $this->configuration[Configuration::CFG_CUSTOM_ROUTE_PARSER];
@@ -262,23 +261,18 @@ class Injection
             }
         }
 
-        $this->services[RouteResolver::class] = new RouteResolver(
+        $this->services[RouteCollector::class] = new RouteCollector(
             strategies: [
                 new SymfonyYamlRouteStrategy(namespaceResolver: $this->get(NamespaceResolver::class)),
                 new SymfonyAttributeStrategy(
                     nodeFinder: $this->get(NodeFinder::class),
                     nodeParser: $this->get(NodeParser::class),
-                    fileParser: $this->get(FileParser::class),
+                    fileScanner: $this->get(FileScanner::class),
                     attributeParser: $this->get(SymfonyAttributeParser::class),
-                    fileClassesExtractor: $this->get(FileClassesExtractor::class)
+                    classFinder: $this->get(ClassFinder::class)
                 ),
                 ...$parsers
             ]
-        );
-
-        $this->services[RouteParser::class] = new RouteParser(
-            projectPath: $this->rootPath,
-            routeResolver: $this->get(RouteResolver::class)
         );
     }
 

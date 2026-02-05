@@ -1,13 +1,13 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\Parser\Api;
+namespace Apilyser\Framework;
 
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Definition\NewClassResponseParameter;
 use Apilyser\Resolver\ResponseCall;
 use PhpParser\Node;
 
-interface ApiParser {
+interface FrameworkAdapter {
 
     /**
      * @return string[] of class names
@@ -45,7 +45,7 @@ interface ApiParser {
      * @param Node $node
      * @param array $methodJourney
      * @param ?ResponseCall $modifierResponseCall
-     * 
+     *
      * @return ?ResponseCall
      */
     function tryParseCallLikeAsResponse(

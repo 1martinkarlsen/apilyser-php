@@ -3,7 +3,7 @@
 namespace Apilyser\Resolver;
 
 use Apilyser\Analyser\ClassMethodContext;
-use Apilyser\Extractor\ClassUsage;
+use Apilyser\Ast\ClassUsage;
 use PhpParser\Node;
 
 class ResponseResolver
@@ -15,16 +15,16 @@ class ResponseResolver
 
     /**
      * Resolving how to handle used classes
-     * 
+     *
      * @param ClassMethodContext $context
      * @param Node[] $methodJourney
      * @param ClassUsage[] $usedClasses
-     * 
+     *
      * @return ResponseCall[]
      */
     public function resolve(ClassMethodContext $context, array $methodJourney, array $usedClasses): array
     {
-        $results = []; 
+        $results = [];
         foreach ($usedClasses as $usedClass) {
             // Here we will look through each class.
             // We need to find all usages of $usedClass to define the response.
@@ -32,7 +32,7 @@ class ResponseResolver
 
             // Class assigned (ex: $var = new Class())
             $result = $this->classUsageResolver->resolve($context, $methodJourney, $usedClass->node);
-            
+
             if ($result != null) {
                 $results[] = $result;
             }

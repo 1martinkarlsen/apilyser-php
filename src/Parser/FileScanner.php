@@ -5,7 +5,7 @@ namespace Apilyser\Parser;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
-class FileParser
+class FileScanner
 {
 
     private string $regex = '#(?<!/)\.php$|^[^\.]*$#i';

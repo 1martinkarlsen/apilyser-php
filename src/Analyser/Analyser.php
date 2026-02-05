@@ -4,7 +4,7 @@ namespace Apilyser\Analyser;
 
 use Apilyser\Comparison\ApiComparison;
 use Apilyser\Comparison\EndpointResult;
-use Apilyser\Resolver\RouteResolver;
+use Apilyser\Resolver\RouteCollector;
 use Exception;
 
 class Analyser
@@ -12,7 +12,7 @@ class Analyser
 
     public function __construct(
         private OpenApiAnalyser $openApiAnalyser,
-        private RouteResolver $routeResolver,
+        private RouteCollector $routeCollector,
         private FileAnalyser $fileAnalyser,
         private ApiComparison $comparison
     ) {}
@@ -30,7 +30,7 @@ class Analyser
         }
 
         // Analyse all routes
-        $routes = $this->routeResolver->resolveRoutes($folderPath);
+        $routes = $this->routeCollector->resolveRoutes($folderPath);
 
         $endpoints = [];
         foreach ($routes as $route) {

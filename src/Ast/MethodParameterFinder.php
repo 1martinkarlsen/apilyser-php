@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\Extractor;
+namespace Apilyser\Ast;
 
 use Apilyser\Resolver\NamespaceResolver;
 use PhpParser\Node\Expr\Variable;
@@ -9,7 +9,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassMethod;
 
-class MethodParameterExtractor
+class MethodParameterFinder
 {
     public function __construct(
         private NamespaceResolver $namespaceResolver
@@ -17,10 +17,10 @@ class MethodParameterExtractor
 
     /**
      * Loops through params and parses each parameter
-     * 
+     *
      * @param ClassMethod $method
      * @param string[] $imports
-     * 
+     *
      * @return MethodParam[]
      */
     public function extract(ClassMethod $method, array $imports): array
@@ -62,7 +62,7 @@ class MethodParameterExtractor
                     type: $param->type->name,
                     isBuiltinType: true
                 );
-            
+
             case $param->type instanceof Name:
                 // This means that the propertye is a namespaced object (e.g. Response)
                 $paramTypeName = null;

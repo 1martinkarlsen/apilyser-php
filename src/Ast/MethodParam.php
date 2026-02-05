@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\Extractor;
+namespace Apilyser\Ast;
 
 class MethodParam
 {

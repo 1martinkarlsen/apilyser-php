@@ -4,7 +4,8 @@ namespace Apilyser\Resolver;
 
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Definition\ResponseBodyDefinition;
-use Apilyser\Traverser\ArrayKeyTraverser;
+use Apilyser\Ast\VariableAssignmentFinder;
+use Apilyser\Ast\Visitor\ArrayKeyVisitor;
 use PhpParser\Node;
 use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr;
@@ -631,7 +632,7 @@ class TypeStructureResolver
     private function extractArray(ClassMethodContext $context, array $methodJourney, string $calledMethodName): array
     {
         $traverser = new NodeTraverser();
-        $keyExtractor = new ArrayKeyTraverser($calledMethodName);
+        $keyExtractor = new ArrayKeyVisitor($calledMethodName);
         $traverser->addVisitor($keyExtractor);
         $traverser->traverse($context->class->stmts);
         

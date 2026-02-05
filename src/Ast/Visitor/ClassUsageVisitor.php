@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\Traverser;
+namespace Apilyser\Ast\Visitor;
 
-use Apilyser\Extractor\ClassUsage;
+use Apilyser\Ast\ClassUsage;
 use Apilyser\Resolver\NamespaceResolver;
 use PhpParser\Node;
 use PhpParser\Node\Expr\ClassConstFetch;
@@ -11,7 +11,7 @@ use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Name;
 use PhpParser\NodeVisitorAbstract;
 
-class ClassUsageTraverser extends NodeVisitorAbstract
+class ClassUsageVisitor extends NodeVisitorAbstract
 {
     /**
      * @var ClassUsage[] $usages
@@ -102,7 +102,7 @@ class ClassUsageTraverser extends NodeVisitorAbstract
         if ($parent) {
             return $parent;
         }
-        
+
         return null;
     }
 }

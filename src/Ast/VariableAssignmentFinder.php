@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\Resolver;
+namespace Apilyser\Ast;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr;
@@ -21,7 +21,7 @@ class VariableAssignmentFinder
     /**
      * @param string $variableName
      * @param Node[] $nodes
-     * 
+     *
      * @return ?Expr
      */
     public function findAssignment(string $variableName, array|null $nodes): ?Expr
@@ -43,7 +43,7 @@ class VariableAssignmentFinder
         return null;
     }
 
-    
+
 
     private function isVariableAssignment(Node $node, string $variableName)
     {

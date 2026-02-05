@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\Extractor;
+namespace Apilyser\Ast;
 
 use PhpParser\Node\Stmt\Use_;
 use PhpParser\NodeFinder;
 
-class ClassImportsExtractor
+class ImportFinder
 {
 
     public function __construct(
@@ -19,7 +19,7 @@ class ClassImportsExtractor
 
     /**
      * @param \PhpParser\Node\Stmt[] $stmts
-     * 
+     *
      * @return string[]
      */
     private function parseNamespaces(array $stmts): array

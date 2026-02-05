@@ -5,9 +5,10 @@ namespace Apilyser\tests\Analyser;
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Analyser\MethodAnalyser;
 use Apilyser\Analyser\ResponseAnalyser;
-use Apilyser\Extractor\MethodPathExtractor;
-use Apilyser\Parser\Api\HttpDelegate;
-use Apilyser\Parser\Api\SymfonyApiParser;
+use Apilyser\Ast\ExecutionPathFinder;
+use Apilyser\Ast\VariableAssignmentFinder;
+use Apilyser\Framework\FrameworkRegistry;
+use Apilyser\Framework\SymfonyAdapter;
 use Apilyser\Parser\NodeParser;
 use Apilyser\Resolver\ClassAstResolver;
 use Apilyser\Resolver\NamespaceResolver;
@@ -16,8 +17,7 @@ use Apilyser\Resolver\Node\NewClassResponseResolver;
 use Apilyser\Resolver\ResponseClassUsageResolver;
 use Apilyser\Resolver\ResponseResolver;
 use Apilyser\Resolver\TypeStructureResolver;
-use Apilyser\Resolver\VariableAssignmentFinder;
-use Apilyser\Traverser\ClassUsageTraverserFactory;
+use Apilyser\Ast\Visitor\ClassUsageVisitorFactory;
 use PhpParser\NodeFinder;
 use PhpParser\ParserFactory;
 use PHPUnit\Framework\TestCase;
@@ -29,24 +29,24 @@ class ResponseAnalyserIntegrationTest extends TestCase
     private NamespaceResolver $namespaceResolver;
     private ClassAstResolver $classAstResolver;
     private TypeStructureResolver $typeStructureResolver;
-    private HttpDelegate $httpDelegate;
+    private FrameworkRegistry $frameworkRegistry;
     private ResponseAnalyser $analyser;
     private NodeFinder $nodeFinder;
 
     private function findProjectRoot(): string
     {
         $dir = __DIR__;
-        
+
         while ($dir !== '/') {
             if (file_exists($dir . '/composer.json')) {
                 return $dir;
             }
             $dir = dirname($dir);
         }
-        
+
         throw new \RuntimeException('Could not find project root (composer.json not found)');
     }
-    
+
     protected function setUp(): void
     {
         $this->output = $this->createMock(OutputInterface::class);
@@ -63,29 +63,29 @@ class ResponseAnalyserIntegrationTest extends TestCase
             classAstResolver: $this->classAstResolver,
             nodeFinder: $this->nodeFinder
         );
-        $this->httpDelegate = new HttpDelegate();
-        $this->httpDelegate->registerParser(new SymfonyApiParser($this->typeStructureResolver));
+        $this->frameworkRegistry = new FrameworkRegistry();
+        $this->frameworkRegistry->registerParser(new SymfonyAdapter($this->typeStructureResolver));
 
         $this->analyser = new ResponseAnalyser(
             output: $this->output,
             methodAnalyser: new MethodAnalyser(
-                methodPathExtractor: new MethodPathExtractor(),
+                executionPathFinder: new ExecutionPathFinder(),
                 responseResolver: new ResponseResolver(
                     new ResponseClassUsageResolver(
                         classUsageResolvers: [
                             new NewClassResponseResolver(
                                 namespaceResolver: $this->namespaceResolver,
                                 typeStructureResolver: $this->typeStructureResolver,
-                                httpDelegate: $this->httpDelegate,
+                                frameworkRegistry: $this->frameworkRegistry,
                                 variableAssignmentFinder: new VariableAssignmentFinder(),
                                 classAstResolver: $this->classAstResolver
                             ),
-                            new MethodCallResponseResolver(httpDelegate: $this->httpDelegate)
+                            new MethodCallResponseResolver(frameworkRegistry: $this->frameworkRegistry)
                         ]
                     )
                 ),
-                httpDelegate: $this->httpDelegate,
-                classUsageTraverserFactory: new ClassUsageTraverserFactory($this->namespaceResolver),
+                frameworkRegistry: $this->frameworkRegistry,
+                classUsageVisitorFactory: new ClassUsageVisitorFactory($this->namespaceResolver),
                 classAstResolver: $this->classAstResolver
             )
         );
@@ -97,16 +97,16 @@ class ResponseAnalyserIntegrationTest extends TestCase
         $dir = __DIR__ . '/../Data/ResponseAnalyserIntegrationData.php';
         $code = file_get_contents($dir);
         $ast = $parser->parse($code);
-        
+
         $namespaceNode = null;
         $classNode = null;
         $methodNode = null;
         $imports = [];
-        
+
         foreach ($ast as $node) {
             if ($node instanceof \PhpParser\Node\Stmt\Namespace_) {
                 $namespaceNode = $node;
-                
+
                 foreach ($node->stmts as $stmt) {
                     if ($stmt instanceof \PhpParser\Node\Stmt\Use_) {
                         foreach ($stmt->uses as $use) {
@@ -114,12 +114,12 @@ class ResponseAnalyserIntegrationTest extends TestCase
                             $imports[$alias] = $use->name->name;
                         }
                     }
-                    
+
                     if ($stmt instanceof \PhpParser\Node\Stmt\Class_) {
                         $classNode = $stmt;
-                        
+
                         foreach ($stmt->stmts as $classStmt) {
-                            if ($classStmt instanceof \PhpParser\Node\Stmt\ClassMethod 
+                            if ($classStmt instanceof \PhpParser\Node\Stmt\ClassMethod
                                 && $classStmt->name->toString() === $methodName) {
                                 $methodNode = $classStmt;
                                 break 3;
@@ -129,11 +129,11 @@ class ResponseAnalyserIntegrationTest extends TestCase
                 }
             }
         }
-        
+
         if (!$namespaceNode || !$classNode || !$methodNode) {
             throw new \RuntimeException("Could not parse method: $methodName");
         }
-        
+
         return new ClassMethodContext(
             namespace: $namespaceNode,
             imports: $imports,
@@ -144,10 +144,10 @@ class ResponseAnalyserIntegrationTest extends TestCase
 
     // Testing for finding responses where response is directly returned.
     public function testFindWithOneDirectReturn()
-    {   
+    {
         $context = $this->parseDataClassMethod("withOneDirectReturn");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $this->assertCount(expectedCount: 1, haystack: $result);
@@ -161,7 +161,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withMultipleDirectReturn");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $this->assertCount(expectedCount: 2, haystack: $result);
@@ -171,7 +171,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withVariableReturn");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $this->assertCount(expectedCount: 1, haystack: $result);
@@ -181,7 +181,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withOuterScopeVariableReturn");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $this->assertCount(expectedCount: 2, haystack: $result);
@@ -191,7 +191,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withMethodCallReturn");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $this->assertCount(expectedCount: 1, haystack: $result);
@@ -201,7 +201,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withServiceCallReturn");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $this->assertCount(expectedCount: 1, haystack: $result);
@@ -220,7 +220,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withVariableStatusCode");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $first = $result[0];
@@ -232,7 +232,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withClassScopedVariableStatusCode");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $first = $result[0];
@@ -244,7 +244,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withConstantStatusCode");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $first = $result[0];
@@ -256,7 +256,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withParameterVariableStatusCode");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $first = $result[0];
@@ -268,7 +268,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withMethodCallStatusCode");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $first = $result[0];
@@ -280,7 +280,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withDefaultStatusCode");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $first = $result[0];
@@ -301,7 +301,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withDirectArrayBody");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $first = $result[0];
@@ -321,7 +321,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withDirectNullBody");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $first = $result[0];
@@ -334,7 +334,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withDirectEmptyArrayBody");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $first = $result[0];
@@ -347,7 +347,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withDirectArrayWithVariablesBody");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $first = $result[0];
@@ -381,7 +381,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withVariableArrayBody");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $first = $result[0];
@@ -401,7 +401,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withMethodCallBody");
         $result = $this->analyser->analyse($context);
-        
+
         // Dine assertions her
         $this->assertNotNull($result);
         $first = $result[0];
@@ -421,10 +421,10 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withMultipleEarlyReturns");
         $result = $this->analyser->analyse($context);
-        
+
         $this->assertNotNull($result);
         $this->assertCount(3, $result, "Should find all 3 return statements");
-        
+
         // Extract all status codes
         $statusCodes = array_map(fn($r) => $r->statusCode, $result);
 
@@ -437,13 +437,13 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withTryCatchBlock");
         $result = $this->analyser->analyse($context);
-        
+
         $this->assertNotNull($result);
         $this->assertCount(3, $result, "Should find try + 2 catch blocks");
-        
+
         $statusCodes = array_map(fn($r) => $r->statusCode, $result);
         sort($statusCodes);
-        
+
         $this->assertContains(200, $statusCodes, "Should find 200 from try block");
         $this->assertContains(404, $statusCodes, "Should find 404 from first catch");
         $this->assertContains(500, $statusCodes, "Should find 500 from second catch");
@@ -453,13 +453,13 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withOuterScopeTryCatchBlock");
         $result = $this->analyser->analyse($context);
-        
+
         $this->assertNotNull($result);
         $this->assertCount(3, $result, "Should find try + 2 catch blocks");
-        
+
         $statusCodes = array_map(fn($r) => $r->statusCode, $result);
         sort($statusCodes);
-        
+
         $this->assertContains(200, $statusCodes, "Should find 200 from try block");
         $this->assertContains(404, $statusCodes, "Should find 404 from first catch");
         $this->assertContains(500, $statusCodes, "Should find 500 from second catch");
@@ -472,12 +472,12 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withTryCatchAndThrow");
         $result = $this->analyser->analyse($context);
-        
+
         $this->assertNotNull($result);
-        
+
         // Should detect the catch block return
         $this->assertGreaterThanOrEqual(1, count($result));
-        
+
         $statusCodes = array_map(fn($r) => $r->statusCode, $result);
         $this->assertContains(404, $statusCodes);
     }*/
@@ -486,13 +486,13 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withSwitchStatement");
         $result = $this->analyser->analyse($context);
-        
+
         $this->assertNotNull($result);
         $this->assertCount(4, $result, "Should find all 4 switch cases");
-        
+
         $statusCodes = array_map(fn($r) => $r->statusCode, $result);
         sort($statusCodes);
-        
+
         $this->assertContains(200, $statusCodes);
         $this->assertContains(400, $statusCodes);
         $this->assertContains(404, $statusCodes);
@@ -507,10 +507,10 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withTernaryStatusCode");
         $result = $this->analyser->analyse($context);
-        
+
         $this->assertNotNull($result);
         $this->assertCount(expectedCount: 2, haystack: $result);
-        
+
         $statusCodes = array_map(fn($r) => $r->statusCode, $result);
         $this->assertContains(200, $statusCodes);
         $this->assertContains(400, $statusCodes);
@@ -523,14 +523,14 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withTernaryBody");
         $result = $this->analyser->analyse($context);
-        
+
         $this->assertNotNull($result);
         $this->assertCount(2, $result);
 
         // Both should have status 200
         $this->assertEquals(200, $result[0]->statusCode);
         $this->assertEquals(200, $result[1]->statusCode);
-        
+
         // Check that we detect at least one body structure
         $first = $result[0];
         $this->assertNotNull($first->structure);
@@ -548,14 +548,14 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withNestedTernary");
         $result = $this->analyser->analyse($context);
-        
+
         $this->assertNotNull($result);
-        
+
         // This is complex - acceptable outcomes:
         // 1. Find all 3 status codes (200, 400, 500)
         // 2. Find some of them
         // 3. Mark as low confidence
-        
+
         $this->assertGreaterThanOrEqual(1, count($result));
     }*/
 
@@ -566,13 +566,13 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withReassignedStatusCode");
         $result = $this->analyser->analyse($context);
-        
+
         $this->assertNotNull($result);
-        
+
         // Ideally finds all 3 possible values: 200, 400, 401
         // At minimum should find the initial value (200)
         $this->assertGreaterThanOrEqual(1, count($result));
-        
+
         if (count($result) === 3) {
             $statusCodes = array_map(fn($r) => $r->statusCode, $result);
             $this->assertContains(200, $statusCodes);
@@ -588,10 +588,10 @@ class ResponseAnalyserIntegrationTest extends TestCase
     {
         $context = $this->parseDataClassMethod("withNullCoalescingStatusCode");
         $result = $this->analyser->analyse($context);
-        
+
         $this->assertNotNull($result);
         $this->assertGreaterThanOrEqual(1, count($result));
-        
+
         // Should at least detect the default value (200)
         $first = $result[0];
         $this->assertEquals(200, $first->statusCode);

@@ -4,8 +4,8 @@ namespace Apilyser\Definition;
 
 use Apilyser\Definition\ParameterDefinition;
 use Apilyser\Definition\RequestType;
-use Apilyser\Extractor\MethodParam;
-use Apilyser\Extractor\RequestCall;
+use Apilyser\Ast\MethodParam;
+use Apilyser\Ast\RequestCall;
 
 class ParameterDefinitionFactory
 {

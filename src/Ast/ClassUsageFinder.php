@@ -1,26 +1,26 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\Extractor;
+namespace Apilyser\Ast;
 
-use Apilyser\Traverser\ClassUsageTraverserFactory;
+use Apilyser\Ast\Visitor\ClassUsageVisitorFactory;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
 
 /**
- * Used for extracting usage of classes provided by HttpDelegate
+ * Used for extracting usage of classes provided by FrameworkRegistry
  */
-class ClassExtractor
+class ClassUsageFinder
 {
-    public function __construct(private ClassUsageTraverserFactory $classUsageTraverserFactory)
+    public function __construct(private ClassUsageVisitorFactory $classUsageVisitorFactory)
     {
     }
 
     /**
      * @param Node[] $stmts
      * @param string[] $imports
-     * 
+     *
      * @return ClassUsage[]
      */
     function extract(array $stmts, string $className, array $imports): array
@@ -45,7 +45,7 @@ class ClassExtractor
      * @param string $className
      * @param Node[] $stmts
      * @param string[] $imports
-     * 
+     *
      * @return ClassUsage[]
      */
     private function traverseResponse(string $className, array $stmts, array $imports)
@@ -58,7 +58,7 @@ class ClassExtractor
 
         // Find class usage
         $tt = new NodeTraverser();
-        $finder = $this->classUsageTraverserFactory->create(
+        $finder = $this->classUsageVisitorFactory->create(
             className: $className,
             imports: $imports
         );
