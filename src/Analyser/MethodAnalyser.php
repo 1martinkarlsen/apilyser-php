@@ -301,7 +301,7 @@ class MethodAnalyser
     {
         $usedResponseClasses = [];
 
-        foreach ($this->frameworkRegistry->getParsers() as $frameworkAdapter) {
+        foreach ($this->frameworkRegistry->getAdapters() as $frameworkAdapter) {
             $usedClass = $this->processClassInPath($path, $frameworkAdapter, $context->imports);
             array_push(
                 $usedResponseClasses,

@@ -26,7 +26,7 @@ class MethodCallResponseResolver implements ResponseNodeResolver
         Node $node,
         ?ResponseCall $modifierResponseCall = null
     ): ?ResponseCall {
-        foreach ($this->frameworkRegistry->getParsers() as $http) {
+        foreach ($this->frameworkRegistry->getAdapters() as $http) {
             $responseDef = $http->tryParseCallLikeAsResponse($context, $node, $methodJourney, $modifierResponseCall);
             if ($responseDef != null) {
                 return $responseDef;

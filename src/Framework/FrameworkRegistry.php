@@ -9,7 +9,7 @@ class FrameworkRegistry
      */
     private array $adapters = [];
 
-    public function registerParser(FrameworkAdapter $parser)
+    public function registerAdapter(FrameworkAdapter $parser)
     {
         array_push(
             $this->adapters,
@@ -20,12 +20,12 @@ class FrameworkRegistry
     /**
      * @return FrameworkAdapter[]
      */
-    public function getParsers(): array
+    public function getAdapters(): array
     {
         return $this->adapters;
     }
 
-    public function getRequestParser(string $fullNamespace): ?FrameworkAdapter
+    public function getRequestAdapter(string $fullNamespace): ?FrameworkAdapter
     {
         foreach ($this->adapters as $parser) {
             if ($parser->supportRequestClass($fullNamespace)) {

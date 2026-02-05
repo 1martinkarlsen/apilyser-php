@@ -12,8 +12,8 @@ class EndpointAnalyser
 {
 
     public function __construct(
-        private RequestAnalyser $requestAnalyzer,
-        private ResponseAnalyser $responseAnalyzer
+        private RequestAnalyser $requestAnalyser,
+        private ResponseAnalyser $responseAnalyser
     ) {}
 
     /**
@@ -23,8 +23,8 @@ class EndpointAnalyser
      */
     public function analyse(Route $route, ClassMethodContext $context): ?EndpointDefinition
     {
-        $requests = $this->requestAnalyzer->analyse($context);
-        $responses = $this->responseAnalyzer->analyse($context);
+        $requests = $this->requestAnalyser->analyse($context);
+        $responses = $this->responseAnalyser->analyse($context);
 
         return new EndpointDefinition(
             $route->path,

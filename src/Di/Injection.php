@@ -154,7 +154,7 @@ class Injection
             typeStructureResolver: $this->get(TypeStructureResolver::class)
         );
         $frameworkRegistry = new FrameworkRegistry();
-        $frameworkRegistry->registerParser($this->get(SymfonyAdapter::class));
+        $frameworkRegistry->registerAdapter($this->get(SymfonyAdapter::class));
         $this->services[FrameworkRegistry::class] = $frameworkRegistry;
 
         // Ast Finders
@@ -225,8 +225,8 @@ class Injection
             methodAnalyser: $this->get(MethodAnalyser::class)
         );
         $this->services[EndpointAnalyser::class] = new EndpointAnalyser(
-            requestAnalyzer: $this->get(RequestAnalyser::class),
-            responseAnalyzer: $this->get(ResponseAnalyser::class)
+            requestAnalyser: $this->get(RequestAnalyser::class),
+            responseAnalyser: $this->get(ResponseAnalyser::class)
         );
         $this->services[FileAnalyser::class] = new FileAnalyser(
             nodeParser: $this->get(NodeParser::class),
