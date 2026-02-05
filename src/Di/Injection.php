@@ -141,7 +141,8 @@ class Injection
             nodeParser: $this->get(NodeParser::class)
         );
         $this->services[TypeStructureResolver::class] = new TypeStructureResolver(
-            classAstResolver: $this->get(ClassAstResolver::class)
+            classAstResolver: $this->get(ClassAstResolver::class),
+            nodeFinder: $this->get(NodeFinder::class)
         );
 
         // Traverser
@@ -210,7 +211,7 @@ class Injection
             responseResolver: $this->get(ResponseResolver::class),
             httpDelegate: $this->get(HttpDelegate::class),
             classUsageTraverserFactory: $this->get(ClassUsageTraverserFactory::class),
-            classAstResolver: $this->get(ClassAstResolver::class)
+            classAstResolver: $this->get(ClassAstResolver::class),
         );
         $this->services[OpenApiAnalyser::class] = new OpenApiAnalyser(
             openApiDocPath: $this->rootPath . $this->configuration[Configuration::CFG_OPEN_API_PATH]

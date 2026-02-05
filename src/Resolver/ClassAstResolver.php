@@ -56,10 +56,11 @@ class ClassAstResolver
 
             $namespace = $this->nodeFinder->findFirstInstanceOf($stmts, Namespace_::class);
             $classImports = $this->nodeFinder->findInstanceOf($stmts, Use_::class);
+            $classImportStrings = [];
             foreach ($classImports as $useNamespace) {
                 foreach ($useNamespace->uses as $use) {
                     $alias = $use->alias ? $use->name->name : $use->name->getLast();
-                    $imports[$alias] = $use->name->name;
+                    $classImportStrings[$alias] = $use->name->name;
                 }
             }
 
@@ -76,7 +77,7 @@ class ClassAstResolver
             if ($classNode instanceof Class_) {
                 return new ClassStructure(
                     namespace: $namespace,
-                    imports: $classImports,
+                    imports: $classImportStrings,
                     class: $classNode
                 );
             }

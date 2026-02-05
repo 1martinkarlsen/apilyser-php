@@ -61,18 +61,22 @@ class RequestUsageExtractor
         return null;
     }
 
-    private function handleMethodCall(MethodCall $method): RequestCall
+    private function handleMethodCall(MethodCall $method): ?RequestCall
     {
+        if (!in_array($method->name->name, $this->apiParser->getBody())) {
+            return null;
+        }
+
         $expr = $method->var;
         $location = RequestType::Unknown;
 
-        if ($expr instanceof PropertyFetch) {
+        if ($expr instanceof PropertyFetch || $expr instanceof MethodCall) {
             if ($expr->var instanceof Variable) {
-                switch ($expr->name->name) {
-                    case $this->apiParser->getQuery():
+                switch (true) {
+                    case $expr->name->name === $this->apiParser->getQuery():
                         $location = RequestType::Query;
                         break;
-                    case $this->apiParser->getBody():
+                    case in_array($expr->name->name, $this->apiParser->getBody()):
                         $location = RequestType::Body;
                         break;
                     default:
