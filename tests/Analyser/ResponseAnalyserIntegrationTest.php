@@ -16,7 +16,8 @@ use Apilyser\Resolver\Node\MethodCallResponseResolver;
 use Apilyser\Resolver\Node\NewClassResponseResolver;
 use Apilyser\Resolver\ResponseClassUsageResolver;
 use Apilyser\Resolver\ResponseResolver;
-use Apilyser\Resolver\TypeStructureResolver;
+use Apilyser\Resolver\MethodContextResolver;
+use Apilyser\Resolver\ResponseBodyResolver;
 use Apilyser\Ast\Visitor\ClassUsageVisitorFactory;
 use PhpParser\NodeFinder;
 use PhpParser\ParserFactory;
@@ -28,7 +29,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
     private OutputInterface $output;
     private NamespaceResolver $namespaceResolver;
     private ClassAstResolver $classAstResolver;
-    private TypeStructureResolver $typeStructureResolver;
+    private ResponseBodyResolver $responseBodyResolver;
     private FrameworkRegistry $frameworkRegistry;
     private ResponseAnalyser $analyser;
     private NodeFinder $nodeFinder;
@@ -59,12 +60,17 @@ class ResponseAnalyserIntegrationTest extends TestCase
             namespaceResolver: $this->namespaceResolver,
             nodeParser: new NodeParser()
         );
-        $this->typeStructureResolver = new TypeStructureResolver(
+        $methodContextResolver = new MethodContextResolver(
             classAstResolver: $this->classAstResolver,
-            nodeFinder: $this->nodeFinder
+            nodeFinder: $this->nodeFinder,
+            variableAssignmentFinder: new VariableAssignmentFinder()
+        );
+        $this->responseBodyResolver = new ResponseBodyResolver(
+            classAstResolver: $this->classAstResolver,
+            methodContextResolver: $methodContextResolver
         );
         $this->frameworkRegistry = new FrameworkRegistry();
-        $this->frameworkRegistry->registerAdapter(new SymfonyAdapter($this->typeStructureResolver));
+        $this->frameworkRegistry->registerAdapter(new SymfonyAdapter($this->responseBodyResolver));
 
         $this->analyser = new ResponseAnalyser(
             output: $this->output,
@@ -75,7 +81,7 @@ class ResponseAnalyserIntegrationTest extends TestCase
                         classUsageResolvers: [
                             new NewClassResponseResolver(
                                 namespaceResolver: $this->namespaceResolver,
-                                typeStructureResolver: $this->typeStructureResolver,
+                                responseBodyResolver: $this->responseBodyResolver,
                                 frameworkRegistry: $this->frameworkRegistry,
                                 variableAssignmentFinder: new VariableAssignmentFinder(),
                                 classAstResolver: $this->classAstResolver
