@@ -6,7 +6,7 @@ use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Definition\NewClassResponseParameter;
 use Apilyser\Resolver\ResponseCall;
 use PhpParser\Node;
-use Apilyser\Resolver\TypeStructureResolver;
+use Apilyser\Resolver\ResponseBodyResolver;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
@@ -45,7 +45,7 @@ class SymfonyAdapter implements FrameworkAdapter {
     ];
 
     public function __construct(
-        private TypeStructureResolver $typeStructureResolver
+        private ResponseBodyResolver $responseBodyResolver
     ) {}
 
 
@@ -138,7 +138,7 @@ class SymfonyAdapter implements FrameworkAdapter {
                 case self::RESPONSE_FUNCTION_SET_CONTENT:
                 case self::RESPONSE_FUNCTION_SET_DATA:
                     if (isset($args[0])) {
-                        $modifierResponseCall->structure = $this->typeStructureResolver->resolveFromExpression(
+                        $modifierResponseCall->structure = $this->responseBodyResolver->resolveFromExpression(
                             context: $context,
                             methodJourney: $methodJourney,
                             expr: $args[0]->value

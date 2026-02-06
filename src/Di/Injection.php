@@ -37,7 +37,8 @@ use Apilyser\Resolver\Node\NewClassResponseResolver;
 use Apilyser\Resolver\ResponseClassUsageResolver;
 use Apilyser\Resolver\ResponseResolver;
 use Apilyser\Resolver\RouteCollector;
-use Apilyser\Resolver\TypeStructureResolver;
+use Apilyser\Resolver\MethodContextResolver;
+use Apilyser\Resolver\ResponseBodyResolver;
 use Apilyser\Ast\VariableAssignmentFinder;
 use Apilyser\Ast\Visitor\ClassUsageVisitorFactory;
 use Exception;
@@ -139,9 +140,14 @@ class Injection
             namespaceResolver: $this->get(NamespaceResolver::class),
             nodeParser: $this->get(NodeParser::class)
         );
-        $this->services[TypeStructureResolver::class] = new TypeStructureResolver(
+        $this->services[MethodContextResolver::class] = new MethodContextResolver(
             classAstResolver: $this->get(ClassAstResolver::class),
-            nodeFinder: $this->get(NodeFinder::class)
+            nodeFinder: $this->get(NodeFinder::class),
+            variableAssignmentFinder: new VariableAssignmentFinder()
+        );
+        $this->services[ResponseBodyResolver::class] = new ResponseBodyResolver(
+            classAstResolver: $this->get(ClassAstResolver::class),
+            methodContextResolver: $this->get(MethodContextResolver::class)
         );
 
         // Ast Visitors
@@ -151,7 +157,7 @@ class Injection
 
         // Framework adapters
         $this->services[SymfonyAdapter::class] = new SymfonyAdapter(
-            typeStructureResolver: $this->get(TypeStructureResolver::class)
+            responseBodyResolver: $this->get(ResponseBodyResolver::class)
         );
         $frameworkRegistry = new FrameworkRegistry();
         $frameworkRegistry->registerAdapter($this->get(SymfonyAdapter::class));
@@ -176,7 +182,7 @@ class Injection
 
         $this->services[NewClassResponseResolver::class] = new NewClassResponseResolver(
             namespaceResolver: $this->get(NamespaceResolver::class),
-            typeStructureResolver: $this->get(TypeStructureResolver::class),
+            responseBodyResolver: $this->get(ResponseBodyResolver::class),
             frameworkRegistry: $this->get(FrameworkRegistry::class),
             variableAssignmentFinder: $this->get(VariableAssignmentFinder::class),
             classAstResolver: $this->get(ClassAstResolver::class)

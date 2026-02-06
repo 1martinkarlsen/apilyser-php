@@ -9,7 +9,7 @@ use Apilyser\Framework\FrameworkRegistry;
 use Apilyser\Resolver\ClassAstResolver;
 use Apilyser\Resolver\NamespaceResolver;
 use Apilyser\Resolver\ResponseCall;
-use Apilyser\Resolver\TypeStructureResolver;
+use Apilyser\Resolver\ResponseBodyResolver;
 use Apilyser\Ast\VariableAssignmentFinder;
 use Exception;
 use PhpParser\Node;
@@ -29,7 +29,7 @@ class NewClassResponseResolver implements ResponseNodeResolver
 
     public function __construct(
         private NamespaceResolver $namespaceResolver,
-        private TypeStructureResolver $typeStructureResolver,
+        private ResponseBodyResolver $responseBodyResolver,
         private FrameworkRegistry $frameworkRegistry,
         private VariableAssignmentFinder $variableAssignmentFinder,
         private ClassAstResolver $classAstResolver
@@ -110,7 +110,7 @@ class NewClassResponseResolver implements ResponseNodeResolver
             if ($arg->name != null) {
                 // Named parameters
                 if ($arg->name->name == $parameterInfo->bodyName) {
-                    $body = $this->typeStructureResolver->resolveFromExpression(
+                    $body = $this->responseBodyResolver->resolveFromExpression(
                         context: $context,
                         methodJourney: $methodJourney,
                         expr: $arg->value
@@ -130,7 +130,7 @@ class NewClassResponseResolver implements ResponseNodeResolver
                 // Positional parameters
                 if ($newIndex == $parameterInfo->bodyIndex) {
                     // Body
-                    $body = $this->typeStructureResolver->resolveFromExpression(
+                    $body = $this->responseBodyResolver->resolveFromExpression(
                         context: $context,
                         methodJourney: $methodJourney,
                         expr: $arg->value

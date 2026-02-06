@@ -40,6 +40,7 @@ class ApiValidator
             return Command::FAILURE;
         }
 
+        $this->output->writeln("<info>Apilyser validate succeeded</info>");
         return Command::SUCCESS;
     }
 
