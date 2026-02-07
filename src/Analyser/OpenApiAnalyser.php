@@ -263,7 +263,7 @@ class OpenApiAnalyser
                 $resultProperties,
                 new ResponseBodyDefinition(
                     name: $key,
-                    type: isset($value['type']) ? $value['type'] : null
+                    type: array_key_exists('type', $value) ? $value['type'] : null
                 )
             );
         }
