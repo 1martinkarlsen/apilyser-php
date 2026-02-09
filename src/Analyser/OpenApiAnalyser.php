@@ -102,9 +102,10 @@ class OpenApiAnalyser
         $allParameters = array_merge($pathParameters, $operationParameters);
 
         foreach ($allParameters as $param) {
-            $location = $this->mapParameterLocation($param['in']);
-            $type = $this->mapOpenApiTypeToPhp($param['schema']['type'] ?? 'string');
-            $default = $param['schema']['default'] ?? null;
+            $location = $this->mapParameterLocation($param['in'] ?? null);
+            $schema = $param['schema'] ?? [];
+            $type = $this->mapOpenApiTypeToPhp($schema['type'] ?? 'string');
+            $default = $schema['default'] ?? null;
             
             $parameters[] = new ParameterDefinition(
                 $param['name'] ?? "",
@@ -230,17 +231,23 @@ class OpenApiAnalyser
             // handle ref
             $ref = $schema['$ref'];
             $refArr = explode("/", $ref);
-            if ($refArr[0] == "#" && $refArr[1] == "components") {
+            if (($refArr[0] ?? '') == "#" && ($refArr[1] ?? '') == "components" && isset($refArr[2], $refArr[3])) {
                 // Referencing components in this file
 
-                $reference = $this->components[$refArr[2]][$refArr[3]];
-                return $this->parseSchema($reference);
+                $reference = $this->components[$refArr[2]][$refArr[3]] ?? null;
+                if ($reference !== null) {
+                    return $this->parseSchema($reference);
+                }
             }
 
             return [];
         }
 
         // Schema does not reference, we will have to look at the type
+        if (!array_key_exists('type', $schema)) {
+            return [];
+        }
+
         $type = $schema['type'];
         $hasProperties = array_key_exists('properties', $schema);
 
