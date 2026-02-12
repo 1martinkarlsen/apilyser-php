@@ -2,6 +2,7 @@
 
 namespace Apilyser\Ast;
 
+use Apilyser\Ast\Node\NameHelper;
 use PhpParser\Node\Stmt\Use_;
 use PhpParser\NodeFinder;
 
@@ -29,12 +30,7 @@ class ImportFinder
 
         foreach ($useNamespaces as $useNamespace) {
             foreach ($useNamespace->uses as $use) {
-                $importName = $use->name->name;
-                if (null !== $use->name->name) {
-                    $importName = $use->name->name;
-                } else {
-                    $importName = implode("/", $use->name->getParts());
-                }
+                $importName = NameHelper::getName($use->name);
                 $alias = $use->alias ? $use->name->toString() : $use->name->getLast();
                 $imports[$alias] = $importName;
             }
