@@ -3,6 +3,7 @@
 namespace Apilyser\Ast\Visitor;
 
 use Apilyser\Ast\ClassUsage;
+use Apilyser\Ast\Node\NameHelper;
 use Apilyser\Resolver\NamespaceResolver;
 use PhpParser\Node;
 use PhpParser\Node\Expr\ClassConstFetch;
@@ -81,11 +82,7 @@ class ClassUsageVisitor extends NodeVisitorAbstract
      */
     private function getTargetClassName(Name $name): ?string
     {
-        if (null !== $name->name) {
-            $className = $name->name;
-        } else {
-            $className = implode("/", $name->getParts());
-        }
+        $className = NameHelper::getName($name);
 
         $fullClassName = $this->namespaceResolver->findFullNamespaceForClass($className, $this->imports);
         if ($this->className === $fullClassName) {

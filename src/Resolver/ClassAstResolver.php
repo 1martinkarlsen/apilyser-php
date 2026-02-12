@@ -2,6 +2,7 @@
 
 namespace Apilyser\Resolver;
 
+use Apilyser\Ast\Node\NameHelper;
 use Apilyser\Parser\NodeParser;
 use PhpParser\Node;
 use PhpParser\Node\Const_;
@@ -46,7 +47,7 @@ class ClassAstResolver
         // If the class name is not fully qualified (i.e., it was not in the imports),
         // we assume it's in the same namespace.
         if (strpos($fullClassName, '\\') === false) {
-            $fullClassName = $namespace->name->name . "\\" . $className;
+            $fullClassName = NameHelper::getName($namespace->name) . "\\" . $className;
         }
 
         $filePath = $this->namespaceResolver->resolveNamespace($fullClassName);
@@ -59,8 +60,8 @@ class ClassAstResolver
             $classImportStrings = [];
             foreach ($classImports as $useNamespace) {
                 foreach ($useNamespace->uses as $use) {
-                    $alias = $use->alias ? $use->name->name : $use->name->getLast();
-                    $classImportStrings[$alias] = $use->name->name;
+                    $alias = $use->alias ? NameHelper::getName($use->name) : $use->name->getLast();
+                    $classImportStrings[$alias] = NameHelper::getName($use->name);
                 }
             }
 

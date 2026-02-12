@@ -6,6 +6,7 @@ use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Analyser\MethodAnalyser;
 use Apilyser\Analyser\ResponseAnalyser;
 use Apilyser\Ast\ExecutionPathFinder;
+use Apilyser\Ast\Node\NameHelper;
 use Apilyser\Ast\VariableAssignmentFinder;
 use Apilyser\Framework\FrameworkRegistry;
 use Apilyser\Framework\SymfonyAdapter;
@@ -116,8 +117,8 @@ class ResponseAnalyserIntegrationTest extends TestCase
                 foreach ($node->stmts as $stmt) {
                     if ($stmt instanceof \PhpParser\Node\Stmt\Use_) {
                         foreach ($stmt->uses as $use) {
-                            $alias = $use->alias ? $use->name->toString() : $use->name->getLast();
-                            $imports[$alias] = $use->name->name;
+                            $alias = $use->alias ? NameHelper::getName($use->name) : $use->name->getLast();
+                            $imports[$alias] = NameHelper::getName($use->name);
                         }
                     }
 
