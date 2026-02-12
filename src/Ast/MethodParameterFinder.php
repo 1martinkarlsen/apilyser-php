@@ -2,6 +2,7 @@
 
 namespace Apilyser\Ast;
 
+use Apilyser\Ast\Node\NameHelper;
 use Apilyser\Resolver\NamespaceResolver;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
@@ -65,12 +66,7 @@ class MethodParameterFinder
 
             case $param->type instanceof Name:
                 // This means that the propertye is a namespaced object (e.g. Response)
-                $paramTypeName = null;
-                if (null !== $param->type->name) {
-                    $paramTypeName = $param->type->name;
-                } else {
-                    $paramTypeName = $param->type->getParts()[0];
-                }
+                $paramTypeName = NameHelper::getName($param->type);
 
                 return new MethodParam(
                     name: $varName,
