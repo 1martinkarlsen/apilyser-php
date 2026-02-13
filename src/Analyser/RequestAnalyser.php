@@ -41,7 +41,7 @@ class RequestAnalyser
         $this->logger->info("Found function params");
 
         foreach ($methodParams as $param) {
-            $this->logger->info($param->name . ", type: " . $param->type);
+            $this->logger->info($param->name . ", type: " . $param->type . ", namespace: " . $param->fullNamespace);
 
             if ($param->isBuiltinType) {
                 $parameterDefinitions[] = $this->parameterDefinitionFactory->createPathDefinition($param);
