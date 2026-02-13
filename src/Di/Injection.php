@@ -221,6 +221,7 @@ class Injection
             openApiDocPath: $this->rootPath . $this->configuration[Configuration::CFG_OPEN_API_PATH]
         );
         $this->services[RequestAnalyser::class] = new RequestAnalyser(
+            logger: $this->get(Logger::class),
             frameworkRegistry: $this->get(FrameworkRegistry::class),
             methodParameterFinder: $this->get(MethodParameterFinder::class),
             parameterDefinitionFactory: $this->get(ParameterDefinitionFactory::class)
