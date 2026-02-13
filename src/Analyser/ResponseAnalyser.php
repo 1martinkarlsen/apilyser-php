@@ -4,12 +4,10 @@ namespace Apilyser\Analyser;
 
 use Apilyser\Definition\ResponseDefinition;
 use Apilyser\Resolver\ResponseCall;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class ResponseAnalyser
 {
     public function __construct(
-        private OutputInterface $output,
         private MethodAnalyser $methodAnalyser
     ) {}
 

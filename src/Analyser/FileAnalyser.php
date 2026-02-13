@@ -7,6 +7,7 @@ use Apilyser\Ast\ImportFinder;
 use Apilyser\Ast\ClassFinder;
 use Apilyser\Parser\NodeParser;
 use Apilyser\Parser\Route;
+use Apilyser\Util\Logger;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\NodeFinder;
@@ -15,6 +16,7 @@ final class FileAnalyser
 {
 
     public function __construct(
+        private Logger $logger,
         private NodeParser $nodeParser,
         private NodeFinder $nodeFinder,
         private EndpointAnalyser $endpointAnalyser,
@@ -62,10 +64,16 @@ final class FileAnalyser
                     )
                 );
 
-                array_push(
-                    $endpoints,
-                    $endpoint
-                );
+                if (null !== $endpoint) {
+                    $this->logEndpointInfo($endpoint);
+
+                    array_push(
+                        $endpoints,
+                        $endpoint
+                    );   
+                } else {
+                    $this->logger->info("No endpoint");
+                }
             }
         }
 
@@ -75,5 +83,25 @@ final class FileAnalyser
                 return $enpoint != null;
             }
         );
+    }
+
+    private function logEndpointInfo(EndpointDefinition $endpoint): void
+    {
+        $this->logger->info("");
+        $this->logger->info($endpoint->method . " " . $endpoint->path);
+
+        if (null !== $endpoint->getParameters()) {
+            $this->logger->info("Parameters:");
+            foreach ($endpoint->getParameters() as $param) {
+                $this->logger->info(" - " . $param->toString());
+            }
+        }
+
+        if (null !== $endpoint->getResponse()) {
+            $this->logger->info("Response:");
+            foreach ($endpoint->getResponse() as $res) {
+                $this->logger->info(" - " . $res->toString());
+            }
+        }
     }
 }
