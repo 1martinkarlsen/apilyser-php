@@ -32,6 +32,7 @@ class NamespaceResolver {
         array $imports,
         ?Namespace_ $currentNamespace = null
     ): string {
+        $this->logger->info("Imports " . count($imports));
         foreach ($imports as $import) {
             $importArr = explode("\\", $import);
             $lastElm = end($importArr);
