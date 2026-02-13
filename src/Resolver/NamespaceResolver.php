@@ -36,6 +36,7 @@ class NamespaceResolver {
             $importArr = explode("\\", $import);
             $lastElm = end($importArr);
             if ($lastElm == $className) {
+                $this->logger->info("Returning import " . $import);
                 return $import;
             }
         }
@@ -43,9 +44,11 @@ class NamespaceResolver {
         // If not in imports and we have current namespace context,
         // assume it's in the same namespace
         if ($currentNamespace !== null && $currentNamespace->name !== null) {
+            $this->logger->info("Returning namespace " . $currentNamespace->name->toString() . "\\" . $className);
             return $currentNamespace->name->toString() . "\\" . $className;
         }
 
+        $this->logger->info("Returning class name");
         return $className;
     }
     
