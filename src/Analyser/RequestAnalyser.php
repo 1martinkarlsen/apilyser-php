@@ -7,7 +7,6 @@ use Apilyser\Ast\MethodParameterFinder;
 use Apilyser\Ast\RequestCallFinder;
 use Apilyser\Definition\ParameterDefinitionFactory;
 use Apilyser\Framework\FrameworkRegistry;
-use Apilyser\Util\Logger;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassMethod;
 
@@ -15,7 +14,6 @@ class RequestAnalyser
 {
 
     public function __construct(
-        private Logger $logger,
         private FrameworkRegistry $frameworkRegistry,
         private MethodParameterFinder $methodParameterFinder,
         private ParameterDefinitionFactory $parameterDefinitionFactory
@@ -38,10 +36,7 @@ class RequestAnalyser
 
         $methodParams = $this->methodParameterFinder->extract($method, $imports);
 
-        $this->logger->info("Found function params");
-
         foreach ($methodParams as $param) {
-            $this->logger->info($param->name . ", type: " . $param->type . ", namespace: " . $param->fullNamespace);
 
             if ($param->isBuiltinType) {
                 $parameterDefinitions[] = $this->parameterDefinitionFactory->createPathDefinition($param);
