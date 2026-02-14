@@ -36,6 +36,7 @@ class NamespaceResolver {
         foreach ($imports as $import) {
             $importArr = explode("\\", $import);
             $lastElm = end($importArr);
+            $this->logger->info("Last import " . $lastElm);
             if ($lastElm == $className) {
                 $this->logger->info("Returning import " . $import);
                 return $import;
