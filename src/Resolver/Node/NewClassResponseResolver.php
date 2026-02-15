@@ -3,6 +3,7 @@
 namespace Apilyser\Resolver\Node;
 
 use Apilyser\Analyser\ClassMethodContext;
+use Apilyser\Ast\Node\NameHelper;
 use Apilyser\Definition\NewClassResponseParameter;
 use Apilyser\Framework\FrameworkAdapter;
 use Apilyser\Framework\FrameworkRegistry;
@@ -58,7 +59,12 @@ class NewClassResponseResolver implements ResponseNodeResolver
             throw new Exception("Invalid node type");
         }
 
-        $className = $node->class->name;
+        $className = null;
+        if ($node instanceof New_) {
+            $className = $node->class->name;
+        } else if ($node instanceof Name) {
+            $className = NameHelper::getName($node);
+        }
         $fullClassName = $this->namespaceResolver->findFullNamespaceForClass(
             className: $className,
             imports: $context->imports,
