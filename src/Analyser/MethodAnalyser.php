@@ -5,6 +5,7 @@ namespace Apilyser\Analyser;
 use Apilyser\Definition\MethodPathDefinition;
 use Apilyser\Ast\ClassUsage;
 use Apilyser\Ast\ExecutionPathFinder;
+use Apilyser\Ast\Node\NameHelper;
 use Apilyser\Ast\VariableAssignmentFinder;
 use Apilyser\Framework\FrameworkAdapter;
 use Apilyser\Framework\FrameworkRegistry;
@@ -209,6 +210,8 @@ class MethodAnalyser
                 $propertyFetch->name->name
             );
             if ($constructorParam?->type instanceof Name) {
+                $propertyClassName = NameHelper::getName($constructorParam->type);
+            } else if ($constructorParam?->type instanceof Identifier) {
                 $propertyClassName = $constructorParam->type->name;
             }
         }
