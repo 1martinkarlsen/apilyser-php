@@ -198,6 +198,7 @@ class Injection
             ]
         );
         $this->services[ResponseResolver::class] = new ResponseResolver(
+            logger: $this->get(Logger::class),
             classUsageResolver: $this->get(ResponseClassUsageResolver::class)
         );
 
@@ -211,6 +212,7 @@ class Injection
 
         // Analyzer
         $this->services[MethodAnalyser::class] = new MethodAnalyser(
+            logger: $this->get(Logger::class),
             executionPathFinder: $this->get(ExecutionPathFinder::class),
             responseResolver: $this->get(ResponseResolver::class),
             frameworkRegistry: $this->get(FrameworkRegistry::class),

@@ -4,12 +4,14 @@ namespace Apilyser\Resolver;
 
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Ast\ClassUsage;
+use Apilyser\Util\Logger;
 use PhpParser\Node;
 
 class ResponseResolver
 {
 
     public function __construct(
+        private Logger $logger,
         private ResponseClassUsageResolver $classUsageResolver
     ) {}
 
@@ -26,6 +28,7 @@ class ResponseResolver
     {
         $results = [];
         foreach ($usedClasses as $usedClass) {
+            $this->logger->info("Used class: " . $usedClass->className);
             // Here we will look through each class.
             // We need to find all usages of $usedClass to define the response.
             $result = null;

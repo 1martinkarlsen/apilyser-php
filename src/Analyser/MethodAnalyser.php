@@ -13,6 +13,7 @@ use Apilyser\Resolver\ResponseCall;
 use Apilyser\Resolver\ResponseResolver;
 use Apilyser\Ast\Visitor\ClassUsageVisitor;
 use Apilyser\Ast\Visitor\ClassUsageVisitorFactory;
+use Apilyser\Util\Logger;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
@@ -29,6 +30,7 @@ class MethodAnalyser
     private $variableAssignmentFinder;
 
     public function __construct(
+        private Logger $logger,
         private ExecutionPathFinder $executionPathFinder,
         private ResponseResolver $responseResolver,
         private FrameworkRegistry $frameworkRegistry,
@@ -57,6 +59,8 @@ class MethodAnalyser
     {
         $paths = $this->executionPathFinder->extract($context->method);
 
+        $this->logger->info("Found paths: " . count($paths));
+
         $results = [];
         foreach ($paths as $path) {
             $pathResults = $this->analysePath($path, $context);
@@ -82,6 +86,10 @@ class MethodAnalyser
 
         // Find response class usages.
         $usedResponseClasses = $this->findUsedResponseClassesInPath($path, $context);
+
+        $this->logger->info("Found used response classes " . count($usedResponseClasses));
+        
+
         $classResults = $this->responseResolver->resolve($context, $statementNodes, $usedResponseClasses);
         array_push($results, ...$classResults);
 
