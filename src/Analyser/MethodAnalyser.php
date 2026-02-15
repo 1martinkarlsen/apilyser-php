@@ -198,12 +198,21 @@ class MethodAnalyser
             return [];
         }
         $property = $this->classAstResolver->findPropertyInClass($context->class, $propertyFetch);
-        if (!$property) {
-            $this->logger->info("Failing at property in class");
-            return [];
+
+        $propertyClassName = null;
+        if ($property) {
+            $propertyClassName = $this->getPropertyClassName($property);
+        } else {
+            // Fallback: check constructor promoted properties
+            $constructorParam = $this->classAstResolver->findConstructorParam(
+                $context->class,
+                $propertyFetch->name->name
+            );
+            if ($constructorParam?->type instanceof Name) {
+                $propertyClassName = $constructorParam->type->name;
+            }
         }
 
-        $propertyClassName = $this->getPropertyClassName($property);
         if (!$propertyClassName) {
             $this->logger->info("Failing at property class name");
             return [];
