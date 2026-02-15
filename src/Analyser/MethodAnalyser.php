@@ -189,28 +189,35 @@ class MethodAnalyser
     {
         $methodName = $methodCall->name->name;
 
+        $this->logger->info("Analysing property method call " . $methodName);
+
         // Find the property in the class
         $propertyFetch = $methodCall->var;
         if (!$propertyFetch instanceof PropertyFetch) {
+            $this->logger->info("Failing at property fetch");
             return [];
         }
         $property = $this->classAstResolver->findPropertyInClass($context->class, $propertyFetch);
         if (!$property) {
+            $this->logger->info("Failing at property in class");
             return [];
         }
 
         $propertyClassName = $this->getPropertyClassName($property);
         if (!$propertyClassName) {
+            $this->logger->info("Failing at property class name");
             return [];
         }
 
         $classStructure = $this->classAstResolver->resolveClassStructure($context->namespace, $propertyClassName, $context->imports);
         if (!$classStructure) {
+            $this->logger->info("Failing at property class structure");
             return [];
         }
 
         $calledMethod = $this->findMethodInClass($classStructure->class, $methodName);
         if (!$calledMethod) {
+            $this->logger->info("Failing at property method in class");
             return [];
         }
 
