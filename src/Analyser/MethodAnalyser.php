@@ -59,8 +59,6 @@ class MethodAnalyser
     {
         $paths = $this->executionPathFinder->extract($context->method);
 
-        $this->logger->info("Found paths: " . count($paths));
-
         $results = [];
         foreach ($paths as $path) {
             $pathResults = $this->analysePath($path, $context);
@@ -87,15 +85,14 @@ class MethodAnalyser
         // Find response class usages.
         $usedResponseClasses = $this->findUsedResponseClassesInPath($path, $context);
 
-        $this->logger->info("Found used response classes " . count($usedResponseClasses));
-        
-
         $classResults = $this->responseResolver->resolve($context, $statementNodes, $usedResponseClasses);
         array_push($results, ...$classResults);
 
         // Find all method calls in entire path
         foreach ($statementNodes as $node) {
             $methodCalls = $this->findMethodCalls($node);
+
+            $this->logger->info("Found method calls: " . count($methodCalls));
 
             foreach ($methodCalls as $methodCall) {
                 $childResults = $this->analyseMethodCall($methodCall, $context, $statementNodes);
@@ -146,6 +143,7 @@ class MethodAnalyser
         ClassMethodContext $context,
         array $statementNodes
     ): array {
+        $this->logger->info("Analysing method call " . $methodCall->name->name);
         $var = $methodCall->var;
 
         // If method in same class
