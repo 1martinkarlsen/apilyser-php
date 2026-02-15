@@ -30,6 +30,9 @@ class MethodAnalyser
 
     private $variableAssignmentFinder;
 
+    /** @var array<string, true> Track visited class::method to prevent infinite recursion */
+    private array $visitedMethods = [];
+
     public function __construct(
         private Logger $logger,
         private ExecutionPathFinder $executionPathFinder,
@@ -48,6 +51,7 @@ class MethodAnalyser
      */
     public function analyse(ClassMethodContext $context): array
     {
+        $this->visitedMethods = [];
         return $this->analyseMethod($context);
     }
 
@@ -58,6 +62,13 @@ class MethodAnalyser
      */
     private function analyseMethod(ClassMethodContext $context): array
     {
+        $methodKey = $context->class->name->name . '::' . $context->method->name->name;
+        if (isset($this->visitedMethods[$methodKey])) {
+            $this->logger->info("Skipping already visited method: " . $methodKey);
+            return [];
+        }
+        $this->visitedMethods[$methodKey] = true;
+
         $paths = $this->executionPathFinder->extract($context->method);
 
         $results = [];
