@@ -10,6 +10,7 @@ use Apilyser\Ast\VariableAssignmentFinder;
 use Apilyser\Framework\FrameworkAdapter;
 use Apilyser\Framework\FrameworkRegistry;
 use Apilyser\Resolver\ClassAstResolver;
+use Apilyser\Resolver\NamespaceResolver;
 use Apilyser\Resolver\ResponseCall;
 use Apilyser\Resolver\ResponseResolver;
 use Apilyser\Ast\Visitor\ClassUsageVisitor;
@@ -36,7 +37,8 @@ class MethodAnalyser
         private ResponseResolver $responseResolver,
         private FrameworkRegistry $frameworkRegistry,
         private ClassUsageVisitorFactory $classUsageVisitorFactory,
-        private ClassAstResolver $classAstResolver
+        private ClassAstResolver $classAstResolver,
+        private NamespaceResolver $namespaceResolver
     ) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
     }
@@ -182,7 +184,7 @@ class MethodAnalyser
             return [];
         }
 
-        if (!$this->isResponseReturningMethod($calledMethod, $context->imports)) {
+        if (!$this->isResponseReturningMethod($calledMethod, $context->imports, $context->namespace)) {
             return [];
         }
 
@@ -256,7 +258,7 @@ class MethodAnalyser
         $returnTypeStr = $returnType ? ($returnType instanceof Name ? $returnType->toString() : ($returnType instanceof Identifier ? $returnType->name : get_class($returnType))) : 'none';
         $this->logger->info("[PropertyCall] Return type: " . $returnTypeStr);
 
-        if (!$this->isResponseReturningMethod($calledMethod, $classStructure->imports)) {
+        if (!$this->isResponseReturningMethod($calledMethod, $classStructure->imports, $classStructure->namespace)) {
             $this->logger->info("[PropertyCall] STOP: return type does not match a response class");
             return [];
         }
@@ -306,7 +308,7 @@ class MethodAnalyser
             return [];
         }
 
-        if (!$this->isResponseReturningMethod($calledMethod, $classStructure->imports)) {
+        if (!$this->isResponseReturningMethod($calledMethod, $classStructure->imports, $classStructure->namespace)) {
             return [];
         }
 
@@ -348,8 +350,11 @@ class MethodAnalyser
      *
      * @return bool
      */
-    private function isResponseReturningMethod(\PhpParser\Node\Stmt\ClassMethod $method, array $imports): bool
-    {
+    private function isResponseReturningMethod(
+        \PhpParser\Node\Stmt\ClassMethod $method,
+        array $imports,
+        \PhpParser\Node\Stmt\Namespace_ $namespace
+    ): bool {
         $returnType = $method->returnType;
 
         if ($returnType === null) {
@@ -365,16 +370,15 @@ class MethodAnalyser
         }
 
         if ($returnType instanceof Name) {
-            $shortName = $returnType->toString();
+            $fullClassName = $this->namespaceResolver->findFullNamespaceForClass(
+                className: $returnType->toString(),
+                imports: $imports,
+                currentNamespace: $namespace
+            );
 
             foreach ($this->frameworkRegistry->getAdapters() as $adapter) {
-                foreach ($adapter->getSupportedResponseClasses() as $responseClass) {
-                    if ($shortName === $responseClass) {
-                        return true;
-                    }
-                    if (isset($imports[$shortName]) && $imports[$shortName] === $responseClass) {
-                        return true;
-                    }
+                if ($adapter->supportResponseClass($fullClassName)) {
+                    return true;
                 }
             }
         }

@@ -97,7 +97,8 @@ class ResponseAnalyserIntegrationTest extends TestCase
                 ),
                 frameworkRegistry: $this->frameworkRegistry,
                 classUsageVisitorFactory: new ClassUsageVisitorFactory($this->namespaceResolver),
-                classAstResolver: $this->classAstResolver
+                classAstResolver: $this->classAstResolver,
+                namespaceResolver: $this->namespaceResolver
             )
         );
     }
