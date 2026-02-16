@@ -218,6 +218,7 @@ class Injection
             frameworkRegistry: $this->get(FrameworkRegistry::class),
             classUsageVisitorFactory: $this->get(ClassUsageVisitorFactory::class),
             classAstResolver: $this->get(ClassAstResolver::class),
+            namespaceResolver: $this->get(NamespaceResolver::class)
         );
         $this->services[OpenApiAnalyser::class] = new OpenApiAnalyser(
             openApiDocPath: $this->rootPath . $this->configuration[Configuration::CFG_OPEN_API_PATH]
