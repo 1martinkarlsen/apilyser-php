@@ -200,11 +200,13 @@ class MethodAnalyser
     private function analysePropertyMethodCall(MethodCall $methodCall, ClassMethodContext $context): array
     {
         $methodName = $methodCall->name->name;
+        $propertyName = $methodCall->var->name->name ?? '?';
+        $this->logger->info("[PropertyCall] \$this->{$propertyName}->{$methodName}()");
 
         // Find the property in the class
         $propertyFetch = $methodCall->var;
         if (!$propertyFetch instanceof PropertyFetch) {
-            $this->logger->info("Failing at property fetch");
+            $this->logger->info("[PropertyCall] STOP: not a PropertyFetch");
             return [];
         }
 
@@ -213,6 +215,7 @@ class MethodAnalyser
         $propertyClassName = null;
         if ($property) {
             $propertyClassName = $this->getPropertyClassName($property);
+            $this->logger->info("[PropertyCall] Found traditional property, type: " . ($propertyClassName ?? 'null'));
         } else {
             // Fallback: check constructor promoted properties
             $constructorParam = $this->classAstResolver->findConstructorParam(
@@ -221,31 +224,44 @@ class MethodAnalyser
             );
             if ($constructorParam?->type instanceof Name) {
                 $propertyClassName = NameHelper::getName($constructorParam->type);
+                $this->logger->info("[PropertyCall] Found promoted property, type: " . $propertyClassName);
             } else if ($constructorParam?->type instanceof Identifier) {
                 $propertyClassName = $constructorParam->type->name;
+                $this->logger->info("[PropertyCall] Found promoted property (identifier), type: " . $propertyClassName);
+            } else {
+                $this->logger->info("[PropertyCall] STOP: no property or constructor param found for '{$propertyName}'");
             }
         }
 
         if (!$propertyClassName) {
-            $this->logger->info("Failing at property class name");
+            $this->logger->info("[PropertyCall] STOP: could not resolve property class name");
             return [];
         }
 
         $classStructure = $this->classAstResolver->resolveClassStructure($context->namespace, $propertyClassName, $context->imports);
         if (!$classStructure) {
-            $this->logger->info("Failing at property class structure");
+            $this->logger->info("[PropertyCall] STOP: could not resolve class structure for '{$propertyClassName}'");
             return [];
         }
+        $this->logger->info("[PropertyCall] Resolved class: " . $classStructure->class->name->name);
 
         $calledMethod = $this->findMethodInClass($classStructure->class, $methodName);
         if (!$calledMethod) {
-            $this->logger->info("Failing at property method in class");
+            $this->logger->info("[PropertyCall] STOP: method '{$methodName}' not found in " . $classStructure->class->name->name);
+            return [];
+        }
+        $this->logger->info("[PropertyCall] Found method: " . $classStructure->class->name->name . "::{$methodName}()");
+
+        $returnType = $calledMethod->returnType;
+        $returnTypeStr = $returnType ? ($returnType instanceof Name ? $returnType->toString() : ($returnType instanceof Identifier ? $returnType->name : get_class($returnType))) : 'none';
+        $this->logger->info("[PropertyCall] Return type: " . $returnTypeStr);
+
+        if (!$this->isResponseReturningMethod($calledMethod, $classStructure->imports)) {
+            $this->logger->info("[PropertyCall] STOP: return type does not match a response class");
             return [];
         }
 
-        if (!$this->isResponseReturningMethod($calledMethod, $classStructure->imports)) {
-            return [];
-        }
+        $this->logger->info("[PropertyCall] MATCH - recursing into " . $classStructure->class->name->name . "::{$methodName}()");
 
         $childContext = new ClassMethodContext(
             namespace: $classStructure->namespace,
