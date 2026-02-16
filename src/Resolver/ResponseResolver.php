@@ -28,7 +28,6 @@ class ResponseResolver
     {
         $results = [];
         foreach ($usedClasses as $usedClass) {
-            $this->logger->info("Used class: " . $usedClass->className);
             // Here we will look through each class.
             // We need to find all usages of $usedClass to define the response.
             $result = null;
