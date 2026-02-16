@@ -5,6 +5,7 @@ use Apilyser\ApiValidator;
 use Apilyser\Comparison\EndpointResult;
 use Apilyser\Comparison\ValidationError;
 use Apilyser\Definition\EndpointDefinition;
+use Apilyser\Util\Logger;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -18,7 +19,7 @@ class ApiValidatorTest extends TestCase
 
         $validator = new ApiValidator(
             folderPath: "/test",
-            output: $this->createMock(OutputInterface::class),
+            logger: $this->createMock(Logger::class),
             analyser: $analyserMock
         );
 
@@ -51,7 +52,7 @@ class ApiValidatorTest extends TestCase
 
         $validator = new ApiValidator(
             folderPath: "/test",
-            output: $this->createMock(OutputInterface::class),
+            logger: $this->createMock(Logger::class),
             analyser: $analyserMock
         );
 
@@ -91,7 +92,7 @@ class ApiValidatorTest extends TestCase
 
         $validator = new ApiValidator(
             folderPath: "/test",
-            output: $this->createMock(OutputInterface::class),
+            logger: $this->createMock(Logger::class),
             analyser: $analyserMock
         );
 

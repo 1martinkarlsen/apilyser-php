@@ -182,6 +182,7 @@ class Injection
         $this->services[VariableAssignmentFinder::class] = new VariableAssignmentFinder();
 
         $this->services[NewClassResponseResolver::class] = new NewClassResponseResolver(
+            logger: $this->get(Logger::class),
             namespaceResolver: $this->get(NamespaceResolver::class),
             responseBodyResolver: $this->get(ResponseBodyResolver::class),
             frameworkRegistry: $this->get(FrameworkRegistry::class),
@@ -189,6 +190,7 @@ class Injection
             classAstResolver: $this->get(ClassAstResolver::class)
         );
         $this->services[MethodCallResponseResolver::class] = new MethodCallResponseResolver(
+            logger: $this->get(Logger::class),
             frameworkRegistry: $this->get(FrameworkRegistry::class)
         );
         $this->services[ResponseClassUsageResolver::class] = new ResponseClassUsageResolver(
