@@ -144,6 +144,8 @@ class MethodAnalyser
         ClassMethodContext $context,
         array $statementNodes
     ): array {
+        $this->logger->info("Analysing method call " . $methodCall->name->name . " on line " . $methodCall->getLine());
+        $this->logger->info("Analysing with var: " . get_class($methodCall->var));
         $var = $methodCall->var;
 
         // If method in same class
