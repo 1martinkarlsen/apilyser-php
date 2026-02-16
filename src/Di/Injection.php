@@ -215,6 +215,7 @@ class Injection
         // Analyzer
         $this->services[MethodAnalyser::class] = new MethodAnalyser(
             logger: $this->get(Logger::class),
+            dumper: $this->get(NodeDumper::class),
             executionPathFinder: $this->get(ExecutionPathFinder::class),
             responseResolver: $this->get(ResponseResolver::class),
             frameworkRegistry: $this->get(FrameworkRegistry::class),

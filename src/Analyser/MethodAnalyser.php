@@ -24,6 +24,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\Property;
+use PhpParser\NodeDumper;
 
 class MethodAnalyser
 {
@@ -32,6 +33,7 @@ class MethodAnalyser
 
     public function __construct(
         private Logger $logger,
+        private NodeDumper $dumper,
         private ExecutionPathFinder $executionPathFinder,
         private ResponseResolver $responseResolver,
         private FrameworkRegistry $frameworkRegistry,
@@ -92,10 +94,13 @@ class MethodAnalyser
         $this->logger->info("Used response classes: " . count($usedResponseClasses));
         foreach ($usedResponseClasses as $usedClass) {
             $this->logger->info(" - " . $usedClass->className . " - " . $usedClass->usageType);
+            $this->logger->info("Node " . $this->dumper->dump($usedClass->node));
         }
 
         $classResults = $this->responseResolver->resolve($context, $statementNodes, $usedResponseClasses);
         array_push($results, ...$classResults);
+
+        $this->logger->info("Class results " . count($classResults));
 
         // Find all method calls in entire path
         foreach ($statementNodes as $node) {
