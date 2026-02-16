@@ -30,9 +30,6 @@ class MethodAnalyser
 
     private $variableAssignmentFinder;
 
-    /** @var array<string, true> Track visited class::method to prevent infinite recursion */
-    private array $visitedMethods = [];
-
     public function __construct(
         private Logger $logger,
         private ExecutionPathFinder $executionPathFinder,
@@ -51,7 +48,6 @@ class MethodAnalyser
      */
     public function analyse(ClassMethodContext $context): array
     {
-        $this->visitedMethods = [];
         return $this->analyseMethod($context);
     }
 
@@ -62,14 +58,9 @@ class MethodAnalyser
      */
     private function analyseMethod(ClassMethodContext $context): array
     {
-        $methodKey = $context->class->name->name . '::' . $context->method->name->name;
-        if (isset($this->visitedMethods[$methodKey])) {
-            $this->logger->info("Skipping already visited method: " . $methodKey);
-            return [];
-        }
-        $this->visitedMethods[$methodKey] = true;
-
         $paths = $this->executionPathFinder->extract($context->method);
+
+        $this->logger->info("Found " . count($paths) . " execution paths");
 
         $results = [];
         foreach ($paths as $path) {
@@ -103,8 +94,6 @@ class MethodAnalyser
         // Find all method calls in entire path
         foreach ($statementNodes as $node) {
             $methodCalls = $this->findMethodCalls($node);
-
-            $this->logger->info("Found method calls: " . count($methodCalls));
 
             foreach ($methodCalls as $methodCall) {
                 $childResults = $this->analyseMethodCall($methodCall, $context, $statementNodes);
@@ -155,7 +144,6 @@ class MethodAnalyser
         ClassMethodContext $context,
         array $statementNodes
     ): array {
-        $this->logger->info("Analysing method call " . $methodCall->name->name);
         $var = $methodCall->var;
 
         // If method in same class
@@ -201,17 +189,21 @@ class MethodAnalyser
     {
         $methodName = $methodCall->name->name;
 
-        $this->logger->info("Analysing property method call " . $methodName);
-
         // Find the property in the class
         $propertyFetch = $methodCall->var;
         if (!$propertyFetch instanceof PropertyFetch) {
             $this->logger->info("Failing at property fetch");
             return [];
         }
-        $property = $this->classAstResolver->findPropertyInClass($context->class, $propertyFetch);
 
-        $propertyClassName = null;
+        $property = $this->classAstResolver->findPropertyInClass($context->class, $propertyFetch);
+        if (!$property) {
+            $this->logger->info("Failing at property in class");
+            return [];
+        }
+
+
+        /*$propertyClassName = null;
         if ($property) {
             $propertyClassName = $this->getPropertyClassName($property);
         } else {
@@ -225,8 +217,9 @@ class MethodAnalyser
             } else if ($constructorParam?->type instanceof Identifier) {
                 $propertyClassName = $constructorParam->type->name;
             }
-        }
+        }*/
 
+        $propertyClassName = $this->getPropertyClassName($property);
         if (!$propertyClassName) {
             $this->logger->info("Failing at property class name");
             return [];
