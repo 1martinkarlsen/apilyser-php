@@ -24,7 +24,6 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\NodeDumper;
 
 class MethodAnalyser
 {
@@ -33,7 +32,6 @@ class MethodAnalyser
 
     public function __construct(
         private Logger $logger,
-        private NodeDumper $dumper,
         private ExecutionPathFinder $executionPathFinder,
         private ResponseResolver $responseResolver,
         private FrameworkRegistry $frameworkRegistry,
@@ -94,7 +92,6 @@ class MethodAnalyser
         $this->logger->info("Used response classes: " . count($usedResponseClasses));
         foreach ($usedResponseClasses as $usedClass) {
             $this->logger->info(" - " . $usedClass->className . " - " . $usedClass->usageType);
-            $this->logger->info("Node " . $this->dumper->dump($usedClass->node));
         }
 
         $classResults = $this->responseResolver->resolve($context, $statementNodes, $usedResponseClasses);
@@ -185,6 +182,10 @@ class MethodAnalyser
             return [];
         }
 
+        if (!$this->isResponseReturningMethod($calledMethod, $context->imports)) {
+            return [];
+        }
+
         $childContext = new ClassMethodContext(
             namespace: $context->namespace,
             class: $context->class,
@@ -208,13 +209,8 @@ class MethodAnalyser
         }
 
         $property = $this->classAstResolver->findPropertyInClass($context->class, $propertyFetch);
-        if (!$property) {
-            $this->logger->info("Failing at property in class");
-            return [];
-        }
 
-
-        /*$propertyClassName = null;
+        $propertyClassName = null;
         if ($property) {
             $propertyClassName = $this->getPropertyClassName($property);
         } else {
@@ -228,9 +224,8 @@ class MethodAnalyser
             } else if ($constructorParam?->type instanceof Identifier) {
                 $propertyClassName = $constructorParam->type->name;
             }
-        }*/
+        }
 
-        $propertyClassName = $this->getPropertyClassName($property);
         if (!$propertyClassName) {
             $this->logger->info("Failing at property class name");
             return [];
@@ -248,11 +243,15 @@ class MethodAnalyser
             return [];
         }
 
+        if (!$this->isResponseReturningMethod($calledMethod, $classStructure->imports)) {
+            return [];
+        }
+
         $childContext = new ClassMethodContext(
             namespace: $classStructure->namespace,
             class: $classStructure->class,
             method: $calledMethod,
-            imports: $context->imports
+            imports: $classStructure->imports
         );
 
         return $this->analyseMethod($childContext);
@@ -291,11 +290,15 @@ class MethodAnalyser
             return [];
         }
 
+        if (!$this->isResponseReturningMethod($calledMethod, $classStructure->imports)) {
+            return [];
+        }
+
         $childContext = new ClassMethodContext(
             namespace: $classStructure->namespace,
             class: $classStructure->class,
             method: $calledMethod,
-            imports: $context->imports
+            imports: $classStructure->imports
         );
 
         return $this->analyseMethod($childContext);
@@ -319,6 +322,48 @@ class MethodAnalyser
         }
 
         return null;
+    }
+
+    /**
+     * Checks if a method's return type is a supported response class.
+     *
+     * @param \PhpParser\Node\Stmt\ClassMethod $method
+     * @param array $imports Imports from the file where the method is defined
+     *
+     * @return bool
+     */
+    private function isResponseReturningMethod(\PhpParser\Node\Stmt\ClassMethod $method, array $imports): bool
+    {
+        $returnType = $method->returnType;
+
+        if ($returnType === null) {
+            return false;
+        }
+
+        if ($returnType instanceof NullableType) {
+            $returnType = $returnType->type;
+        }
+
+        if ($returnType instanceof Identifier) {
+            return false;
+        }
+
+        if ($returnType instanceof Name) {
+            $shortName = $returnType->toString();
+
+            foreach ($this->frameworkRegistry->getAdapters() as $adapter) {
+                foreach ($adapter->getSupportedResponseClasses() as $responseClass) {
+                    if ($shortName === $responseClass) {
+                        return true;
+                    }
+                    if (isset($imports[$shortName]) && $imports[$shortName] === $responseClass) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

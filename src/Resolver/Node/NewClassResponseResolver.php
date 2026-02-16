@@ -12,7 +12,6 @@ use Apilyser\Resolver\NamespaceResolver;
 use Apilyser\Resolver\ResponseCall;
 use Apilyser\Resolver\ResponseBodyResolver;
 use Apilyser\Ast\VariableAssignmentFinder;
-use Apilyser\Util\Logger;
 use Exception;
 use PhpParser\Node;
 use PhpParser\Node\Expr\ClassConstFetch;
@@ -30,7 +29,6 @@ class NewClassResponseResolver implements ResponseNodeResolver
 {
 
     public function __construct(
-        private Logger $logger,
         private NamespaceResolver $namespaceResolver,
         private ResponseBodyResolver $responseBodyResolver,
         private FrameworkRegistry $frameworkRegistry,
@@ -57,7 +55,6 @@ class NewClassResponseResolver implements ResponseNodeResolver
         Node $node,
         ?ResponseCall $modifierResponseCall = null
     ): ?ResponseCall {
-        $this->logger->info("New class response resolver");
         if (!$node instanceof New_ || !$node->class instanceof Name) {
             throw new Exception("Invalid node type");
         }
