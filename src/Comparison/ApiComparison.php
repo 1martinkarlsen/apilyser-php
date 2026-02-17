@@ -10,7 +10,7 @@ use Apilyser\Rule\ParameterTypeRule;
 use Apilyser\Rule\ResponseExistenceRule;
 use Apilyser\Rule\ResponsePropertyTypeRule;
 use Apilyser\Rule\ResponseSchemePropertiesRule;
-use Symfony\Component\Console\Output\OutputInterface;
+use Apilyser\Util\Logger;
 
 /**
  * TODO:
@@ -23,7 +23,7 @@ class ApiComparison {
     /** @var ValidationRule[] */
     private $rules = [];
 
-    public function __construct(public OutputInterface $output) {
+    public function __construct() {
         $this->rules = [
             new ResponseExistenceRule(),
             new ResponseSchemePropertiesRule(),

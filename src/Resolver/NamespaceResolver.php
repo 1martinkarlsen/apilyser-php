@@ -2,8 +2,8 @@
 
 namespace Apilyser\Resolver;
 
+use Apilyser\Util\Logger;
 use PhpParser\Node\Stmt\Namespace_;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Project-aware namespace to file path resolver
@@ -14,7 +14,7 @@ class NamespaceResolver {
 
     private string $rootPath;
 
-    function __construct(public OutputInterface $output, string $rootPath)
+    function __construct(public Logger $logger, string $rootPath)
     {
         $this->rootPath = $rootPath;
     }
@@ -66,14 +66,14 @@ class NamespaceResolver {
 
         // Check if composer.json exists
         if (!file_exists($composerJsonPath)) {
-            $this->output->writeln("Could not find composer for " . $composerJsonPath);
+            $this->logger->log("Could not find composer for " . $composerJsonPath);
             return false;
         }
         
         // Load composer configuration
         $composerConfig = json_decode(file_get_contents($composerJsonPath), true);
         if (!$composerConfig || !isset($composerConfig['autoload'])) {
-            $this->output->writeln("Could not find composer config");
+            $this->logger->log("Could not find composer config");
             return false;
         }
         

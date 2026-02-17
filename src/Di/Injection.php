@@ -41,10 +41,10 @@ use Apilyser\Resolver\MethodContextResolver;
 use Apilyser\Resolver\ResponseBodyResolver;
 use Apilyser\Ast\VariableAssignmentFinder;
 use Apilyser\Ast\Visitor\ClassUsageVisitorFactory;
+use Apilyser\Util\Logger;
 use Exception;
 use PhpParser\NodeDumper;
 use PhpParser\NodeFinder;
-use Symfony\Component\Console\Output\OutputInterface;
 
 class Injection
 {
@@ -53,7 +53,7 @@ class Injection
     private array $services = [];
 
     public function __construct(
-        public OutputInterface $output,
+        public Logger $logger,
         public string $rootPath
     )
     {
@@ -78,7 +78,7 @@ class Injection
     {
         return new ApiValidator(
             folderPath: $this->rootPath,
-            output: $this->get(OutputInterface::class),
+            logger: $this->get(Logger::class),
             analyser: $this->get(Analyser::class)
         );
     }
@@ -115,7 +115,7 @@ class Injection
      */
     private function setup()
     {
-        $this->services[OutputInterface::class] = $this->output;
+        $this->services[Logger::class] = $this->logger;
         $this->services[NodeDumper::class] = new NodeDumper();
         $this->services[NodeFinder::class] = new NodeFinder();
 
@@ -133,7 +133,7 @@ class Injection
 
         // Resolver
         $this->services[NamespaceResolver::class] = new NamespaceResolver(
-            output: $this->get(OutputInterface::class),
+            logger: $this->get(Logger::class),
             rootPath: $this->rootPath
         );
         $this->services[ClassAstResolver::class] = new ClassAstResolver(
@@ -197,6 +197,7 @@ class Injection
             ]
         );
         $this->services[ResponseResolver::class] = new ResponseResolver(
+            logger: $this->get(Logger::class),
             classUsageResolver: $this->get(ResponseClassUsageResolver::class)
         );
 
@@ -206,9 +207,7 @@ class Injection
         );
 
         // Rules
-        $this->services[ApiComparison::class] = new ApiComparison(
-            output: $this->get(OutputInterface::class)
-        );
+        $this->services[ApiComparison::class] = new ApiComparison();
 
         // Analyzer
         $this->services[MethodAnalyser::class] = new MethodAnalyser(
@@ -216,7 +215,7 @@ class Injection
             responseResolver: $this->get(ResponseResolver::class),
             frameworkRegistry: $this->get(FrameworkRegistry::class),
             classUsageVisitorFactory: $this->get(ClassUsageVisitorFactory::class),
-            classAstResolver: $this->get(ClassAstResolver::class),
+            classAstResolver: $this->get(ClassAstResolver::class)
         );
         $this->services[OpenApiAnalyser::class] = new OpenApiAnalyser(
             openApiDocPath: $this->rootPath . $this->configuration[Configuration::CFG_OPEN_API_PATH]
@@ -227,7 +226,6 @@ class Injection
             parameterDefinitionFactory: $this->get(ParameterDefinitionFactory::class)
         );
         $this->services[ResponseAnalyser::class] = new ResponseAnalyser(
-            output: $this->get(OutputInterface::class),
             methodAnalyser: $this->get(MethodAnalyser::class)
         );
         $this->services[EndpointAnalyser::class] = new EndpointAnalyser(
@@ -235,6 +233,7 @@ class Injection
             responseAnalyser: $this->get(ResponseAnalyser::class)
         );
         $this->services[FileAnalyser::class] = new FileAnalyser(
+            logger: $this->get(Logger::class),
             nodeParser: $this->get(NodeParser::class),
             nodeFinder: $this->get(NodeFinder::class),
             endpointAnalyser: $this->get(EndpointAnalyser::class),

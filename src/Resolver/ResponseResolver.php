@@ -4,12 +4,14 @@ namespace Apilyser\Resolver;
 
 use Apilyser\Analyser\ClassMethodContext;
 use Apilyser\Ast\ClassUsage;
+use Apilyser\Util\Logger;
 use PhpParser\Node;
 
 class ResponseResolver
 {
 
     public function __construct(
+        private Logger $logger,
         private ResponseClassUsageResolver $classUsageResolver
     ) {}
 

@@ -212,7 +212,7 @@ class MethodAnalyser
             namespace: $classStructure->namespace,
             class: $classStructure->class,
             method: $calledMethod,
-            imports: $context->imports
+            imports: $classStructure->imports
         );
 
         return $this->analyseMethod($childContext);
@@ -255,7 +255,7 @@ class MethodAnalyser
             namespace: $classStructure->namespace,
             class: $classStructure->class,
             method: $calledMethod,
-            imports: $context->imports
+            imports: $classStructure->imports
         );
 
         return $this->analyseMethod($childContext);

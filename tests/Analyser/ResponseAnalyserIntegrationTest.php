@@ -20,6 +20,7 @@ use Apilyser\Resolver\ResponseResolver;
 use Apilyser\Resolver\MethodContextResolver;
 use Apilyser\Resolver\ResponseBodyResolver;
 use Apilyser\Ast\Visitor\ClassUsageVisitorFactory;
+use Apilyser\Util\Logger;
 use PhpParser\NodeFinder;
 use PhpParser\ParserFactory;
 use PHPUnit\Framework\TestCase;
@@ -27,6 +28,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ResponseAnalyserIntegrationTest extends TestCase
 {
+    private Logger $logger;
     private OutputInterface $output;
     private NamespaceResolver $namespaceResolver;
     private ClassAstResolver $classAstResolver;
@@ -52,9 +54,10 @@ class ResponseAnalyserIntegrationTest extends TestCase
     protected function setUp(): void
     {
         $this->output = $this->createMock(OutputInterface::class);
+        $this->logger = new Logger($this->output, true);
         $this->nodeFinder = new NodeFinder();
         $this->namespaceResolver = new NamespaceResolver(
-            output: $this->output,
+            logger: $this->logger,
             rootPath: $this->findProjectRoot()
         );
         $this->classAstResolver = new ClassAstResolver(
@@ -74,11 +77,11 @@ class ResponseAnalyserIntegrationTest extends TestCase
         $this->frameworkRegistry->registerAdapter(new SymfonyAdapter($this->responseBodyResolver));
 
         $this->analyser = new ResponseAnalyser(
-            output: $this->output,
             methodAnalyser: new MethodAnalyser(
                 executionPathFinder: new ExecutionPathFinder(),
                 responseResolver: new ResponseResolver(
-                    new ResponseClassUsageResolver(
+                    logger: $this->logger,
+                    classUsageResolver:new ResponseClassUsageResolver(
                         classUsageResolvers: [
                             new NewClassResponseResolver(
                                 namespaceResolver: $this->namespaceResolver,

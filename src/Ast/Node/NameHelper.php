@@ -12,7 +12,7 @@ class NameHelper
         if (property_exists($name, 'name') && null !== $name->name) {
             return $name->name;
         } else {
-            return implode("/", $name->getParts());
+            return $name->toString();
         }
     }
 }

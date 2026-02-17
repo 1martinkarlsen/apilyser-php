@@ -3,10 +3,12 @@
 namespace Apilyser\Command;
 
 use Apilyser\Di\Injection;
+use Apilyser\Util\Logger;
 use Exception;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand(
@@ -16,6 +18,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 )]
 class ValidateApiCommand extends Command
 {
+
+    protected function configure(): void
+    {
+        $this->addOption(
+            'info',
+            null,
+            InputOption::VALUE_NONE,
+            'Enable info output logging'
+        );
+    }
 
     /**
      * Execute the command
@@ -30,11 +42,16 @@ class ValidateApiCommand extends Command
         $rootPath = getcwd();
 
         try {
+            $info = $input->getOption('info');
+
             $injection = new Injection(
-                output: $output, 
+                logger: new Logger(
+                    output: $output,
+                    info: $info
+                ),
                 rootPath: $rootPath
             );
-            
+
             $validator = $injection->createApiValidator();
             return $validator->run();
             
