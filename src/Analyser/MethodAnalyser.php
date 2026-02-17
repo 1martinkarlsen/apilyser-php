@@ -5,17 +5,14 @@ namespace Apilyser\Analyser;
 use Apilyser\Definition\MethodPathDefinition;
 use Apilyser\Ast\ClassUsage;
 use Apilyser\Ast\ExecutionPathFinder;
-use Apilyser\Ast\Node\NameHelper;
 use Apilyser\Ast\VariableAssignmentFinder;
 use Apilyser\Framework\FrameworkAdapter;
 use Apilyser\Framework\FrameworkRegistry;
 use Apilyser\Resolver\ClassAstResolver;
-use Apilyser\Resolver\NamespaceResolver;
 use Apilyser\Resolver\ResponseCall;
 use Apilyser\Resolver\ResponseResolver;
 use Apilyser\Ast\Visitor\ClassUsageVisitor;
 use Apilyser\Ast\Visitor\ClassUsageVisitorFactory;
-use Apilyser\Util\Logger;
 use PhpParser\Node;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
@@ -32,13 +29,11 @@ class MethodAnalyser
     private $variableAssignmentFinder;
 
     public function __construct(
-        private Logger $logger,
         private ExecutionPathFinder $executionPathFinder,
         private ResponseResolver $responseResolver,
         private FrameworkRegistry $frameworkRegistry,
         private ClassUsageVisitorFactory $classUsageVisitorFactory,
-        private ClassAstResolver $classAstResolver,
-        private NamespaceResolver $namespaceResolver
+        private ClassAstResolver $classAstResolver
     ) {
         $this->variableAssignmentFinder = new VariableAssignmentFinder();
     }
@@ -62,11 +57,8 @@ class MethodAnalyser
     {
         $paths = $this->executionPathFinder->extract($context->method);
 
-        $this->logger->info("Found " . count($paths) . " execution paths");
-
         $results = [];
         foreach ($paths as $index => $path) {
-            $this->logger->info("Path number " . $index);
             $pathResults = $this->analysePath($path, $context);
             array_push($results, ...$pathResults);
         }
@@ -90,16 +82,8 @@ class MethodAnalyser
 
         // Find response class usages.
         $usedResponseClasses = $this->findUsedResponseClassesInPath($path, $context);
-
-        $this->logger->info("Used response classes: " . count($usedResponseClasses));
-        foreach ($usedResponseClasses as $usedClass) {
-            $this->logger->info(" - " . $usedClass->className . " - " . $usedClass->usageType);
-        }
-
         $classResults = $this->responseResolver->resolve($context, $statementNodes, $usedResponseClasses);
         array_push($results, ...$classResults);
-
-        $this->logger->info("Class results " . count($classResults));
 
         // Find all method calls in entire path
         foreach ($statementNodes as $node) {
@@ -184,10 +168,6 @@ class MethodAnalyser
             return [];
         }
 
-        if (!$this->isResponseReturningMethod($calledMethod, $context->imports, $context->namespace)) {
-            return [];
-        }
-
         $childContext = new ClassMethodContext(
             namespace: $context->namespace,
             class: $context->class,
@@ -203,67 +183,32 @@ class MethodAnalyser
     {
         $methodName = $methodCall->name->name;
         $propertyName = $methodCall->var->name->name ?? '?';
-        $this->logger->info("[PropertyCall] \$this->{$propertyName}->{$methodName}()");
 
         // Find the property in the class
         $propertyFetch = $methodCall->var;
         if (!$propertyFetch instanceof PropertyFetch) {
-            $this->logger->info("[PropertyCall] STOP: not a PropertyFetch");
             return [];
         }
 
         $property = $this->classAstResolver->findPropertyInClass($context->class, $propertyFetch);
-
-        $propertyClassName = null;
-        if ($property) {
-            $propertyClassName = $this->getPropertyClassName($property);
-            $this->logger->info("[PropertyCall] Found traditional property, type: " . ($propertyClassName ?? 'null'));
-        } else {
-            // Fallback: check constructor promoted properties
-            $constructorParam = $this->classAstResolver->findConstructorParam(
-                $context->class,
-                $propertyFetch->name->name
-            );
-            if ($constructorParam?->type instanceof Name) {
-                $propertyClassName = NameHelper::getName($constructorParam->type);
-                $this->logger->info("[PropertyCall] Found promoted property, type: " . $propertyClassName);
-            } else if ($constructorParam?->type instanceof Identifier) {
-                $propertyClassName = $constructorParam->type->name;
-                $this->logger->info("[PropertyCall] Found promoted property (identifier), type: " . $propertyClassName);
-            } else {
-                $this->logger->info("[PropertyCall] STOP: no property or constructor param found for '{$propertyName}'");
-            }
+        if (!$property) {
+            return [];
         }
 
+        $propertyClassName = $this->getPropertyClassName($property);
         if (!$propertyClassName) {
-            $this->logger->info("[PropertyCall] STOP: could not resolve property class name");
             return [];
         }
 
         $classStructure = $this->classAstResolver->resolveClassStructure($context->namespace, $propertyClassName, $context->imports);
         if (!$classStructure) {
-            $this->logger->info("[PropertyCall] STOP: could not resolve class structure for '{$propertyClassName}'");
             return [];
         }
-        $this->logger->info("[PropertyCall] Resolved class: " . $classStructure->class->name->name);
 
         $calledMethod = $this->findMethodInClass($classStructure->class, $methodName);
         if (!$calledMethod) {
-            $this->logger->info("[PropertyCall] STOP: method '{$methodName}' not found in " . $classStructure->class->name->name);
             return [];
         }
-        $this->logger->info("[PropertyCall] Found method: " . $classStructure->class->name->name . "::{$methodName}()");
-
-        $returnType = $calledMethod->returnType;
-        $returnTypeStr = $returnType ? ($returnType instanceof Name ? $returnType->toString() : ($returnType instanceof Identifier ? $returnType->name : get_class($returnType))) : 'none';
-        $this->logger->info("[PropertyCall] Return type: " . $returnTypeStr);
-
-        if (!$this->isResponseReturningMethod($calledMethod, $classStructure->imports, $classStructure->namespace)) {
-            $this->logger->info("[PropertyCall] STOP: return type does not match a response class");
-            return [];
-        }
-
-        $this->logger->info("[PropertyCall] MATCH - recursing into " . $classStructure->class->name->name . "::{$methodName}()");
 
         $childContext = new ClassMethodContext(
             namespace: $classStructure->namespace,
@@ -308,10 +253,6 @@ class MethodAnalyser
             return [];
         }
 
-        if (!$this->isResponseReturningMethod($calledMethod, $classStructure->imports, $classStructure->namespace)) {
-            return [];
-        }
-
         $childContext = new ClassMethodContext(
             namespace: $classStructure->namespace,
             class: $classStructure->class,
@@ -340,50 +281,6 @@ class MethodAnalyser
         }
 
         return null;
-    }
-
-    /**
-     * Checks if a method's return type is a supported response class.
-     *
-     * @param \PhpParser\Node\Stmt\ClassMethod $method
-     * @param array $imports Imports from the file where the method is defined
-     *
-     * @return bool
-     */
-    private function isResponseReturningMethod(
-        \PhpParser\Node\Stmt\ClassMethod $method,
-        array $imports,
-        \PhpParser\Node\Stmt\Namespace_ $namespace
-    ): bool {
-        $returnType = $method->returnType;
-
-        if ($returnType === null) {
-            return false;
-        }
-
-        if ($returnType instanceof NullableType) {
-            $returnType = $returnType->type;
-        }
-
-        if ($returnType instanceof Identifier) {
-            return false;
-        }
-
-        if ($returnType instanceof Name) {
-            $fullClassName = $this->namespaceResolver->findFullNamespaceForClass(
-                className: $returnType->toString(),
-                imports: $imports,
-                currentNamespace: $namespace
-            );
-
-            foreach ($this->frameworkRegistry->getAdapters() as $adapter) {
-                if ($adapter->supportResponseClass($fullClassName)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     /**

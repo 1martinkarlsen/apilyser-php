@@ -62,7 +62,6 @@ class Injection
         $this->setupRouting();
 
         $this->services[Analyser::class] = new Analyser(
-            logger: $this->get(Logger::class),
             openApiAnalyser: $this->get(OpenApiAnalyser::class),
             routeCollector: $this->get(RouteCollector::class),
             fileAnalyser: $this->get(FileAnalyser::class),
@@ -212,13 +211,11 @@ class Injection
 
         // Analyzer
         $this->services[MethodAnalyser::class] = new MethodAnalyser(
-            logger: $this->get(Logger::class),
             executionPathFinder: $this->get(ExecutionPathFinder::class),
             responseResolver: $this->get(ResponseResolver::class),
             frameworkRegistry: $this->get(FrameworkRegistry::class),
             classUsageVisitorFactory: $this->get(ClassUsageVisitorFactory::class),
-            classAstResolver: $this->get(ClassAstResolver::class),
-            namespaceResolver: $this->get(NamespaceResolver::class)
+            classAstResolver: $this->get(ClassAstResolver::class)
         );
         $this->services[OpenApiAnalyser::class] = new OpenApiAnalyser(
             openApiDocPath: $this->rootPath . $this->configuration[Configuration::CFG_OPEN_API_PATH]

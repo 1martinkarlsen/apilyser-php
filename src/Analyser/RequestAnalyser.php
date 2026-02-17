@@ -37,7 +37,6 @@ class RequestAnalyser
         $methodParams = $this->methodParameterFinder->extract($method, $imports);
 
         foreach ($methodParams as $param) {
-
             if ($param->isBuiltinType) {
                 $parameterDefinitions[] = $this->parameterDefinitionFactory->createPathDefinition($param);
             } else {

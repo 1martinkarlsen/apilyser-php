@@ -5,14 +5,12 @@ namespace Apilyser\Analyser;
 use Apilyser\Comparison\ApiComparison;
 use Apilyser\Comparison\EndpointResult;
 use Apilyser\Resolver\RouteCollector;
-use Apilyser\Util\Logger;
 use Exception;
 
 class Analyser
 {
 
     public function __construct(
-        private Logger $logger,
         private OpenApiAnalyser $openApiAnalyser,
         private RouteCollector $routeCollector,
         private FileAnalyser $fileAnalyser,
