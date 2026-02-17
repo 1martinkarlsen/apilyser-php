@@ -78,7 +78,6 @@ class ResponseAnalyserIntegrationTest extends TestCase
 
         $this->analyser = new ResponseAnalyser(
             methodAnalyser: new MethodAnalyser(
-                logger: $this->logger,
                 executionPathFinder: new ExecutionPathFinder(),
                 responseResolver: new ResponseResolver(
                     logger: $this->logger,
@@ -97,24 +96,16 @@ class ResponseAnalyserIntegrationTest extends TestCase
                 ),
                 frameworkRegistry: $this->frameworkRegistry,
                 classUsageVisitorFactory: new ClassUsageVisitorFactory($this->namespaceResolver),
-                classAstResolver: $this->classAstResolver,
-                namespaceResolver: $this->namespaceResolver
+                classAstResolver: $this->classAstResolver
             )
         );
     }
 
     private function parseDataClassMethod(string $methodName): ClassMethodContext
     {
-        return $this->parseClassMethod(
-            __DIR__ . '/../Data/ResponseAnalyserIntegrationData.php',
-            $methodName
-        );
-    }
-
-    private function parseClassMethod(string $filePath, string $methodName): ClassMethodContext
-    {
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
-        $code = file_get_contents($filePath);
+        $dir = __DIR__ . '/../Data/ResponseAnalyserIntegrationData.php';
+        $code = file_get_contents($dir);
         $ast = $parser->parse($code);
 
         $namespaceNode = null;
@@ -159,31 +150,6 @@ class ResponseAnalyserIntegrationTest extends TestCase
             class: $classNode,
             method: $methodNode
         );
-    }
-
-    // Testing for finding responses where response is directly returned.
-    public function testFindWithPromotedPropertyServiceCall()
-    {
-        $context = $this->parseClassMethod(
-            __DIR__ . '/../Data/PromotedPropertyData.php',
-            'withPromotedPropertyServiceCall'
-        );
-        $result = $this->analyser->analyse($context);
-
-        $this->assertNotNull($result);
-        $this->assertCount(expectedCount: 1, haystack: $result);
-    }
-
-    public function testFindWithPromotedPropertyInTryCatch()
-    {
-        $context = $this->parseClassMethod(
-            __DIR__ . '/../Data/PromotedPropertyData.php',
-            'withPromotedPropertyInTryCatch'
-        );
-        $result = $this->analyser->analyse($context);
-
-        $this->assertNotNull($result);
-        $this->assertGreaterThanOrEqual(1, count($result));
     }
 
     // Testing for finding responses where response is directly returned.
