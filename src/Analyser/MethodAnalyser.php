@@ -58,7 +58,7 @@ class MethodAnalyser
         $paths = $this->executionPathFinder->extract($context->method);
 
         $results = [];
-        foreach ($paths as $index => $path) {
+        foreach ($paths as $path) {
             $pathResults = $this->analysePath($path, $context);
             array_push($results, ...$pathResults);
         }
@@ -182,14 +182,12 @@ class MethodAnalyser
     private function analysePropertyMethodCall(MethodCall $methodCall, ClassMethodContext $context): array
     {
         $methodName = $methodCall->name->name;
-        $propertyName = $methodCall->var->name->name ?? '?';
 
         // Find the property in the class
         $propertyFetch = $methodCall->var;
         if (!$propertyFetch instanceof PropertyFetch) {
             return [];
         }
-
         $property = $this->classAstResolver->findPropertyInClass($context->class, $propertyFetch);
         if (!$property) {
             return [];
