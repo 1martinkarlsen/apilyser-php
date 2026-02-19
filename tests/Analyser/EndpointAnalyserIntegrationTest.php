@@ -178,9 +178,14 @@ class EndpointAnalyserIntegrationTest extends TestCase
             context: $context
         );
 
+        $parameters = $result->getParameters();
         $responses = $result->getResponse();
 
         $this->assertNotNull($result);
+        $this->assertNotNull($parameters);
+        $this->assertNotNull($responses);
+
+        $this->assertCount(expectedCount: 3, haystack: $parameters);
         $this->assertCount(expectedCount: 1, haystack: $responses);
     }
 }
