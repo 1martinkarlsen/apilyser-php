@@ -85,7 +85,7 @@ class ExecutionPathFinder
         $truePath->addCondition("if", $ifStmt->cond, true);
 
         // Continue with remaining statements after if block (if no return/throw)
-        if (!$this->pathEndsWithTermination($ifStmt->stmts)) {
+        if ($this->pathEndsWithTermination($ifStmt->stmts)) {
             $this->extractPaths($ifStmt->stmts, $truePath);
         } else {
             $mergedStmts = array_merge($ifStmt->stmts, $remainingStmts);
@@ -98,7 +98,7 @@ class ExecutionPathFinder
             $elseifPath->addCondition("elseif", $elseif->cond, true);
 
             // Continue with remaining statements after elseif block
-            if (!$this->pathEndsWithTermination($elseif->stmts)) {
+            if ($this->pathEndsWithTermination($elseif->stmts)) {
                 $this->extractPaths($elseif->stmts, $elseifPath);
             } else {
                 $mergedStmts = array_merge($elseif->stmts, $remainingStmts);
@@ -112,7 +112,7 @@ class ExecutionPathFinder
             $elsePath->addCondition("else", $ifStmt->cond, false);
 
             // Continue with remaining statements after else block
-            if (!$this->pathEndsWithTermination($ifStmt->else->stmts)) {
+            if ($this->pathEndsWithTermination($ifStmt->else->stmts)) {
                 $this->extractPaths($ifStmt->else->stmts, $elsePath);
             } else {
                 $mergedStmts = array_merge($ifStmt->else->stmts, $remainingStmts);
@@ -147,7 +147,7 @@ class ExecutionPathFinder
         }
 
         // Continue with remaining statements after loop (if no break/return)
-        if (!$this->pathEndsWithTermination($loopBodyStmts)) {
+        if ($this->pathEndsWithTermination($loopBodyStmts)) {
             $this->extractPaths($loopBodyStmts, $loopPath);
         } else {
             $mergedStmts = array_merge($loopBodyStmts, $remainingStmts);
@@ -174,7 +174,7 @@ class ExecutionPathFinder
             }
 
             // Continue with remaining statements after switch (if no break/return)
-            if (!$this->pathEndsWithTermination($case->stmts)) {
+            if ($this->pathEndsWithTermination($case->stmts)) {
                 $this->extractPaths($case->stmts, $casePath);
             } else {
                 $mergedStmts = array_merge($case->stmts, $remainingStmts);
