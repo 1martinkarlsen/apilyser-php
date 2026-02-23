@@ -1,6 +1,6 @@
 <?php
 
-namespace Apilyser\tests\Data;
+namespace Apilyser\tests\Data\Endpoint;
 
 class Config
 {

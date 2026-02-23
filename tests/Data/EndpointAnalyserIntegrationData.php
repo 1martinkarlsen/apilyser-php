@@ -2,6 +2,15 @@
 
 namespace Apilyser\tests\Data;
 
+use Apilyser\tests\Data\Endpoint\ApiErrors;
+use Apilyser\tests\Data\Endpoint\ClientErrorException;
+use Apilyser\tests\Data\Endpoint\Config;
+use Apilyser\tests\Data\Endpoint\ListingFactory;
+use Apilyser\tests\Data\Endpoint\ListingFilter;
+use Apilyser\tests\Data\Endpoint\ListingResponseService;
+use Apilyser\tests\Data\Endpoint\NavigationRouteService;
+use Apilyser\tests\Data\Endpoint\ServerSideListingResponse;
+use Apilyser\tests\Data\Endpoint\TestLogger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -94,7 +103,7 @@ class EndpointAnalyserIntegrationData
             $this->apiErrorService->throwApiErrorException("INVALID PARAMS", Response::HTTP_NOT_FOUND);
         } catch (\JsonException) {
             $this->apiErrorService->throwApiErrorException("INVALID PARAMS", Response::HTTP_NOT_FOUND);
-        } catch (\Apilyser\tests\Data\ListingServiceClientException | ClientErrorException $e) {
+        } catch (\Apilyser\tests\Data\Endpoint\ListingServiceClientException | ClientErrorException $e) {
             $this->logger->error("Error");
             $this->apiErrorService->throwApiErrorException("INTERNAL SERVER ERROR", $e->getCode());
         }
