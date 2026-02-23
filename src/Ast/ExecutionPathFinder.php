@@ -13,6 +13,7 @@ use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\Node\Stmt\Switch_;
+use PhpParser\Node\Stmt\TryCatch;
 use PhpParser\Node\Stmt\While_;
 
 class ExecutionPathFinder
@@ -68,6 +69,11 @@ class ExecutionPathFinder
                 case $statement instanceof Switch_:
                     $remainingStmts = array_slice($stmts, $index + 1);
                     $this->handleSwitch($statement, $newPath, $remainingStmts);
+                    return;
+
+                case $statement instanceof TryCatch:
+                    $remainingStmts = array_slice($stmts, $index + 1);
+                    $this->handleTryCatch($statement, $newPath, $remainingStmts);
                     return;
 
                 default:
@@ -187,6 +193,28 @@ class ExecutionPathFinder
             $noMatchPath = clone $basePath;
             $noMatchPath->addCondition("no-case-match", null, false);
             $this->extractPaths($remainingStmts, $noMatchPath);
+        }
+    }
+
+    private function handleTryCatch(Node\Stmt\TryCatch $tryCatch, MethodPathDefinition $basePath, array $remainingStmts): void
+    {
+        // Try body paths (merged with statements after the try-catch if the body does not terminate)
+        if ($this->pathEndsWithTermination($tryCatch->stmts)) {
+            $this->extractPaths($tryCatch->stmts, $basePath);
+        } else {
+            $mergedTryStmts = array_merge($tryCatch->stmts, $remainingStmts);
+            $this->extractPaths($mergedTryStmts, $basePath);
+        }
+
+        // Each catch block creates its own path
+        foreach ($tryCatch->catches as $catch) {
+            $catchPath = clone $basePath;
+            if ($this->pathEndsWithTermination($catch->stmts)) {
+                $this->extractPaths($catch->stmts, $catchPath);
+            } else {
+                $mergedCatchStmts = array_merge($catch->stmts, $remainingStmts);
+                $this->extractPaths($mergedCatchStmts, $catchPath);
+            }
         }
     }
 

@@ -186,6 +186,6 @@ class EndpointAnalyserIntegrationTest extends TestCase
         $this->assertNotNull($responses);
 
         $this->assertCount(expectedCount: 3, haystack: $parameters);
-        $this->assertCount(expectedCount: 1, haystack: $responses);
+        $this->assertCount(expectedCount: 3, haystack: $responses);
     }
 }

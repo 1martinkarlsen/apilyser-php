@@ -188,12 +188,24 @@ class MethodAnalyser
         if (!$propertyFetch instanceof PropertyFetch) {
             return [];
         }
+        $propertyClassName = null;
+
         $property = $this->classAstResolver->findPropertyInClass($context->class, $propertyFetch);
-        if (!$property) {
-            return [];
+        if ($property) {
+            $propertyClassName = $this->getPropertyClassName($property);
+        } elseif ($propertyFetch->name instanceof Identifier) {
+            $constructorParam = $this->classAstResolver->findConstructorParam($context->class, $propertyFetch->name->name);
+            if ($constructorParam !== null) {
+                $type = $constructorParam->type;
+                if ($type instanceof NullableType) {
+                    $type = $type->type;
+                }
+                if ($type instanceof Name) {
+                    $propertyClassName = $type->toString();
+                }
+            }
         }
 
-        $propertyClassName = $this->getPropertyClassName($property);
         if (!$propertyClassName) {
             return [];
         }
@@ -231,7 +243,27 @@ class MethodAnalyser
         $methodName = $methodCall->name->name;
 
         $assignment = $this->variableAssignmentFinder->findAssignment($variableName, $statementNodes);
-        if (!$assignment || !($assignment instanceof New_)) {
+        if (!$assignment) {
+            return [];
+        }
+
+        // When assigned from a method call, follow that chain and apply the current method as a modifier
+        if ($assignment instanceof MethodCall) {
+            $baseResponseCalls = $this->analyseMethodCall($assignment, $context, $statementNodes);
+
+            $results = [];
+            foreach ($baseResponseCalls as $baseCall) {
+                foreach ($this->frameworkRegistry->getAdapters() as $adapter) {
+                    $modified = $adapter->tryParseCallLikeAsResponse($context, $methodCall, $statementNodes, $baseCall);
+                    if ($modified !== null) {
+                        $results[] = $modified;
+                    }
+                }
+            }
+            return $results;
+        }
+
+        if (!($assignment instanceof New_)) {
             return [];
         }
 
