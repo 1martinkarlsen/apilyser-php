@@ -40,7 +40,7 @@ class VariableUsageFinder {
 
         // Find variable usages
         $tt = new NodeTraverser();
-        $usageFinder = new VariableUsageVisitor(variableName: $name, findRootParent: false);
+        $usageFinder = new VariableUsageVisitor(variableName: $name, findRootStmt: false);
         $tt->addVisitor($usageFinder);
         $tt->traverse($ast);
         $usages = $usageFinder->getUsages();

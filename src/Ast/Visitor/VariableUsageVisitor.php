@@ -17,7 +17,7 @@ class VariableUsageVisitor extends NodeVisitorAbstract
 
     public function __construct(
         public string $variableName,
-        private bool $findRootParent = true
+        private bool $findRootStmt = true
     ) {}
 
     public function enterNode(Node $node)
@@ -48,7 +48,7 @@ class VariableUsageVisitor extends NodeVisitorAbstract
             return $node;
         }
 
-        if ($this->findRootParent) {
+        if ($this->findRootStmt) {
             if ($parent instanceof Stmt) {
                 return $node;
             }
