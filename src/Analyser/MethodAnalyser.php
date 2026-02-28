@@ -247,7 +247,7 @@ class MethodAnalyser
             return [];
         }
 
-        // When assigned from a method call, follow that chain and apply the current method as a modifier
+        // When assigned from a method call
         if ($assignment instanceof MethodCall) {
             $baseResponseCalls = $this->analyseMethodCall($assignment, $context, $statementNodes);
 
@@ -263,34 +263,35 @@ class MethodAnalyser
             return $results;
         }
 
-        if (!($assignment instanceof New_)) {
-            return [];
+        // When assigned from new
+        if ($assignment instanceof New_) {
+            // Get the class name from "new ClassName()"
+            $className = $assignment->class->name ?? null;
+            if (!is_string($className)) {
+                return [];
+            }
+
+            $classStructure = $this->classAstResolver->resolveClassStructure($context->namespace, $className, $context->imports);
+            if (!$classStructure) {
+                return [];
+            }
+
+            $calledMethod = $this->findMethodInClass($classStructure->class, $methodName);
+            if (!$calledMethod) {
+                return [];
+            }
+
+            $childContext = new ClassMethodContext(
+                namespace: $classStructure->namespace,
+                class: $classStructure->class,
+                method: $calledMethod,
+                imports: $classStructure->imports
+            );
+
+            return $this->analyseMethod($childContext);
         }
 
-        // Get the class name from "new ClassName()"
-        $className = $assignment->class->name ?? null;
-        if (!is_string($className)) {
-            return [];
-        }
-
-        $classStructure = $this->classAstResolver->resolveClassStructure($context->namespace, $className, $context->imports);
-        if (!$classStructure) {
-            return [];
-        }
-
-        $calledMethod = $this->findMethodInClass($classStructure->class, $methodName);
-        if (!$calledMethod) {
-            return [];
-        }
-
-        $childContext = new ClassMethodContext(
-            namespace: $classStructure->namespace,
-            class: $classStructure->class,
-            method: $calledMethod,
-            imports: $classStructure->imports
-        );
-
-        return $this->analyseMethod($childContext);
+        return [];
     }
 
     private function getPropertyClassName(Property $property): ?string
