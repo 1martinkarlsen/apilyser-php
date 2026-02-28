@@ -40,7 +40,7 @@ class ResponseAnalyser
         return new ResponseDefinition(
             type: $call->type,
             structure: $call->structure,
-            statusCode: $call->statusCode
+            statusCode: $call->statusCode ?? 200
         );
     }
 

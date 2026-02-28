@@ -2,6 +2,7 @@
 
 namespace Apilyser\tests\Data;
 
+use Apilyser\tests\Data\Endpoint\ServiceResponseAnalyserIntegrationData;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 

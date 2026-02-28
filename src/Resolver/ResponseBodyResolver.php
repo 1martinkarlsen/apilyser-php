@@ -10,6 +10,7 @@ use PhpParser\Node;
 use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
+use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\PropertyFetch;
@@ -50,6 +51,9 @@ class ResponseBodyResolver
             $expr instanceof MethodCall => fn() => $this->handleMethodCall($context, $methodJourney, $expr),
             $expr instanceof Variable => fn() => $this->handleVariable($context, $methodJourney, $expr->name),
             $expr instanceof Array_ => fn() => $this->handleArray($context, $methodJourney, $expr),
+            $expr instanceof FuncCall
+                && $expr->name instanceof Name
+                && strtolower((string) $expr->name) === 'json_encode' => fn() => $this->handleJsonEncode($context, $methodJourney, $expr),
             default => fn() => []
         };
 
@@ -77,6 +81,22 @@ class ResponseBodyResolver
     /**
      * @param ClassMethodContext $context
      * @param Node[] $methodJourney
+     * @param FuncCall $node
+     *
+     * @return ResponseBodyDefinition[]
+     */
+    private function handleJsonEncode(ClassMethodContext $context, array $methodJourney, FuncCall $node): array
+    {
+        if (empty($node->args)) {
+            return [];
+        }
+
+        return $this->resolveFromExpression($context, $methodJourney, $node->args[0]->value);
+    }
+
+    /**
+     * @param ClassMethodContext $context
+     * @param Node[] $methodJourney
      * @param MethodCall $node
      *
      * @return ?ResponseBodyDefinition[]
@@ -89,23 +109,26 @@ class ResponseBodyResolver
             return null;
         }
 
-        $returnType = null;
-        if ($newMethodContext->method->returnType instanceof NullableType) {
-            $returnType = $newMethodContext->method->returnType->type->name;
-        } else if ($newMethodContext->method->returnType instanceof Identifier) {
-            $returnType = $newMethodContext->method->returnType->name;
+        $returnTypeNode = $newMethodContext->method->returnType;
+        if ($returnTypeNode instanceof NullableType) {
+            $returnTypeNode = $returnTypeNode->type;
         }
 
         $results = [];
-        if ($returnType === 'array') {
+        if ($returnTypeNode instanceof Identifier && $returnTypeNode->name === 'array') {
             // TODO: Issue here, becuase extractArray is mapping an array but because the function
             // is calling another function which returns an array, we need to handle method call.
             $results = $this->extractArray($newMethodContext, $methodJourney, $node->name->name);
+        } else if ($returnTypeNode instanceof Name) {
+            // Class return type — represent as a single object entry
+            $results = [new ResponseBodyDefinition(name: null, type: 'object', nullable: false)];
         } else {
             // Simple return types like 'int', 'string' etc.
             // This is wrong
             $result = $this->findValueType($newMethodContext, $methodJourney, $node->var);
-            $results[] = $result;
+            if ($result !== null) {
+                $results[] = $result;
+            }
         }
 
         if ($results != null) {
@@ -255,14 +278,16 @@ class ResponseBodyResolver
                     return null;
                 }
 
-                $returnType = null;
-                if ($methodCallContext->method->returnType instanceof NullableType) {
-                    $returnType = $methodCallContext->method->returnType->type->name;
-                } else if ($methodCallContext->method->returnType instanceof Identifier) {
-                    $returnType = $methodCallContext->method->returnType->name;
+                $returnTypeNode = $methodCallContext->method->returnType;
+                if ($returnTypeNode instanceof NullableType) {
+                    $returnTypeNode = $returnTypeNode->type;
                 }
 
-                $returnType = $this->mapReturnToTypeName($returnType);
+                $returnType = match (true) {
+                    $returnTypeNode instanceof Identifier => $this->mapReturnToTypeName($returnTypeNode->name),
+                    $returnTypeNode instanceof Name => 'object',
+                    default => 'mixed',
+                };
 
                 return new ResponseBodyDefinition(
                     name: $itemKey,

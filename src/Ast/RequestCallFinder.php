@@ -20,7 +20,9 @@ use PhpParser\NodeVisitor\ParentConnectingVisitor;
 class RequestCallFinder
 {
 
-    public function __construct(private FrameworkAdapter $frameworkAdapter) {}
+    public function __construct(
+        private FrameworkAdapter $frameworkAdapter
+    ) {}
 
     /**
      * @param Node\Stmt[] $methodStmts

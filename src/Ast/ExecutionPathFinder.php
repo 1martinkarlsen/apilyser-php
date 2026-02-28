@@ -13,6 +13,7 @@ use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\Node\Stmt\Switch_;
+use PhpParser\Node\Stmt\TryCatch;
 use PhpParser\Node\Stmt\While_;
 
 class ExecutionPathFinder
@@ -70,6 +71,11 @@ class ExecutionPathFinder
                     $this->handleSwitch($statement, $newPath, $remainingStmts);
                     return;
 
+                case $statement instanceof TryCatch:
+                    $remainingStmts = array_slice($stmts, $index + 1);
+                    $this->handleTryCatch($statement, $newPath, $remainingStmts);
+                    return;
+
                 default:
                     $currentPath = $newPath;
             }
@@ -85,7 +91,7 @@ class ExecutionPathFinder
         $truePath->addCondition("if", $ifStmt->cond, true);
 
         // Continue with remaining statements after if block (if no return/throw)
-        if (!$this->pathEndsWithTermination($ifStmt->stmts)) {
+        if ($this->pathEndsWithTermination($ifStmt->stmts)) {
             $this->extractPaths($ifStmt->stmts, $truePath);
         } else {
             $mergedStmts = array_merge($ifStmt->stmts, $remainingStmts);
@@ -98,7 +104,7 @@ class ExecutionPathFinder
             $elseifPath->addCondition("elseif", $elseif->cond, true);
 
             // Continue with remaining statements after elseif block
-            if (!$this->pathEndsWithTermination($elseif->stmts)) {
+            if ($this->pathEndsWithTermination($elseif->stmts)) {
                 $this->extractPaths($elseif->stmts, $elseifPath);
             } else {
                 $mergedStmts = array_merge($elseif->stmts, $remainingStmts);
@@ -112,7 +118,7 @@ class ExecutionPathFinder
             $elsePath->addCondition("else", $ifStmt->cond, false);
 
             // Continue with remaining statements after else block
-            if (!$this->pathEndsWithTermination($ifStmt->else->stmts)) {
+            if ($this->pathEndsWithTermination($ifStmt->else->stmts)) {
                 $this->extractPaths($ifStmt->else->stmts, $elsePath);
             } else {
                 $mergedStmts = array_merge($ifStmt->else->stmts, $remainingStmts);
@@ -147,7 +153,7 @@ class ExecutionPathFinder
         }
 
         // Continue with remaining statements after loop (if no break/return)
-        if (!$this->pathEndsWithTermination($loopBodyStmts)) {
+        if ($this->pathEndsWithTermination($loopBodyStmts)) {
             $this->extractPaths($loopBodyStmts, $loopPath);
         } else {
             $mergedStmts = array_merge($loopBodyStmts, $remainingStmts);
@@ -174,7 +180,7 @@ class ExecutionPathFinder
             }
 
             // Continue with remaining statements after switch (if no break/return)
-            if (!$this->pathEndsWithTermination($case->stmts)) {
+            if ($this->pathEndsWithTermination($case->stmts)) {
                 $this->extractPaths($case->stmts, $casePath);
             } else {
                 $mergedStmts = array_merge($case->stmts, $remainingStmts);
@@ -187,6 +193,28 @@ class ExecutionPathFinder
             $noMatchPath = clone $basePath;
             $noMatchPath->addCondition("no-case-match", null, false);
             $this->extractPaths($remainingStmts, $noMatchPath);
+        }
+    }
+
+    private function handleTryCatch(Node\Stmt\TryCatch $tryCatch, MethodPathDefinition $basePath, array $remainingStmts): void
+    {
+        // Try body paths (merged with statements after the try-catch if the body does not terminate)
+        if ($this->pathEndsWithTermination($tryCatch->stmts)) {
+            $this->extractPaths($tryCatch->stmts, $basePath);
+        } else {
+            $mergedTryStmts = array_merge($tryCatch->stmts, $remainingStmts);
+            $this->extractPaths($mergedTryStmts, $basePath);
+        }
+
+        // Each catch block creates its own path
+        foreach ($tryCatch->catches as $catch) {
+            $catchPath = clone $basePath;
+            if ($this->pathEndsWithTermination($catch->stmts)) {
+                $this->extractPaths($catch->stmts, $catchPath);
+            } else {
+                $mergedCatchStmts = array_merge($catch->stmts, $remainingStmts);
+                $this->extractPaths($mergedCatchStmts, $catchPath);
+            }
         }
     }
 

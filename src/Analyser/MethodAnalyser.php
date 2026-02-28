@@ -188,12 +188,24 @@ class MethodAnalyser
         if (!$propertyFetch instanceof PropertyFetch) {
             return [];
         }
+        $propertyClassName = null;
+
         $property = $this->classAstResolver->findPropertyInClass($context->class, $propertyFetch);
-        if (!$property) {
-            return [];
+        if ($property) {
+            $propertyClassName = $this->getPropertyClassName($property);
+        } elseif ($propertyFetch->name instanceof Identifier) {
+            $constructorParam = $this->classAstResolver->findConstructorParam($context->class, $propertyFetch->name->name);
+            if ($constructorParam !== null) {
+                $type = $constructorParam->type;
+                if ($type instanceof NullableType) {
+                    $type = $type->type;
+                }
+                if ($type instanceof Name) {
+                    $propertyClassName = $type->toString();
+                }
+            }
         }
 
-        $propertyClassName = $this->getPropertyClassName($property);
         if (!$propertyClassName) {
             return [];
         }
@@ -231,34 +243,55 @@ class MethodAnalyser
         $methodName = $methodCall->name->name;
 
         $assignment = $this->variableAssignmentFinder->findAssignment($variableName, $statementNodes);
-        if (!$assignment || !($assignment instanceof New_)) {
+        if (!$assignment) {
             return [];
         }
 
-        // Get the class name from "new ClassName()"
-        $className = $assignment->class->name ?? null;
-        if (!is_string($className)) {
-            return [];
+        // When assigned from a method call
+        if ($assignment instanceof MethodCall) {
+            $baseResponseCalls = $this->analyseMethodCall($assignment, $context, $statementNodes);
+
+            $results = [];
+            foreach ($baseResponseCalls as $baseCall) {
+                foreach ($this->frameworkRegistry->getAdapters() as $adapter) {
+                    $modified = $adapter->tryParseCallLikeAsResponse($context, $methodCall, $statementNodes, $baseCall);
+                    if ($modified !== null) {
+                        $results[] = $modified;
+                    }
+                }
+            }
+            return $results;
         }
 
-        $classStructure = $this->classAstResolver->resolveClassStructure($context->namespace, $className, $context->imports);
-        if (!$classStructure) {
-            return [];
+        // When assigned from new
+        if ($assignment instanceof New_) {
+            // Get the class name from "new ClassName()"
+            $className = $assignment->class->name ?? null;
+            if (!is_string($className)) {
+                return [];
+            }
+
+            $classStructure = $this->classAstResolver->resolveClassStructure($context->namespace, $className, $context->imports);
+            if (!$classStructure) {
+                return [];
+            }
+
+            $calledMethod = $this->findMethodInClass($classStructure->class, $methodName);
+            if (!$calledMethod) {
+                return [];
+            }
+
+            $childContext = new ClassMethodContext(
+                namespace: $classStructure->namespace,
+                class: $classStructure->class,
+                method: $calledMethod,
+                imports: $classStructure->imports
+            );
+
+            return $this->analyseMethod($childContext);
         }
 
-        $calledMethod = $this->findMethodInClass($classStructure->class, $methodName);
-        if (!$calledMethod) {
-            return [];
-        }
-
-        $childContext = new ClassMethodContext(
-            namespace: $classStructure->namespace,
-            class: $classStructure->class,
-            method: $calledMethod,
-            imports: $classStructure->imports
-        );
-
-        return $this->analyseMethod($childContext);
+        return [];
     }
 
     private function getPropertyClassName(Property $property): ?string

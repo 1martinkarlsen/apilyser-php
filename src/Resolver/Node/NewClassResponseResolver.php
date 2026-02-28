@@ -15,6 +15,7 @@ use Apilyser\Ast\VariableAssignmentFinder;
 use Exception;
 use PhpParser\Node;
 use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\PropertyFetch;
@@ -178,7 +179,7 @@ class NewClassResponseResolver implements ResponseNodeResolver
             $node instanceof PropertyFetch => $this->handlePropertyFetch($node, $context, $methodJourney),
             $node instanceof ClassConstFetch => $this->handleClassConstFetch($node, $context),
             $node instanceof MethodCall => $this->handleMethodCall($node, $context, $methodJourney),
-            default => null
+            default => []
         };
     }
 
@@ -225,6 +226,10 @@ class NewClassResponseResolver implements ResponseNodeResolver
                 $classConstFetch->class->name,
                 $context->imports
             );
+
+            if ($classStructure === null) {
+                return [];
+            }
 
             $constant = $this->classAstResolver->findConstInClass($classStructure->class, $constName->name);
 

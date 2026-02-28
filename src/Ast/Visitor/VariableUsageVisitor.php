@@ -4,6 +4,7 @@ namespace Apilyser\Ast\Visitor;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Stmt;
 use PhpParser\NodeVisitorAbstract;
 
 class VariableUsageVisitor extends NodeVisitorAbstract
@@ -16,7 +17,7 @@ class VariableUsageVisitor extends NodeVisitorAbstract
 
     public function __construct(
         public string $variableName,
-        private bool $findRootParent = true
+        private bool $findRootStmt = true
     ) {}
 
     public function enterNode(Node $node)
@@ -43,14 +44,18 @@ class VariableUsageVisitor extends NodeVisitorAbstract
     {
         $parent = $node->getAttribute('parent');
 
-        if ($parent) {
-            if ($this->findRootParent) {
-                return $this->lookForParent($parent);
-            } else {
-                return $parent;
-            }
+        if (!$parent) {
+            return $node;
         }
 
-        return $node;
+        if ($this->findRootStmt) {
+            if ($parent instanceof Stmt) {
+                return $node;
+            }
+
+            return $this->lookForParent($parent);
+        }
+
+        return $parent;
     }
 }

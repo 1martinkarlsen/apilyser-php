@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Apilyser\tests\Data;
+namespace Apilyser\tests\Data\Endpoint;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
