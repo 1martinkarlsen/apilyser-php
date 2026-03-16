@@ -42,42 +42,38 @@ class ExecutionPathFinder
     private function extractPaths(array $stmts, MethodPathDefinition $currentPath): void
     {
         foreach ($stmts as $index => $statement) {
-            $newPath = clone $currentPath;
-            $newPath->addStatement($statement);
+            $currentPath->addStatement($statement);
 
             switch (true) {
                 case $statement instanceof If_:
                     $remainingStmts = array_slice($stmts, $index + 1);
-                    $this->handleConditional($statement, $newPath, $remainingStmts);
+                    $this->handleConditional($statement, $currentPath, $remainingStmts);
                     return;
 
                 case $statement instanceof Return_:
-                    $this->paths[] = $newPath;
+                    $this->paths[] = $currentPath;
                     return;
 
                 case $statement instanceof Throw_:
-                    $this->paths[] = $newPath;
+                    $this->paths[] = $currentPath;
                     return;
 
                 case $statement instanceof While_:
                 case $statement instanceof For_:
                 case $statement instanceof Foreach_:
                     $remainingStmts = array_slice($stmts, $index + 1);
-                    $this->handleLoop($statement, $newPath, $remainingStmts);
+                    $this->handleLoop($statement, $currentPath, $remainingStmts);
                     return;
 
                 case $statement instanceof Switch_:
                     $remainingStmts = array_slice($stmts, $index + 1);
-                    $this->handleSwitch($statement, $newPath, $remainingStmts);
+                    $this->handleSwitch($statement, $currentPath, $remainingStmts);
                     return;
 
                 case $statement instanceof TryCatch:
                     $remainingStmts = array_slice($stmts, $index + 1);
-                    $this->handleTryCatch($statement, $newPath, $remainingStmts);
+                    $this->handleTryCatch($statement, $currentPath, $remainingStmts);
                     return;
-
-                default:
-                    $currentPath = $newPath;
             }
         }
 
