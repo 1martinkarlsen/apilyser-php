@@ -29,7 +29,7 @@ class Analyser
             throw new Exception("Could not find Open API documentation");
         }
 
-        // Analyse all routes
+        // Collect all endpoint routes
         $routes = $this->routeCollector->resolveRoutes($folderPath);
 
         $endpoints = [];

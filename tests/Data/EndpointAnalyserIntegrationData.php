@@ -11,6 +11,7 @@ use Apilyser\tests\Data\Endpoint\ListingResponseService;
 use Apilyser\tests\Data\Endpoint\NavigationRouteService;
 use Apilyser\tests\Data\Endpoint\ServerSideListingResponse;
 use Apilyser\tests\Data\Endpoint\TestLogger;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -113,6 +114,19 @@ class EndpointAnalyserIntegrationData
         }
 
         return $response;
+    }
+
+    public function testExample2(Request $request): Response
+    {
+        $queryPath = $request->query->get('path');
+
+        if (isset($queryPath)) {
+            $data = ["hej" => "hej"];            
+        } else {
+            $data = ["auth" => "ok"];
+        }
+
+        return new JsonResponse($data, 200);
     }
 }
 

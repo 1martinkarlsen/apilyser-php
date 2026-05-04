@@ -5,6 +5,9 @@ namespace Apilyser\Resolver;
 use Apilyser\Parser\Route;
 use Apilyser\Parser\Route\RouteStrategy;
 
+/**
+ * Responsible for collecting routes that represent entrypoints for endpoint requests.
+ */
 class RouteCollector
 {
 
