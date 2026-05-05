@@ -76,7 +76,7 @@ class ExecutionPathFinderTest extends TestCase
     public function testFindAmountExecutionPaths()
     {
         $classMethod = $this->parseDataClassMethod('testExample');
-        $paths = $this->executionPathFinder->extract($classMethod->method);
+        $paths = iterator_to_array($this->executionPathFinder->extract($classMethod->method), false);
 
         assertCount(expectedCount: 48, haystack: $paths);
     }

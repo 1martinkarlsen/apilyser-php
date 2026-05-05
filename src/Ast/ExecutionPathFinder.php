@@ -19,27 +19,23 @@ use PhpParser\Node\Stmt\While_;
 class ExecutionPathFinder
 {
 
-    /** @var MethodPathDefinition[] */
-    private array $paths = [];
-
     /**
      * @param ClassMethod $method
      *
-     * @return MethodPathDefinition[]
+     * @return \Generator<MethodPathDefinition>
      */
-    public function extract(ClassMethod $method): array
+    public function extract(ClassMethod $method): \Generator
     {
-        $this->paths = [];
-        $this->extractPaths($method->stmts, new MethodPathDefinition());
-
-        return $this->paths;
+        yield from $this->extractPaths($method->stmts, new MethodPathDefinition());
     }
 
     /**
      * @param Node[] $stmts
      * @param MethodPathDefinition $currentPath
+     *
+     * @return \Generator<MethodPathDefinition>
      */
-    private function extractPaths(array $stmts, MethodPathDefinition $currentPath): void
+    private function extractPaths(array $stmts, MethodPathDefinition $currentPath): \Generator
     {
         foreach ($stmts as $index => $statement) {
             $currentPath->addStatement($statement);
@@ -47,122 +43,99 @@ class ExecutionPathFinder
             switch (true) {
                 case $statement instanceof If_:
                     $remainingStmts = array_slice($stmts, $index + 1);
-                    $this->handleConditional($statement, $currentPath, $remainingStmts);
+                    yield from $this->handleConditional($statement, $currentPath, $remainingStmts);
                     return;
 
                 case $statement instanceof Return_:
-                    $this->paths[] = $currentPath;
+                    yield $currentPath;
                     return;
 
                 case $statement instanceof Throw_:
-                    $this->paths[] = $currentPath;
+                    yield $currentPath;
                     return;
 
                 case $statement instanceof While_:
                 case $statement instanceof For_:
                 case $statement instanceof Foreach_:
                     $remainingStmts = array_slice($stmts, $index + 1);
-                    $this->handleLoop($statement, $currentPath, $remainingStmts);
+                    yield from $this->handleLoop($statement, $currentPath, $remainingStmts);
                     return;
 
                 case $statement instanceof Switch_:
                     $remainingStmts = array_slice($stmts, $index + 1);
-                    $this->handleSwitch($statement, $currentPath, $remainingStmts);
+                    yield from $this->handleSwitch($statement, $currentPath, $remainingStmts);
                     return;
 
                 case $statement instanceof TryCatch:
                     $remainingStmts = array_slice($stmts, $index + 1);
-                    $this->handleTryCatch($statement, $currentPath, $remainingStmts);
+                    yield from $this->handleTryCatch($statement, $currentPath, $remainingStmts);
                     return;
             }
         }
 
-        $this->paths[] = $currentPath;
+        yield $currentPath;
     }
 
-    private function handleConditional(Node\Stmt\If_ $ifStmt, MethodPathDefinition $basePath, array $remainingStmts): void
+    private function handleConditional(Node\Stmt\If_ $ifStmt, MethodPathDefinition $basePath, array $remainingStmts): \Generator
     {
-        // True branch
         $truePath = clone $basePath;
         $truePath->addCondition("if", $ifStmt->cond, true);
 
-        // Continue with remaining statements after if block (if no return/throw)
         if ($this->pathEndsWithTermination($ifStmt->stmts)) {
-            $this->extractPaths($ifStmt->stmts, $truePath);
+            yield from $this->extractPaths($ifStmt->stmts, $truePath);
         } else {
-            $mergedStmts = array_merge($ifStmt->stmts, $remainingStmts);
-            $this->extractPaths($mergedStmts, $truePath);
+            yield from $this->extractPaths(array_merge($ifStmt->stmts, $remainingStmts), $truePath);
         }
 
-        // Handle elseif chains
         foreach ($ifStmt->elseifs as $elseif) {
             $elseifPath = clone $basePath;
             $elseifPath->addCondition("elseif", $elseif->cond, true);
 
-            // Continue with remaining statements after elseif block
             if ($this->pathEndsWithTermination($elseif->stmts)) {
-                $this->extractPaths($elseif->stmts, $elseifPath);
+                yield from $this->extractPaths($elseif->stmts, $elseifPath);
             } else {
-                $mergedStmts = array_merge($elseif->stmts, $remainingStmts);
-                $this->extractPaths($mergedStmts, $elseifPath);
+                yield from $this->extractPaths(array_merge($elseif->stmts, $remainingStmts), $elseifPath);
             }
         }
 
-        // Else branch (or implicit else if no else block)
         if ($ifStmt->else) {
             $elsePath = clone $basePath;
             $elsePath->addCondition("else", $ifStmt->cond, false);
 
-            // Continue with remaining statements after else block
             if ($this->pathEndsWithTermination($ifStmt->else->stmts)) {
-                $this->extractPaths($ifStmt->else->stmts, $elsePath);
+                yield from $this->extractPaths($ifStmt->else->stmts, $elsePath);
             } else {
-                $mergedStmts = array_merge($ifStmt->else->stmts, $remainingStmts);
-                $this->extractPaths($mergedStmts, $elsePath);
+                yield from $this->extractPaths(array_merge($ifStmt->else->stmts, $remainingStmts), $elsePath);
             }
         } else {
-            // Implicit else path (condition was false, continue after if)
             $elsePath = clone $basePath;
             $elsePath->addCondition("implicit-else", $ifStmt->cond, false);
-            $this->extractPaths($remainingStmts, $elsePath);
+            yield from $this->extractPaths($remainingStmts, $elsePath);
         }
     }
 
     /**
      * @param While_|For_|Foreach_ $loopStmt
-     * @param MethodPathDefinition $basePath
-     * @param array $remainingStmts
      */
-    private function handleLoop(Node $loopStmt, MethodPathDefinition $basePath, array $remainingStmts): void
+    private function handleLoop(Node $loopStmt, MethodPathDefinition $basePath, array $remainingStmts): \Generator
     {
-        // Path that enters the loop
         $loopPath = clone $basePath;
         $loopPath->addCondition("loop-enter", $this->getLoopCondition($loopStmt), true);
 
-        $loopBodyStmts = [];
-        if ($loopStmt instanceof Node\Stmt\While_) {
-            $loopBodyStmts = $loopStmt->stmts;
-        } elseif ($loopStmt instanceof Node\Stmt\For_) {
-            $loopBodyStmts = $loopStmt->stmts;
-        } elseif ($loopStmt instanceof Node\Stmt\Foreach_) {
-            $loopBodyStmts = $loopStmt->stmts;
-        }
+        $loopBodyStmts = $loopStmt->stmts;
 
-        // Continue with remaining statements after loop (if no break/return)
         if ($this->pathEndsWithTermination($loopBodyStmts)) {
-            $this->extractPaths($loopBodyStmts, $loopPath);
+            yield from $this->extractPaths($loopBodyStmts, $loopPath);
         } else {
-            $mergedStmts = array_merge($loopBodyStmts, $remainingStmts);
-            $this->extractPaths($mergedStmts, $loopPath);
+            yield from $this->extractPaths(array_merge($loopBodyStmts, $remainingStmts), $loopPath);
         }
 
-        // Path that skips the loop
         $skipPath = clone $basePath;
         $skipPath->addCondition("loop-skip", $this->getLoopCondition($loopStmt), false);
-        $this->extractPaths($remainingStmts, $skipPath);
+        yield from $this->extractPaths($remainingStmts, $skipPath);
     }
 
-    private function handleSwitch(Node\Stmt\Switch_ $switchStmt, MethodPathDefinition $basePath, array $remainingStmts): void
+    private function handleSwitch(Node\Stmt\Switch_ $switchStmt, MethodPathDefinition $basePath, array $remainingStmts): \Generator
     {
         $hasDefaultCase = false;
 
@@ -175,41 +148,34 @@ class ExecutionPathFinder
                 $hasDefaultCase = true;
             }
 
-            // Continue with remaining statements after switch (if no break/return)
             if ($this->pathEndsWithTermination($case->stmts)) {
-                $this->extractPaths($case->stmts, $casePath);
+                yield from $this->extractPaths($case->stmts, $casePath);
             } else {
-                $mergedStmts = array_merge($case->stmts, $remainingStmts);
-                $this->extractPaths($mergedStmts, $casePath);
+                yield from $this->extractPaths(array_merge($case->stmts, $remainingStmts), $casePath);
             }
         }
 
-        // If no default case, create a path that doesn't match any case
         if (!$hasDefaultCase) {
             $noMatchPath = clone $basePath;
             $noMatchPath->addCondition("no-case-match", null, false);
-            $this->extractPaths($remainingStmts, $noMatchPath);
+            yield from $this->extractPaths($remainingStmts, $noMatchPath);
         }
     }
 
-    private function handleTryCatch(Node\Stmt\TryCatch $tryCatch, MethodPathDefinition $basePath, array $remainingStmts): void
+    private function handleTryCatch(Node\Stmt\TryCatch $tryCatch, MethodPathDefinition $basePath, array $remainingStmts): \Generator
     {
-        // Try body paths (merged with statements after the try-catch if the body does not terminate)
         if ($this->pathEndsWithTermination($tryCatch->stmts)) {
-            $this->extractPaths($tryCatch->stmts, $basePath);
+            yield from $this->extractPaths($tryCatch->stmts, $basePath);
         } else {
-            $mergedTryStmts = array_merge($tryCatch->stmts, $remainingStmts);
-            $this->extractPaths($mergedTryStmts, $basePath);
+            yield from $this->extractPaths(array_merge($tryCatch->stmts, $remainingStmts), $basePath);
         }
 
-        // Each catch block creates its own path
         foreach ($tryCatch->catches as $catch) {
             $catchPath = clone $basePath;
             if ($this->pathEndsWithTermination($catch->stmts)) {
-                $this->extractPaths($catch->stmts, $catchPath);
+                yield from $this->extractPaths($catch->stmts, $catchPath);
             } else {
-                $mergedCatchStmts = array_merge($catch->stmts, $remainingStmts);
-                $this->extractPaths($mergedCatchStmts, $catchPath);
+                yield from $this->extractPaths(array_merge($catch->stmts, $remainingStmts), $catchPath);
             }
         }
     }
