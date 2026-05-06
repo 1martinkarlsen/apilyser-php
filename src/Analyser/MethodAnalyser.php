@@ -26,7 +26,12 @@ use PhpParser\Node\Stmt\Property;
 class MethodAnalyser
 {
 
+    private const MAX_PATHS_PER_METHOD = 100;
+
     private $variableAssignmentFinder;
+
+    /** @var array<string, true> Methods currently on the analysis call stack (cycle guard) */
+    private array $analysisStack = [];
 
     public function __construct(
         private ExecutionPathFinder $executionPathFinder,
@@ -55,15 +60,29 @@ class MethodAnalyser
      */
     private function analyseMethod(ClassMethodContext $context): array
     {
-        $paths = $this->executionPathFinder->extract($context->method);
+        $key = $context->class->name->toString() . '::' . $context->method->name->toString();
 
-        $results = [];
-        foreach ($paths as $path) {
-            $pathResults = $this->analysePath($path, $context);
-            array_push($results, ...$pathResults);
+        if (isset($this->analysisStack[$key])) {
+            return [];
         }
 
-        return $results;
+        $this->analysisStack[$key] = true;
+        try {
+            $results = [];
+            $pathCount = 0;
+
+            foreach ($this->executionPathFinder->extract($context->method) as $path) {
+                if (++$pathCount > self::MAX_PATHS_PER_METHOD) {
+                    break;
+                }
+                $pathResults = $this->analysePath($path, $context);
+                array_push($results, ...$pathResults);
+            }
+
+            return $results;
+        } finally {
+            unset($this->analysisStack[$key]);
+        }
     }
 
     /**
