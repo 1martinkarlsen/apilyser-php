@@ -7,13 +7,14 @@ use Apilyser\Ast\MethodParameterFinder;
 use Apilyser\Ast\RequestCallFinder;
 use Apilyser\Definition\ParameterDefinitionFactory;
 use Apilyser\Framework\FrameworkRegistry;
-use PhpParser\Node\Param;
+use Apilyser\Util\Logger;
 use PhpParser\Node\Stmt\ClassMethod;
 
 class RequestAnalyser
 {
 
     public function __construct(
+        private Logger $logger,
         private FrameworkRegistry $frameworkRegistry,
         private MethodParameterFinder $methodParameterFinder,
         private ParameterDefinitionFactory $parameterDefinitionFactory
@@ -21,6 +22,7 @@ class RequestAnalyser
 
     public function analyse(ClassMethodContext $context): array
     {
+        $this->logger->log("Analysing requests");
         return $this->analyzeMethod($context->method, $context->imports) ?: [];
     }
 

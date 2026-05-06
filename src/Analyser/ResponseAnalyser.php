@@ -4,10 +4,12 @@ namespace Apilyser\Analyser;
 
 use Apilyser\Definition\ResponseDefinition;
 use Apilyser\Resolver\ResponseCall;
+use Apilyser\Util\Logger;
 
 class ResponseAnalyser
 {
     public function __construct(
+        private Logger $logger,
         private MethodAnalyser $methodAnalyser
     ) {}
 
@@ -18,6 +20,8 @@ class ResponseAnalyser
      */
     public function analyse(ClassMethodContext $context): array
     {
+        $this->logger->log("Analysing responses");
+        
         $responseCalls = $this->methodAnalyser->analyse($context);
 
         $result = array_map(
