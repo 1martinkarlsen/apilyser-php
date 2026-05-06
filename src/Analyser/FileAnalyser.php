@@ -29,6 +29,8 @@ final class FileAnalyser
      */
     public function analyse(Route $route): array
     {
+        $this->logger->log("Analysing " . $route->controllerPath);
+        
         $fileContent = file_get_contents($route->controllerPath);
         $fileStmts = $this->nodeParser->parse($fileContent);
 

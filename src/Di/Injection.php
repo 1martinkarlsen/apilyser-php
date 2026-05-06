@@ -62,6 +62,7 @@ class Injection
         $this->setupRouting();
 
         $this->services[Analyser::class] = new Analyser(
+            logger: $this->get(Logger::class),
             openApiAnalyser: $this->get(OpenApiAnalyser::class),
             routeCollector: $this->get(RouteCollector::class),
             fileAnalyser: $this->get(FileAnalyser::class),

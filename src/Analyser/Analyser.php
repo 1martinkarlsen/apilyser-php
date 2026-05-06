@@ -5,12 +5,14 @@ namespace Apilyser\Analyser;
 use Apilyser\Comparison\ApiComparison;
 use Apilyser\Comparison\EndpointResult;
 use Apilyser\Resolver\RouteCollector;
+use Apilyser\Util\Logger;
 use Exception;
 
 class Analyser
 {
 
     public function __construct(
+        private Logger $logger,
         private OpenApiAnalyser $openApiAnalyser,
         private RouteCollector $routeCollector,
         private FileAnalyser $fileAnalyser,
@@ -27,10 +29,18 @@ class Analyser
         $spec = $this->openApiAnalyser->analyse();
         if ($spec == null) {
             throw new Exception("Could not find Open API documentation");
+        } else {
+            $this->logger->log("Found open api docs");
         }
 
         // Collect all endpoint routes
         $routes = $this->routeCollector->resolveRoutes($folderPath);
+
+        if (empty($routes)) {
+            $this->logger->log("No routes found");
+        } else {
+            $this->logger->log("Found " . count($routes) . " routes");
+        }
 
         $endpoints = [];
         foreach ($routes as $route) {
